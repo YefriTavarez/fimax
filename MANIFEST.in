@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include fimax *.css
+recursive-include fimax *.csv
+recursive-include fimax *.html
+recursive-include fimax *.ico
+recursive-include fimax *.js
+recursive-include fimax *.json
+recursive-include fimax *.md
+recursive-include fimax *.png
+recursive-include fimax *.py
+recursive-include fimax *.svg
+recursive-include fimax *.txt
+recursive-exclude fimax *.pyc
