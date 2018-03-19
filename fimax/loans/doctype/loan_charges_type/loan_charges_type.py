@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2017, Yefri Tavarez and contributors
+# Copyright (c) 2018, Yefri Tavarez and contributors
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
 
-class CustomLoan(Document):
-	def before_insert(self):
-		if not self.description:
-			self.description = self.loan_name
+class LoanChargesType(Document):
+	pass

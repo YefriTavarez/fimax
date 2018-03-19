@@ -79,16 +79,19 @@ frappe.ui.form.on('Loan Application', {
 		});
 	},
 	"party_type": (frm) => {
-		$.map(["party", "party_name"], (field) => {
-			frm.doc[field] = undefined;
-			refresh_field(field);
-		});
+		frm.trigger("clear_party");
 	},
 	"party": (frm) => {
 		if ( ! frm.doc.party) {
-			frm.set_value("party_name", undefined);
+			frm.trigger("clear_party_name");
+		} else {
+			frappe.run_serially([
+				() => frm.trigger("set_party_name"),
+				() => frm.trigger("set_party_currency")
+			]);
 		}
-
+	},
+	"set_party_name": (frm) => {
 		let party_field = __("{0}_name", [frm.doc.party_type]);
 
 		frappe.db.get_value(frm.doc.party_type, frm.doc.party, party_field.toLocaleLowerCase())
@@ -97,6 +100,28 @@ frappe.ui.form.on('Loan Application', {
 				frm.set_value("party_name", party_name);
 				frm.trigger("show_hide_party_name");
 			}).fail((exec) => frappe.msgprint(__("There was a problem while loading the party name!")));
+	},
+	"set_party_currency": (frm) => {
+		let default_currency = frappe.defaults.get_default("currency");
+
+		if (["Customer", "Supplier"].includes(frm.doc.party_type)) {
+			frappe.db.get_value(frm.doc.party_type, frm.doc.party, "default_currency")
+				.done((response) => {
+					default_currency = response.message["default_currency"];
+					default_currency && frm.set_value("currency", default_currency);
+				}).fail((exec) => frappe.msgprint(__("There was a problem while loading the party default currency!")));
+		}
+
+		frm.set_value("currency", default_currency);
+	},
+	"clear_party_name": (frm) => {
+		frm.set_value("party_name", undefined);
+	},
+	"clear_party": (frm) => {
+		frappe.run_serially([
+			() => frm.set_value("party", undefined),
+			() => frm.trigger("clear_party_name")
+		]);
 	},
 	"approver": (frm) => {
 		if ( ! frm.doc.approver) {

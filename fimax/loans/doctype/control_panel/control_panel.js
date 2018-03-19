@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('Control Panel', {
-	refresh: function(frm) {
+	"refresh": (frm) => {
 
 	}
 });
