@@ -303,11 +303,18 @@ frappe.ui.form.on('Loan Application', {
 		frm.save("Update");
 	},
 	"view_loan": (frm) => {
-		if (frm.doc.loan) {
-			frappe.set_route("Form", "Loan", frm.doc.loan);
-		} else {
-			frappe.msgprint(__("Loan not found"));
-		}
+		frappe.db.get_value("Loan", {
+			"loan_application": frm.docname,
+			"docstatus": ["!=", "2"]
+		}, "name").done((response) => {
+			let loan = response.message["name"];
+
+			if (loan) {
+				frappe.set_route("Form", "Loan", loan);
+			} else {
+				frappe.msgprint(__("Loan not found"));
+			}
+		});
 	},
 	"make_loan": (frm) => {
 		let opts = {
