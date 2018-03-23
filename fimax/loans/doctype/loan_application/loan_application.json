@@ -295,7 +295,7 @@
   }, 
   {
    "allow_bulk_edit": 0, 
-   "allow_on_submit": 0, 
+   "allow_on_submit": 1, 
    "bold": 0, 
    "collapsible": 0, 
    "columns": 0, 
@@ -326,7 +326,7 @@
   }, 
   {
    "allow_bulk_edit": 0, 
-   "allow_on_submit": 0, 
+   "allow_on_submit": 1, 
    "bold": 0, 
    "collapsible": 0, 
    "columns": 0, 
@@ -448,7 +448,7 @@
   }, 
   {
    "allow_bulk_edit": 0, 
-   "allow_on_submit": 0, 
+   "allow_on_submit": 1, 
    "bold": 0, 
    "collapsible": 0, 
    "columns": 0, 
@@ -508,7 +508,7 @@
   }, 
   {
    "allow_bulk_edit": 0, 
-   "allow_on_submit": 0, 
+   "allow_on_submit": 1, 
    "bold": 0, 
    "collapsible": 0, 
    "columns": 0, 
@@ -539,7 +539,7 @@
   }, 
   {
    "allow_bulk_edit": 0, 
-   "allow_on_submit": 0, 
+   "allow_on_submit": 1, 
    "bold": 0, 
    "collapsible": 0, 
    "columns": 0, 
@@ -574,6 +574,7 @@
    "bold": 0, 
    "collapsible": 0, 
    "columns": 0, 
+   "description": "%", 
    "fieldname": "legal_expenses_rate", 
    "fieldtype": "Percent", 
    "hidden": 0, 
@@ -984,7 +985,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 10, 
- "modified": "2018-03-20 10:24:29.353423", 
+ "modified": "2018-03-23 12:54:32.367676", 
  "modified_by": "yefri@soldeva.com", 
  "module": "Loans", 
  "name": "Loan Application", 
@@ -1054,7 +1055,7 @@
   {
    "amend": 1, 
    "apply_user_permissions": 0, 
-   "cancel": 0, 
+   "cancel": 1, 
    "create": 1, 
    "delete": 0, 
    "email": 1, 
@@ -1068,7 +1069,7 @@
    "role": "Loan User", 
    "set_user_permissions": 0, 
    "share": 1, 
-   "submit": 0, 
+   "submit": 1, 
    "write": 1
   }, 
   {

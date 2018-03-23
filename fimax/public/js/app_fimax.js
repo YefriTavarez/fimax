@@ -46,6 +46,17 @@ frappe.provide("fimax.utils");
 $.extend(fimax.utils, {
 	"from_percent_to_decimal": (value) => {
 		return flt(value) / flt(100.000);
+	},
+	"frequency_in_years": (frequency) => {
+		return {
+			"daily": 365,
+			"weekly": 52,
+			"biweekly": 26,
+			"monthly": 12,
+			"quartely": 4,
+			"half-yearly": 2,
+			"yearly": 1
+		}[new String(frequency).toLocaleLowerCase()];
 	}
 });
 

@@ -29,6 +29,8 @@ web_include_js = "/assets/fimax/js/web_fimax.js"
 doctype_js = {
 	"DocType" : "public/js/doctype.js",
 	"Customer" : "public/js/customer.js",
+	"Supplier" : "public/js/supplier.js",
+	"Employee" : "public/js/employee.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -83,13 +85,11 @@ notification_config = "fimax.notifications.get_notification_config"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-#	}
-# }
+doc_events = {
+	"Customer": {
+		# "validate": "fimax.hook.customer.validate",
+	}
+}
 
 # Scheduled Tasks
 # ---------------

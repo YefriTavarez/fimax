@@ -1,6 +1,7 @@
 // Copyright (c) 2017, Yefri Tavarez and contributors
 // For license information, please see license.txt
 
+frappe.provide("fimax.loan_appl");
 frappe.ui.form.on('Loan Application', {
 	"onload": (frm) => {
 		let event_list = ["set_approver", "set_default_values"];
@@ -68,6 +69,14 @@ frappe.ui.form.on('Loan Application', {
 				frm.page.set_inner_btn_group_as_primary(__("Loan"));
 			});
 		}
+
+		if (frm.is_new()) {
+			frm.trigger("add_new_customer_button");
+			frm.trigger("add_new_supplier_button");
+			frm.trigger("add_new_employee_button");
+			
+			frm.page.set_inner_btn_group_as_primary(__("New"));
+		}
 	},
 	"set_party_type_query": (frm) => {
 		frm.set_query("party_type", () => {
@@ -79,13 +88,14 @@ frappe.ui.form.on('Loan Application', {
 		});
 	},
 	"party_type": (frm) => {
-		frm.trigger("clear_party");
+		frm.trigger("clear_party") && frm.trigger("refresh");
 	},
 	"party": (frm) => {
 		if ( ! frm.doc.party) {
 			frm.trigger("clear_party_name");
 		} else {
 			frappe.run_serially([
+				() => frappe.timeout(2.5),
 				() => frm.trigger("set_party_name"),
 				() => frm.trigger("set_party_currency")
 			]);
@@ -124,7 +134,7 @@ frappe.ui.form.on('Loan Application', {
 		]);
 	},
 	"approver": (frm) => {
-		if ( ! frm.doc.approver) {
+		if ( ! frm.docstatus.approver) {
 			frm.set_value("approver_name", undefined);
 		}
 	},
@@ -133,11 +143,48 @@ frappe.ui.form.on('Loan Application', {
 			frm.trigger("update_approved_gross_amount");
 		}
 
-		frm.trigger("calculate_loan_amount")
+		frm.trigger("calculate_loan_amount");
 	},
 	"legal_expenses_rate": (frm) => frm.trigger("calculate_loan_amount"),
 	"approved_gross_amount": (frm) => frm.trigger("calculate_loan_amount"),
+	"repayment_periods": (frm) => frappe.run_serially([
+		() => frm.trigger("validate_repayment_periods"),
+		() => frm.trigger("calculate_loan_amount")
+	]),
 	"repayment_frequency": (frm) => frm.trigger("update_interest_rate_label"),
+	"loan_type": (frm) => {
+		if ( ! frm.doc.loan_type) {
+			return 0; // exit code is zero
+		}
+
+		frappe.db.get_value(frm.fields_dict.loan_type.df.options, frm.doc.loan_type, "*")
+			.done((response) => {
+				let loan_type = response.message;
+
+				if ( loan_type && ! loan_type["enabled"]) {
+					frappe.run_serially([
+						() => frm.set_value("loan_type", undefined),
+						() => frappe.throw(__("{0}: {1} is disabled.", 
+							[frm.fields_dict.loan_type.df.options, loan_type.loan_name]))
+					]);
+				}
+
+				$.map([
+					"currency",
+					"interest_type",
+					"legal_expenses_rate",
+					"repayment_day_of_the_month",
+					"repayment_day_of_the_week",
+					"repayment_days_after_cutoff",
+					"repayment_frequency",
+				], fieldname => frm.set_value(fieldname, loan_type[fieldname]));
+				
+				let repayment_interest_rate = flt(loan_type["interest_rate"]) /
+					fimax.utils.frequency_in_years(frm.doc.repayment_frequency);
+
+				frm.set_value("interest_rate", repayment_interest_rate);
+			});
+	},
 	"update_interest_rate_label": (frm) => {
 		let new_label = __("Interest Rate ({0})", [frm.doc.repayment_frequency]);
 		frm.set_df_property("interest_rate", "label", new_label);
@@ -146,13 +193,22 @@ frappe.ui.form.on('Loan Application', {
 		frm.add_custom_button(__("Approve"), () => frm.trigger("approve_loan_appl"), __("Action"));
 	},
 	"add_deny_button": (frm) => {
-		frm.add_custom_button("Deny", () => frm.trigger("deny_loan_appl"), __("Action"));
+		frm.add_custom_button(__("Deny"), () => frm.trigger("deny_loan_appl"), __("Action"));
 	},
 	"add_make_loan_button": (frm) => {
-		frm.add_custom_button("Make", () => frm.trigger("make_loan"), __("Loan"));
+		frm.add_custom_button(__("Make"), () => frm.trigger("make_loan"), __("Loan"));
 	},
 	"add_view_loan_button": (frm) => {
-		frm.add_custom_button("View", () => frm.trigger("view_loan"), __("Loan"));
+		frm.add_custom_button(__("View"), () => frm.trigger("view_loan"), __("Loan"));
+	},
+	"add_new_customer_button": (frm) => {
+		frm.add_custom_button(__("Customer"), () => frm.trigger("new_customer"), __("New"));
+	},
+	"add_new_supplier_button": (frm) => {
+		frm.add_custom_button(__("Supplier"), () => frm.trigger("new_supplier"), __("New"));
+	},
+	"add_new_employee_button": (frm) => {
+		frm.add_custom_button(__("Employee"), () => frm.trigger("new_employee"), __("New"));
 	},
 	"show_hide_party_name": (frm) => {
 		frm.toggle_display("party_name", frm.doc.party != frm.doc.party_name);
@@ -176,6 +232,8 @@ frappe.ui.form.on('Loan Application', {
 			"interest_type",
 		], 
 			(field) => frm.toggle_enable(field, frappe.session.user == frm.doc.owner));
+
+		frm.toggle_enable("approved_gross_amount", ! ["Approved", "Rejected"].includes(frm.doc.status));
 	},
 	"validate": (frm) => {
 		$.map([
@@ -194,9 +252,8 @@ frappe.ui.form.on('Loan Application', {
 				() => frm.trigger("calculate_requested_net_amount"),
 				() => frm.trigger("calculate_approved_net_amount"),
 			]);
-		} else {
+		} else { 
 			frm.doc.legal_expenses_amount = 0.000;
-			frm.doc.requested_gross_amount = 0.000;
 			frm.doc.approved_net_amount = 0.000;
 		}
 	},		
@@ -206,8 +263,8 @@ frappe.ui.form.on('Loan Application', {
 		refresh_field("legal_expenses_amount");
 	},
 	"calculate_requested_net_amount": (frm) => {
-		frm.doc.requested_net_amount = flt(frm.doc.legal_expenses_amount) 
-			+ flt(frm.doc.requested_gross_amount);
+		frm.doc.requested_net_amount = flt(frm.doc.requested_gross_amount)
+			* flt(flt(frm.doc.legal_expenses_rate / 100.000) + 1);
 		refresh_field("requested_net_amount");
 	},
 	"calculate_approved_net_amount": (frm) => {
@@ -267,5 +324,17 @@ frappe.ui.form.on('Loan Application', {
 			doc = frappe.model.sync(doc)[0];
 			frappe.set_route("Form", doc.doctype, doc.name);
 		}).fail((exec) => frappe.msgprint(__("There was an error while creating the Loan")));
+	},
+	"new_customer": (frm) => {
+		fimax.loan_appl.url = frappe.get_route();
+		frappe.new_doc("Customer");
+	},
+	"new_supplier": (frm) => {
+		fimax.loan_appl.url = frappe.get_route();
+		frappe.new_doc("Supplier");
+	},
+	"new_employee": (frm) => {
+		fimax.loan_appl.url = frappe.get_route();
+		frappe.new_doc("Employee");
 	}
 });
