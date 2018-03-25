@@ -60,3 +60,57 @@ $.extend(fimax.utils, {
 	}
 });
 
+_f.Frm.prototype._save = function (save_action, callback, btn, on_error, resolve) {
+	var _this2 = this;
+
+	var me = this;
+	if (!save_action) save_action = "Save";
+	this.validate_form_action(save_action, resolve);
+
+	if ((!this.meta.in_dialog || this.in_form) && !this.meta.istable) {
+		frappe.utils.scroll_to(0);
+	}
+	var after_save = function after_save(r) {
+		if (!r.exc) {
+			if (["Save", "Update", "Amend"].indexOf(save_action) !== -1) {
+				frappe.utils.play_sound("click");
+			}
+
+			me.script_manager.trigger("after_save");
+			// me.refresh();
+			me.reload_doc();
+		} else {
+			if (on_error) {
+				on_error();
+			}
+		}
+		callback && callback(r);
+		resolve();
+	};
+
+	var fail = function fail() {
+		btn && $(btn).prop("disabled", false);
+		if (on_error) {
+			on_error();
+		}
+		resolve();
+	};
+
+	if (save_action != "Update") {
+		frappe.validated = true;
+		frappe.run_serially([function () {
+			return _this2.script_manager.trigger("validate");
+		}, function () {
+			return _this2.script_manager.trigger("before_save");
+		}, function () {
+			if (!frappe.validated) {
+				fail();
+				return;
+			}
+
+			frappe.ui.form.save(me, save_action, after_save, btn);
+		}]).catch(fail);
+	} else {
+		frappe.ui.form.save(me, save_action, after_save, btn);
+	}
+};
