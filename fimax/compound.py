@@ -34,7 +34,7 @@ def get_interest_amount(balance, rate, periods, capitalizations=12):
 
 	return flt(balance) * flt(capitalization_rate)
 
-def get_capital(balance, rate, periods, capitalizations=12):
+def get_capital_amount(balance, rate, periods, capitalizations=12):
 	"""Calculate using compound interest the capital amount"""
 	interest_amount = get_interest_amount(balance, rate, periods)
 	repayment_amount = get_repayment_amount(balance, rate, periods)
@@ -43,8 +43,7 @@ def get_capital(balance, rate, periods, capitalizations=12):
 
 def get_total_capital_amount(amount, rate, periods):
 	"""Calculate using compound interest the total capital amount"""
-	capital_amount = get_capital(amount, rate, periods)
-	return flt(capital_amount) * flt(periods)
+	return flt(amount) * flt(1.0000)
 
 def get_as_array(amount, rate, periods):
 	repayment_schedule = []
@@ -60,21 +59,23 @@ def get_as_array(amount, rate, periods):
 	periods = cint(periods)
 	for period in xrange(periods):
 
-		interest_accumulated += get_interest_amount(amount, rate, periods)
-		capital_accumulated += get_capital(amount, rate, periods)
-		principal_balance += get_repayment_amount(amount, rate, periods)
+		interest_amount = get_interest_amount(capital_balance, rate, periods)
+		capital_amount = repayment_amount - interest_amount
 
-		interest_balance -= get_interest_amount(amount, rate, periods)
-		capital_balance -= get_capital(amount, rate, periods)
-		total_balance -= get_repayment_amount(amount, rate, periods)
+		interest_accumulated += interest_amount
+		capital_accumulated += capital_amount
+		principal_balance += repayment_amount
 
-		interest = get_interest_amount(principal_balance, rate, periods)
-		capital = get_capital(principal_balance, rate, periods)
+		interest_balance -= interest_amount
+		capital_balance -= capital_amount
+		total_balance -= repayment_amount
 
 		opts = frappe._dict({
-			"interest": interest,
-			"capital": capital,
+			"idx": period +1,
+			"interest_amount": interest_amount,
+			"capital_amount": capital_amount,
 			"repayment_amount": repayment_amount,
+			"principal_balance": principal_balance,
 			"capital_accumulated": capital_accumulated,
 			"interest_accumulated": interest_accumulated,
 			"interest_balance": interest_balance if interest_balance > 0.000 else 0.000,

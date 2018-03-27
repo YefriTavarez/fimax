@@ -36,9 +36,10 @@ def get_as_array(amount, rate, periods):
 	repayment_schedule = []
 	capital_accumulated = 0.000
 	interest_accumulated = 0.000
+	principal_balance = 0.000
 
-	interest = get_interest_amount(amount, rate, periods)
-	capital = get_capital_amount(amount, rate, periods)
+	interest_amount = get_interest_amount(amount, rate, periods)
+	capital_amount = get_capital_amount(amount, rate, periods)
 	repayment_amount = get_repayment_amount(amount, rate, periods)
 
 	interest_balance = get_total_interest_amount(amount, rate, periods)
@@ -50,15 +51,18 @@ def get_as_array(amount, rate, periods):
 
 		interest_accumulated += get_interest_amount(amount, rate, periods)
 		capital_accumulated += get_capital_amount(amount, rate, periods)
+		principal_balance += get_repayment_amount(amount, rate, periods)
 
 		interest_balance -= get_interest_amount(amount, rate, periods)
 		capital_balance -= get_capital_amount(amount, rate, periods)
 		total_balance -= get_repayment_amount(amount, rate, periods)
 
 		opts = frappe._dict({
-			"interest": interest,
-			"capital": capital,
+			"idx": period +1,
+			"interest_amount": interest_amount,
+			"capital_amount": capital_amount,
 			"repayment_amount": repayment_amount,
+			"principal_balance": principal_balance,
 			"capital_accumulated": capital_accumulated,
 			"interest_accumulated": interest_accumulated,
 			"interest_balance": interest_balance if interest_balance > 0.000 else 0.000,
