@@ -14,7 +14,7 @@ frappe.ui.form.on('Employee', {
 		frappe.model.set_value(url[1], url[2], "party", frm.docname);
 		frappe.model.set_value(url[1], url[2], "party_name", frm.doc.employee_name);
 
-		frappe.set_route(url);
+		setTimeout(() => frappe.set_route(url), 500);
 
 		delete fimax.loan_appl.url;
 	}

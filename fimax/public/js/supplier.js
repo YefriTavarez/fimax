@@ -18,7 +18,7 @@ frappe.ui.form.on('Supplier', {
 			frappe.model.set_value(url[1], url[2], "currency", frm.doc.default_currency);
 		}
 
-		frappe.set_route(url);
+		setTimeout(() => frappe.set_route(url), 500);
 
 		delete fimax.loan_appl.url;
 	}
