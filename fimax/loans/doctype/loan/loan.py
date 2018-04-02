@@ -7,35 +7,47 @@ import frappe
 from frappe.model.document import Document
 
 from fimax.api import rate_to_decimal as dec
+from fimax.api import create_loan_from_appl
+
 from fimax import simple
 from fimax import compound
 
 from frappe.utils import add_months
+from frappe import _ as __
 
 class Loan(Document):
 	def validate(self):
 		self.set_missing_values()
 
 	def before_insert(self):
-		frappe.msgprint("before_insert")
+		pass
 
 	def after_insert(self):
-		frappe.msgprint("after_insert")
+		pass
 
 	def before_submit(self):
-		frappe.msgprint("before_submit")
+		pass
 
 	def on_submit(self):
-		frappe.msgprint("on_submit")
+		pass
 
 	def before_cancel(self):
-		frappe.msgprint("before_cancel")
+		pass
 
 	def on_cancel(self):
-		frappe.msgprint("on_cancel")
+		pass
 
 	def on_trash(self):
-		frappe.msgprint("on_trash")
+		pass
+
+	def make_loan(self):
+		if self.loan_application:
+			loan_appl = frappe.get_doc(self.meta.get_field("loan_application").options, 
+				self.loan_application)
+
+			self.evaluate_loan_application(loan_appl)
+
+			return create_loan_from_appl(loan_appl)
 
 	def set_missing_values(self):
 		# simple or compound variable
@@ -69,5 +81,18 @@ class Loan(Document):
 			})
 
 			self.append("loan_schedule", row)
+
+	def evaluate_loan_application(self, loan_appl):
+		if loan_appl.docstatus == 0:
+			frappe.throw(__("Submit this Loan Application first!"))
+
+		elif loan_appl.docstatus == 2:
+			frappe.throw(__("The selected Loan Application is already cancelled!"))
+
+		if frappe.db.exists("Loan", { 
+			"loan_application": loan_appl.name ,
+			"docstatus": ["!=", "2"]
+		}):
+			frappe.throw(__("The selected Loan Application already has Loan document attached to it!"))
 
 

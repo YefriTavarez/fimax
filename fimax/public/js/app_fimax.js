@@ -57,6 +57,9 @@ $.extend(fimax.utils, {
 			"half-yearly": 2,
 			"yearly": 1
 		}[new String(frequency).toLocaleLowerCase()];
+	},
+	"view_doc": (doc) => {
+		frappe.set_route("Form", doc.doctype, doc.name);
 	}
 });
 

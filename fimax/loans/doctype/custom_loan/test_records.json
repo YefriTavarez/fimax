@@ -1,0 +1,17 @@
+[
+	{
+		"asset_type": "",
+		"currency": "DOP",
+		"doctype": "Custom Loan",
+		"enabled": 1,
+		"interest_rate": 1.2,
+		"interest_type": "Simple",
+		"legal_expenses_rate": 10,
+		"loan_name": "Home Loan",
+		"maximum_loan_amount": 1500000,
+		"repayment_day_of_the_month": "30",
+		"repayment_day_of_the_week": "1",
+		"repayment_days_after_cutoff": "1",
+		"repayment_frequency": "Monthly"
+	}
+]

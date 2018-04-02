@@ -12,7 +12,6 @@ from fimax.api import rate_to_decimal as dec
 
 from fimax import simple, compound
 
-
 class LoanApplication(Document):
 	def validate(self):
 		self.set_missing_values()

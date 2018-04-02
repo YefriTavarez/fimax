@@ -11,11 +11,15 @@ frappe.ui.form.on('Loan Application', {
 		$.map(event_list, (event) => frm.trigger(event));
 	},
 	"onload": (frm) => {
-		let event_list = ["set_approver"];
+		let event_list = ["set_approver", "set_defaults"];
 		$.map(event_list, (event) => frm.trigger(event));
 	},
 	"set_queries": (frm) => {
 		let queries = ["set_party_type_query"];
+		$.map(queries, (event) => frm.trigger(event));
+	},
+	"set_defaults": (frm) => {
+		let queries = ["set_default_repayment_day"];
 		$.map(queries, (event) => frm.trigger(event));
 	},
 	"add_fecthes": (frm) => {
@@ -63,9 +67,9 @@ frappe.ui.form.on('Loan Application', {
 		}
 
 		if (frm.is_new()) {
-			frm.trigger("add_new_customer_button");
-			frm.trigger("add_new_supplier_button");
-			frm.trigger("add_new_employee_button");
+			let button_list = ["add_new_customer_button",
+				"add_new_supplier_button", "add_new_employee_button"];
+			$.map(button_list, (event) => frm.trigger(event));
 
 			frm.page.set_inner_btn_group_as_primary(__("New"));
 		}
@@ -91,6 +95,20 @@ frappe.ui.form.on('Loan Application', {
 			};
 		});
 	},
+	"set_default_repayment_day": (frm) => {
+		if (!frm.is_new()) {
+			return 0;
+		}
+
+		let js_date = new Date();
+		let day_of_the_month = js_date.getDate();
+
+		if (day_of_the_month == 31) {
+			day_of_the_month = 30;
+		}
+
+		frm.set_value("repayment_day_of_the_month", day_of_the_month);
+	},
 	"party_type": (frm) => {
 		frm.trigger("clear_party") && frm.trigger("refresh");
 	},
@@ -99,7 +117,7 @@ frappe.ui.form.on('Loan Application', {
 			frm.trigger("clear_party_name");
 		} else {
 			frappe.run_serially([
-				// () => frappe.timeout(2.5),
+				() => frappe.timeout(0.5),
 				() => frm.trigger("set_party_name"),
 				() => frm.trigger("set_party_currency")
 			]);
@@ -199,7 +217,7 @@ frappe.ui.form.on('Loan Application', {
 	"repayment_periods": (frm) => {
 		frappe.run_serially([
 			() => frm.trigger("validate_repayment_periods"),
-			() => frm.trigger("update_repayment_amount")
+			() => frm.trigger("calculate_loan_amount")
 		]);
 	},
 	"legal_expenses_rate": (frm) => {
@@ -405,7 +423,7 @@ frappe.ui.form.on('Loan Application', {
 		frm.call("validate").then(() => frm.refresh());
 	},
 	"calculate_loan_amount": (frm) => {
-		let can_proceed = frm.doc.requested_gross_amount && frm.doc.legal_expenses_rate && frm.doc.repayment_periods;
+		let can_proceed = frm.doc.requested_gross_amount && frm.doc.legal_expenses_rate;
 
 		if (can_proceed) {
 			frappe.run_serially([
@@ -415,7 +433,11 @@ frappe.ui.form.on('Loan Application', {
 				() => frappe.timeout(0.5),
 				() => frm.trigger("calculate_approved_net_amount"),
 				() => frappe.timeout(0.5),
-				() => frm.trigger("update_repayment_amount")
+				() => {
+					if (frm.doc.repayment_periods) {
+						frm.trigger("update_repayment_amount")
+					}
+				}
 			]);
 		} else {
 			frm.doc.legal_expenses_amount = 0.000;
