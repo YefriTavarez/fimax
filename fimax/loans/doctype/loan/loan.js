@@ -16,7 +16,7 @@ frappe.ui.form.on('Loan', {
 		$.map(event_list, (event) => frm.trigger(event));
 	},
 	"set_queries": (frm) => {
-		let event_list = ["set_loan_application_query"];
+		let event_list = ["set_loan_application_query", "set_party_account_query"];
 		$.map(event_list, (event) => frm.trigger(event));
 	},
 	"add_custom_buttons": (frm) => {
@@ -57,6 +57,17 @@ frappe.ui.form.on('Loan', {
 			return {
 				"filters": {
 					"docstatus": 1
+				}
+			};
+		});
+	},
+	"set_party_account_query": (frm) => {
+		frm.set_query("party_account", () => {
+			return {
+				"filters": {
+					"is_group": 0,
+					"account_currency": frm.doc.currency,
+					"account_type": "Receivable"
 				}
 			};
 		});
@@ -140,5 +151,21 @@ frappe.ui.form.on('Loan', {
 				() => frm.trigger("toggle_loan_type_mandatory_fields")
 			]);
 		}
-	}
+	},
+	"mode_of_payment": (frm) => {
+		frappe.db.get_value("Mode of Payment Account", {
+			"parent": frm.doc.mode_of_payment,
+			"company": frm.doc.company
+		}, ["default_account"]).then((response) => {
+			let data = response.message;
+
+			if (! (data && data["default_account"])) {
+				frappe.msgprint(repl(`Please set default Cash or Bank account in Mode of Payment 
+					<a href="/desk#Form/Mode of Payment/%(mode_of_payment)s">%(mode_of_payment)s</a>
+					for company %(company)s`, frm.doc));
+
+				frm.set_value("mode_of_payment", undefined);
+			}
+		});
+	},
 });
