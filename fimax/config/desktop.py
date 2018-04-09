@@ -47,7 +47,7 @@ def get_data():
 			"color": "#3f51b5",
 			"icon": "fa fa-car" ,
 			"type": "link",
-			"link": "List/Card/List"
+			"link": "List/Car/List"
 		}, 
 		{
 			"module_name": "Property",
