@@ -21,7 +21,7 @@ frappe.ui.form.on('Loan', {
 	},
 	"add_custom_buttons": (frm) => {
 		if (frm.is_new()) {
-			let button_list = ["add_new_vehicule_button",
+			let button_list = ["add_new_vehicle_button",
 				"add_new_property_button"];
 			$.map(button_list, (event) => frm.trigger(event));
 
@@ -124,13 +124,13 @@ frappe.ui.form.on('Loan', {
 		frm.call("update_repayment_schedule_dates")
 			.done(() => frm.refresh());
 	},
-	"add_new_vehicule_button": (frm) => {
-		frm.add_custom_button(__("Vehicle"), () => frm.trigger("new_vehicule"), __("New"));
+	"add_new_vehicle_button": (frm) => {
+		frm.add_custom_button(__("Vehicle"), () => frm.trigger("new_vehicle"), __("New"));
 	},
 	"add_new_property_button": (frm) => {
 		frm.add_custom_button(__("Property"), () => frm.trigger("new_property"), __("New"));
 	},
-	"new_vehicule": (frm) => {
+	"new_vehicle": (frm) => {
 		frappe.run_serially([
 			() => frm.trigger("remember_current_route"),
 			() => frm.set_value("asset_type", "Car"),
