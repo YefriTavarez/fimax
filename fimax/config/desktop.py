@@ -31,7 +31,7 @@ def get_data():
 			"color": "#ff5722",
 			"icon": "fa fa-fire" ,
 			"type": "link",
-			"link": "List/Amortization Tool/List"
+			"link": "Form/Amortization Tool"
 		}, 
 		{
 			"module_name": "Insurance Card",
