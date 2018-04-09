@@ -12,15 +12,19 @@ from fimax.api import create_loan_from_appl
 from fimax import simple
 from fimax import compound
 
-from frappe.utils import add_months
+from frappe.utils import flt, cint, cstr
 from frappe import _ as __
 
 class Loan(Document):
 	def validate(self):
 		self.set_missing_values()
+		self.update_repayment_schedule_dates()
 
 	def before_insert(self):
-		pass
+		if not self.loan_application:
+			frappe.throw(__("Missing Loan Application!"))
+
+		self.validate_loan_application()
 
 	def after_insert(self):
 		pass
@@ -72,15 +76,39 @@ class Loan(Document):
 
 		for row in soc.get_as_array(self.total_capital_amount,
 			dec(self.interest_rate), self.repayment_periods):
+
+			repayment_date = frappe.utils.add_months(self.posting_date, row.idx)
 			
 			row.update({
 				"status": "Pending",
-				"repayment_date": add_months(self.posting_date, row.idx),
+				"repayment_date": self.get_correct_date(repayment_date),
 				"outstanding_amount": row.repayment_amount,
 				"paid_amount": 0.000
 			})
 
 			self.append("loan_schedule", row)
+
+	def get_correct_date(self, repayment_date):
+		last_day_of_the_month = frappe.utils.get_last_day(repayment_date)
+		first_day_of_the_month = frappe.utils.get_first_day(repayment_date)
+
+		if cint(self.repayment_day_of_the_month) > last_day_of_the_month.day:
+			return last_day_of_the_month.replace(last_day_of_the_month.year, 
+				last_day_of_the_month.month, last_day_of_the_month.day)
+		else:
+			return frappe.utils.add_days(first_day_of_the_month, 
+				cint(self.repayment_day_of_the_month) - 1)
+
+	def update_repayment_schedule_dates(self):
+		for row in self.loan_schedule:
+			row.repayment_date = self.get_correct_date(row.repayment_date) 
+
+	def validate_loan_application(self):
+		if self.loan_application:
+			loan_appl = frappe.get_doc(self.meta.get_field("loan_application").options, 
+				self.loan_application)
+
+			self.evaluate_loan_application(loan_appl)
 
 	def evaluate_loan_application(self, loan_appl):
 		if loan_appl.docstatus == 0:
@@ -94,5 +122,3 @@ class Loan(Document):
 			"docstatus": ["!=", "2"]
 		}):
 			frappe.throw(__("The selected Loan Application already has Loan document attached to it!"))
-
-
