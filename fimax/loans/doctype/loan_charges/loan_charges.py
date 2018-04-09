@@ -9,6 +9,8 @@ from frappe.model.document import Document
 from frappe.utils import flt, cint, cstr, nowdate
 from frappe import _ as __
 
+from fimax.utils import SUBMITTED as submitted
+
 class LoanCharges(Document):
 	def validate(self):
 		self.validate_amounts()
@@ -50,6 +52,20 @@ class LoanCharges(Document):
 
 		self.outstanding_amount = outstanding_amount
 			
+
+	def validate_reference_name(self):
+		if not self.reference_type:
+			frappe.throw(__("Missing Repayment Type!"))
+
+		if not self.reference_name:
+			frappe.throw(__("Missing Repayment Name!"))
+
+		docstatus = frappe.db.get_value(self.reference_type, 
+			self.reference_name, "docstatus")
+
+		if docstatus is not submitted:
+			frappe.throw(__("Selected {0} is not submitted!".format(self.reference_type)))
+
 
 	def validate_amounts(self):
 		if not flt(self.amount):
