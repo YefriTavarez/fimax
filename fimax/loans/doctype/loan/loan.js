@@ -55,6 +55,7 @@ frappe.ui.form.on('Loan', {
 	"set_loan_application_query": (frm) => {
 		frm.set_query("loan_application", () => {
 			return {
+				"query": "fimax.queries.loan_unlinked_application_query",
 				"filters": {
 					"docstatus": 1
 				}
@@ -118,6 +119,10 @@ frappe.ui.form.on('Loan', {
 				}
 			}); 
 		}
+	},
+	"repayment_day_of_the_month": (frm) => {
+		frm.call("update_repayment_schedule_dates")
+			.done(() => frm.refresh());
 	},
 	"add_new_vehicule_button": (frm) => {
 		frm.add_custom_button(__("Vehicle"), () => frm.trigger("new_vehicule"), __("New"));
