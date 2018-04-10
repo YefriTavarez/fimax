@@ -1,0 +1,43 @@
+[
+	{
+		"buildable": 1,
+		"condition": "Refix",
+		"construction_age": 2,
+		"construction_area": 180,
+		"construction_type": "Apartment",
+		"construction_year": 2016,
+		"doctype": "Property",
+		"floors": 12,
+		"has_balcony": 1,
+		"has_elevator": 1,
+		"has_pool": 0,
+		"has_power_plant": 1,
+		"land_area": 200,
+		"land_line": null,
+		"level": 8,
+		"full_address": "Villa Juan, Residencia Estudiantil",
+		"property_value": 50000000,
+		"user_remarks": null
+	},	
+	{
+		"buildable": 1,
+		"condition": "New",
+		"construction_age": 4,
+		"construction_area": 140,
+		"construction_type": "Apartment",
+		"construction_year": 2014,
+		"doctype": "Property",
+		"floors": 3,
+		"has_balcony": 1,
+		"has_elevator": 0,
+		"has_pool": 0,
+		"has_power_plant": 0,
+		"land_area": 200,
+		"land_line": null,
+		"level": 3,
+		"full_address": "Residencial de Llano, Calle Manzana No. 9",
+		"property_value": 10000000,
+		"user_remarks": null
+	},
+
+]
