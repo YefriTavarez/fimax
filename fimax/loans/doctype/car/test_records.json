@@ -1,0 +1,58 @@
+[
+	{
+		"acquisition_date": "2010-01-05",
+		"chassis_no": "7B024C0666",
+		"color": "Blue",
+		"doctype": "Car",
+		"license_plate": null,
+		"make": "Hyundai",
+		"model": "Sonata N20",
+		"vehicle_last_odometer": 155832,
+		"vehicle_type": "Sedan",
+		"vehicle_value": 285000,
+		"vehicle_year": 2009,
+		"website_description": null
+	},
+	{
+		"acquisition_date": "2010-01-05",
+		"chassis_no": "5ED083E94A",
+		"color": "Gray",
+		"doctype": "Car",
+		"license_plate": null,
+		"make": "Hyundai",
+		"model": "Sonata N20",
+		"vehicle_last_odometer": 158015,
+		"vehicle_type": "Sedan",
+		"vehicle_value": 285000,
+		"vehicle_year": 2010,
+		"website_description": null
+	},
+	{
+		"acquisition_date": "2010-01-05",
+		"chassis_no": "A139160665",
+		"color": "Gray",
+		"doctype": "Car",
+		"license_plate": null,
+		"make": "Hyundai",
+		"model": "Sonata Y20",
+		"vehicle_last_odometer": 140014,
+		"vehicle_type": "Sedan",
+		"vehicle_value": 356000,
+		"vehicle_year": 2009,
+		"website_description": null
+	},
+	{
+		"acquisition_date": "2010-02-04",
+		"chassis_no": "1B19B01E8E",
+		"color": "White",
+		"doctype": "Car",
+		"license_plate": null,
+		"make": "Hyundai",
+		"model": "Sonata N20",
+		"vehicle_last_odometer": 180041,
+		"vehicle_type": "Sedan",
+		"vehicle_value": 180000,
+		"vehicle_year": 2008,
+		"website_description": null
+	},
+]
