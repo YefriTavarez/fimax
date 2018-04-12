@@ -38,7 +38,8 @@ class TestLoanApplication(unittest.TestCase):
 
 	def create_loan_application(self):
 		self.loan_application = frappe.copy_doc(test_records[0])
-		self.loan_application.insert()
+		self.loan_application.status = "Approved"
+		self.loan_application.submit()
 
 	def test_loan_totals(self):
 		loan_application = self.loan_application
