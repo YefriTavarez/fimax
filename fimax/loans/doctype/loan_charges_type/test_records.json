@@ -5,5 +5,19 @@
 		"loan_charges_name": "_Life Insurance",
 		"repayment_frequency": "Monthly",
 		"repayment_periods": 1
+	},
+	{
+		"description": null,
+		"doctype": "Loan Charges Type",
+		"loan_charges_name": "Capital",
+		"repayment_frequency": "Monthly",
+		"repayment_periods": 1
+	},
+	{
+		"description": null,
+		"doctype": "Loan Charges Type",
+		"loan_charges_name": "Interest",
+		"repayment_frequency": "Monthly",
+		"repayment_periods": 1
 	}
 ]
