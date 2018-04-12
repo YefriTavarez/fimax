@@ -85,7 +85,7 @@ frappe.ui.form.on('Loan', {
 		frappe.db.get_value(frm.fields_dict.loan_type.df.options, frm.doc.loan_type, "asset_type")
 			.done((response) => {
 				let data = response.message;
-				asset_type = data && data["asset_type"];
+				let asset_type = data && data["asset_type"];
 
 				if (asset_type) {
 					frm.toggle_reqd("asset", true);
@@ -94,7 +94,6 @@ frappe.ui.form.on('Loan', {
 					frm.toggle_enable("asset_type", true);
 
 					frm.doc.asset_type = asset_type;
-					frm.doc.asset = undefined;
 				} else {
 					frm.toggle_reqd("asset", false);
 					frm.toggle_reqd("asset_type", false);
@@ -123,6 +122,9 @@ frappe.ui.form.on('Loan', {
 	"repayment_day_of_the_month": (frm) => {
 		frm.call("update_repayment_schedule_dates")
 			.done(() => frm.refresh());
+	},
+	"asset_type": (frm) => {
+		frm.set_value("asset", undefined);
 	},
 	"add_new_vehicle_button": (frm) => {
 		frm.add_custom_button(__("Vehicle"), () => frm.trigger("new_vehicle"), __("New"));

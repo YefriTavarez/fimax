@@ -33,10 +33,10 @@ class Loan(Document):
 		pass
 
 	def on_submit(self):
-		pass
+		self.commit_to_loan_charges()
 
 	def before_cancel(self):
-		pass
+		self.rollback_from_loan_charges()
 
 	def on_cancel(self):
 		pass
@@ -121,4 +121,26 @@ class Loan(Document):
 			"loan_application": loan_appl.name ,
 			"docstatus": ["!=", "2"]
 		}):
-			frappe.throw(__("The selected Loan Application already has Loan document attached to it!"))
+			frappe.throw(__("The selected Loan Application already has a Loan document attached to it!"))
+
+			
+	def commit_to_loan_charges(self):
+		from fimax.install import add_default_loan_charges_type
+		
+		# run this to make sure default loan charges type are set
+		add_default_loan_charges_type()
+
+		for row in self.loan_schedule:
+			capital_loan_charge = row.get_new_loan_charge("Capital", row.capital_amount)
+			capital_loan_charge.submit()
+
+			interest_loan_charge = row.get_new_loan_charge("Interest", row.interest_amount)
+			interest_loan_charge.submit()
+
+	def rollback_from_loan_charges(self):
+		for row in self.loan_schedule:
+			for lct in ['Capital', 'Interest']:
+				capital_loan_charge = row.get_loan_charge(loan_charge_type)
+				
+				capital_loan_charge.cancel()
+				capital_loan_charge.delete()
