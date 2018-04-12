@@ -38,7 +38,7 @@ class LoanCharges(Document):
 		pass
 
 	def set_missing_values(self):
-		self.total_amount = flt(self.amount) + flt(self.fine_amount)
+		self.total_amount = flt(self.amount)
 		self.outstanding_amount = self.total_amount
 
 	def update_outstanding_amount(self):
@@ -54,6 +54,9 @@ class LoanCharges(Document):
 			
 
 	def validate_reference_name(self):
+		if not self.loan:
+			frappe.throw(__("Missing Loan!"))
+
 		if not self.reference_type:
 			frappe.throw(__("Missing Repayment Type!"))
 

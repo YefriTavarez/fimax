@@ -2,33 +2,30 @@
 	{
 		"amount": 5000.00,
 		"doctype": "Loan Charges",
-		"fine_amount": 0.00,
 		"loan_charges_type": "_Life Insurance",
 		"outstanding_amount": 5000.00,
 		"paid_amount": 0.00,
 		"reference_name": "_Life Insurance",
 		"reference_type": "Loan Charges Type",
-		"repayment_date": "2018-04-05",
+		"repayment_date": "3018-04-11",
 		"status": "Pending",
 		"total_amount": 5000.00
 	},
 	{
 		"amount": 5000.00,
 		"doctype": "Loan Charges",
-		"fine_amount": 400.00,
 		"loan_charges_type": "_Life Insurance",
-		"outstanding_amount": 5400.00,
+		"outstanding_amount": 5000.00,
 		"paid_amount": 0.00,
 		"reference_name": "_Life Insurance",
 		"reference_type": "Loan Charges Type",
 		"repayment_date": "3000-04-02",
 		"status": "Pending",
-		"total_amount": 5400.00
+		"total_amount": 5000.00
 	},
 	{
 		"amount": 5000.00,
 		"doctype": "Loan Charges",
-		"fine_amount": 0.00,
 		"loan_charges_type": "_Life Insurance",
 		"outstanding_amount": 5000.00,
 		"paid_amount": 0.00,
@@ -41,66 +38,61 @@
 	{
 		"amount": 5000.00,
 		"doctype": "Loan Charges",
-		"fine_amount": 400.00,
 		"loan_charges_type": "_Life Insurance",
-		"outstanding_amount": 4000.00,
+		"outstanding_amount": 3600.00,
 		"paid_amount": 1400.00,
 		"reference_name": "_Life Insurance",
 		"reference_type": "Loan Charges Type",
 		"repayment_date": "2000-04-02",
 		"status": "Pending",
-		"total_amount": 5400.00
+		"total_amount": 5000.00
 	},	
 	{
 		"amount": 5000.00,
 		"doctype": "Loan Charges",
-		"fine_amount": 400.00,
 		"loan_charges_type": "_Life Insurance",
 		"outstanding_amount": 0.00,
-		"paid_amount": 5400.00,
+		"paid_amount": 5000.00,
 		"reference_name": "_Life Insurance",
 		"reference_type": "Loan Charges Type",
 		"repayment_date": "3000-04-02",
 		"status": "Pending",
-		"total_amount": 5400.00
+		"total_amount": 5000.00
 	},
 	{
 		"amount": 5000.00,
 		"doctype": "Loan Charges",
-		"fine_amount": 400.00,
 		"loan_charges_type": "_Life Insurance",
 		"outstanding_amount": 0.00,
-		"paid_amount": 5400.00,
+		"paid_amount": 5000.00,
 		"reference_name": "_Life Insurance",
 		"reference_type": "Loan Charges Type",
 		"repayment_date": "2000-04-02",
 		"status": "Pending",
-		"total_amount": 5400.00
+		"total_amount": 5000.00
 	},
 	{
 		"amount": 5000.00,
 		"doctype": "Loan Charges",
-		"fine_amount": 400.00,
 		"loan_charges_type": "_Life Insurance",
-		"outstanding_amount": 1400.00,
+		"outstanding_amount": 1000.00,
 		"paid_amount": 4000.00,
 		"reference_name": "_Life Insurance",
 		"reference_type": "Loan Charges Type",
 		"repayment_date": "3000-04-02",
 		"status": "Pending",
-		"total_amount": 5400.00
+		"total_amount": 5000.00
 	},
 	{
 		"amount": 5000.00,
 		"doctype": "Loan Charges",
-		"fine_amount": 400.00,
 		"loan_charges_type": "_Life Insurance",
-		"outstanding_amount": 1400.00,
+		"outstanding_amount": 1000.00,
 		"paid_amount": 4000.00,
 		"reference_name": "_Life Insurance",
 		"reference_type": "Loan Charges Type",
 		"repayment_date": "2000-04-02",
 		"status": "Pending",
-		"total_amount": 5400.00
+		"total_amount": 5000.00
 	}
 ]
