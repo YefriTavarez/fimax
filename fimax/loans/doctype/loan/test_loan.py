@@ -7,6 +7,7 @@ import frappe
 import unittest
 
 from fimax.api import create_loan_from_appl
+from frappe.utils import flt, cint, cstr
 
 test_records = frappe.get_test_records('Loan Application')
 
@@ -27,6 +28,8 @@ class TestLoan(unittest.TestCase):
 			"account_type": "Receivable"
 		})
 
+		loan.loan_application = pick_one_loan_appl()
+
 		loan.insert()
 		self.loan = loan
 
@@ -38,3 +41,38 @@ class TestLoan(unittest.TestCase):
 		self.assertEquals(round(loan.total_payable_amount), 262193.00)
 		self.assertEquals(round(loan.total_interest_amount), 101693.00)
 		self.assertEquals(round(loan.total_capital_amount), loan.loan_amount)
+
+	def test_loan_schedule_dates(self):
+		test_records = frappe.get_test_records('Loan')
+		doc = frappe.get_doc(test_records[1])
+		doc.loan_application = pick_one_loan_appl()
+		doc.mode_of_payment = "Cash"
+		doc.party_account = frappe.get_value("Account", {
+			"account_type": "Receivable"
+		})
+
+		doc.submit()
+
+		self.assertEquals(cstr(doc.loan_schedule[0].repayment_date), "2000-02-29")
+		self.assertEquals(cstr(doc.loan_schedule[1].repayment_date), "2000-03-30")
+		self.assertEquals(cstr(doc.loan_schedule[2].repayment_date), "2000-04-30")
+
+def pick_one_loan_appl():
+	return frappe.db.sql("""SELECT
+			name
+		FROM
+			`tabLoan Application` 
+		WHERE
+			docstatus < 2 
+			AND status != 'Rejected' 
+			AND name NOT IN 
+			(
+				SELECT
+					tabLoan.loan_application 
+				FROM
+					tabLoan 
+				WHERE
+					tabLoan.loan_application = `tabLoan Application`.name 
+					AND tabLoan.docstatus < 2
+			)""", 
+	as_list=True)[0][0]
