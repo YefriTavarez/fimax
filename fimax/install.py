@@ -7,7 +7,7 @@ def before_install():
 def after_install():
 	"""runs after installation"""
 	# update_customer_icons()
-	pass
+	add_default_loan_charges_type()
 
 def add_reqd_roles():
 	"""adds default roles for the app to run"""
@@ -26,6 +26,21 @@ def add_reqd_roles():
 
 	# save the changes to the database
 	frappe.db.commit()
+
+def add_default_loan_charges_type():
+	"""adds default loan charges type for the app to run"""
+	from fimax.hook.loan_charges_type import create_loan_charges_type
+
+	for lctn in ["Capital", "Interest", "Insurance", "Late Payment Fee", "GPS"]:
+		if frappe.db.exists("Loan Charges Type", lctn):
+			continue
+
+		if lctn is "Insurance":
+			doc = create_loan_charges_type(lctn, repayment_frequency="Yearly")
+		else:
+			doc = create_loan_charges_type(lctn)
+
+		doc.save()
 
 def update_customer_icons():
 	"""removes default apps' icon from desktop"""
