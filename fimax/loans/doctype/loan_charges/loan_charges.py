@@ -9,7 +9,7 @@ from frappe.model.document import Document
 from frappe.utils import flt, cint, cstr, nowdate
 from frappe import _ as __
 
-from fimax.utils import SUBMITTED as submitted
+from fimax.utils import DocStatus
 
 class LoanCharges(Document):
 	def validate(self):
@@ -66,7 +66,7 @@ class LoanCharges(Document):
 		docstatus = frappe.db.get_value(self.reference_type, 
 			self.reference_name, "docstatus")
 
-		if docstatus is not submitted:
+		if DocStatus(docstatus) is not DocStatus.SUBMITTED:
 			frappe.throw(__("Selected {0} is not submitted!".format(self.reference_type)))
 
 
