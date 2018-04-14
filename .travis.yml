@@ -29,8 +29,7 @@ before_script:
   - echo "USE mysql;\nGRANT ALL PRIVILEGES ON \`test_frappe\`.* TO 'test_frappe'@'localhost';\n" | mysql -u root -ptravis
 
   - cd ~/frappe-bench
-  - bench get-app erpnext $TRAVIS_BUILD_DIR
-  - bench get-app fimax https://github.com/YefriTavarez/fimax.git 
+  - bench get-app erpnext $TRAVIS_BUILD_DIR 
   - bench use test_site
   - bench reinstall --yes
   - bench build
@@ -51,3 +50,7 @@ jobs:
         - bench --force restore ~/frappe-bench/20171108_190013_955977f8_database.sql.gz --mariadb-root-password travis
         - bench migrate
       env: Patch Testing
+after_install:
+  - bench get-app fimax https://github.com/YefriTavarez/fimax.git
+  - bench install-app fimax
+  - bench run-tests --app fimax
