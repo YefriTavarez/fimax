@@ -140,7 +140,7 @@ class Loan(Document):
 	def rollback_from_loan_charges(self):
 		for row in self.loan_schedule:
 			for lct in ['Capital', 'Interest']:
-				capital_loan_charge = row.get_loan_charge(loan_charge_type)
+				capital_loan_charge = row.get_loan_charge(lct)
 				
 				capital_loan_charge.cancel()
 				capital_loan_charge.delete()
