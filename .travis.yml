@@ -1,5 +1,4 @@
 language: python
-dist: trusty
 
 python:
   - "2.7"
@@ -7,50 +6,33 @@ python:
 services:
   - mysql
 
-install:
-  # fix mongodb travis error
-  - sudo rm /etc/apt/sources.list.d/mongodb*.list
-  - pip install flake8==3.3.0
-  - flake8 . --count --select=E901,E999,F821,F822,F823 --show-source --statistics
-  - sudo rm /etc/apt/sources.list.d/docker.list
-  - sudo apt-get purge -y mysql-common mysql-server mysql-client
-  - nvm install v7.10.0
-  - wget https://raw.githubusercontent.com/frappe/bench/master/playbooks/install.py
-  - sudo python install.py --develop --user travis --without-bench-setup
-  - sudo pip install -e ~/bench
+before_install:
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
 
+install:
+  - sudo apt-get purge -y mysql-common
+  - wget https://raw.githubusercontent.com/frappe/bench/master/install_scripts/setup_frappe.sh
+  - sudo bash setup_frappe.sh --skip-setup-bench --mysql-root-password travis --bench-branch master
+  - sudo pip install --upgrade pip
   - rm $TRAVIS_BUILD_DIR/.git/shallow
-  - bash $TRAVIS_BUILD_DIR/travis/bench_init.sh
+  - cd ~/ && bench init frappe-bench --frappe-path https://github.com/frappe/frappe.git --frappe-branch master
   - cp -r $TRAVIS_BUILD_DIR/test_sites/test_site ~/frappe-bench/sites/
 
-before_script:
-  - mysql -u root -ptravis -e 'create database test_frappe'
-  - echo "USE mysql;\nCREATE USER 'test_frappe'@'localhost' IDENTIFIED BY 'test_frappe';\nFLUSH PRIVILEGES;\n" | mysql -u root -ptravis
-  - echo "USE mysql;\nGRANT ALL PRIVILEGES ON \`test_frappe\`.* TO 'test_frappe'@'localhost';\n" | mysql -u root -ptravis
 
+script:
   - cd ~/frappe-bench
-  - bench get-app erpnext $TRAVIS_BUILD_DIR 
+  - bench get-app erpnext https://github.com/frappe/erpnext.git --branch master
+  - bench get-app fimax https://github.com/YefriTavarez/fimax.git --branch master
   - bench use test_site
-  - bench reinstall --yes
-  - bench build
-  - bench scheduler disable
+  - bench reinstall
+  - bench --site test_site install-app erpnext
+  - bench --site test_site install-app fimax
   - bench start &
   - sleep 10
+  - bench --verbose run-tests --driver Firefox
 
-jobs:
-  include:
-    - stage: test
-      script:
-        - set -e
-        - bench run-tests
-      env: Server Side Test
-    - # stage
-      script:
-        - wget http://build.erpnext.com/20171108_190013_955977f8_database.sql.gz
-        - bench --force restore ~/frappe-bench/20171108_190013_955977f8_database.sql.gz --mariadb-root-password travis
-        - bench migrate
-      env: Patch Testing
-after_script:
-  - bench get-app fimax https://github.com/YefriTavarez/fimax.git
-  - bench install-app fimax
-  - bench run-tests --app fimax
+before_script:
+  - mysql -e 'create database test_frappe'
+  - echo "USE mysql;\nCREATE USER 'test_frappe'@'localhost' IDENTIFIED BY 'test_frappe';\nFLUSH PRIVILEGES;\n" | mysql -u root -ptravis
+  - echo "USE mysql;\nGRANT ALL PRIVILEGES ON \`test_frappe\`.* TO 'test_frappe'@'localhost';\n" | mysql -u root -ptravis
