@@ -139,8 +139,12 @@ class Loan(Document):
 
 	def rollback_from_loan_charges(self):
 		for row in self.loan_schedule:
-			for lct in ['Capital', 'Interest']:
-				capital_loan_charge = row.get_loan_charge(loan_charge_type)
-				
-				capital_loan_charge.cancel()
-				capital_loan_charge.delete()
+			[self.cancel_and_delete_loan_charge(row, lct) 
+				for lct in ('Capital', 'Interest')]
+
+	def cancel_and_delete_loan_charge(self, child, loan_charge_type):
+		capital_loan_charge = child.get_loan_charge(loan_charge_type)
+
+		fimax.utils.delete_doc(capital_loan_charge)		
+
+		frappe.db.commit()
