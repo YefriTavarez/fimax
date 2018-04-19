@@ -9,7 +9,7 @@ services:
 
 before_script:
   - wget https://raw.githubusercontent.com/frappe/bench/master/playbooks/install.py
-  - python install.py --develop --user frappe
+  - python install.py --production --user travis
 
 script:
   - cd ~/frappe-bench
