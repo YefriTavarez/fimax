@@ -8,15 +8,13 @@ services:
   - mysql
 
 before_script:
+  - wget https://raw.githubusercontent.com/frappe/bench/master/playbooks/install.py
+  - python install.py --develop --user frappe
 
-
-#  - cd ~/frappe-bench
-#  - bench use test_site
-#  - bench reinstall --yes
-#  - bench setup-help
-#  - bench scheduler disable
-#  - bench start &
-#  - sleep 20
+script:
+  - cd ~/frappe-bench
+  - bench start &
+  - bench run-tests
 
 install:
   - sudo rm /etc/apt/sources.list.d/mongodb*.list
