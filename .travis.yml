@@ -9,7 +9,8 @@ services:
 
 before_script:
   - wget https://raw.githubusercontent.com/YefriTavarez/bench-v11/master/playbooks/install.py
-  - python install.py --production --user travis
+  - python install.py --develop --user travis --without-bench-setup
+  - sudo pip install -e ~/bench
 
 script:
   - cd ~/frappe-bench
