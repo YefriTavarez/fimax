@@ -17,7 +17,7 @@ def create_desktop_icon(opts):
 
 		return new_desktop_icon(opts)
 
-	existing_doc = frappe.get_doc(opts)
+	existing_doc = frappe.get_doc(opts) # check this out for errors
 	
 	existing_doc.icon = icon
 	existing_doc.color = color

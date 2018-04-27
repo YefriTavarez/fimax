@@ -11,7 +11,7 @@ frappe.ui.form.on('Loan Application', {
 		$.map(event_list, (event) => frm.trigger(event));
 	},
 	"onload": (frm) => {
-		let event_list = ["set_approver", "set_defaults"];
+		let event_list = ["set_approver", "set_defaults", "set_dynamic_labels"];
 		$.map(event_list, (event) => frm.trigger(event));
 	},
 	"set_queries": (frm) => {
@@ -21,6 +21,14 @@ frappe.ui.form.on('Loan Application', {
 	"set_defaults": (frm) => {
 		let queries = ["set_default_repayment_day"];
 		$.map(queries, (event) => frm.trigger(event));
+	},
+	"set_dynamic_labels": (frm) => {
+		$.map(frm.meta.fields, field => {
+			if (field.fieldtype == "Currency") {
+				let new_label = __("{0} ({1})", [field.label, frm.doc.currency]);
+				frm.set_df_property(field.fieldname, "label", new_label);
+			}
+		});
 	},
 	"add_fecthes": (frm) => {
 		let queries = ["add_party_fetch"];
@@ -122,6 +130,9 @@ frappe.ui.form.on('Loan Application', {
 				() => frm.trigger("set_party_currency")
 			]);
 		}
+	},
+	"currency": (frm) => {
+		frm.trigger("set_dynamic_labels");
 	},
 	"set_party_name": (frm) => {
 		let party_field = __("{0}_name", [frm.doc.party_type]);

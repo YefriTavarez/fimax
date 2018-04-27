@@ -12,8 +12,25 @@ frappe.ui.form.on('Loan', {
 		$.map(event_list, (event) => frm.trigger(event));
 	},
 	"onload": (frm) => {
-		let event_list = ["toggle_mandatory_fields"];
+		let event_list = [
+			"toggle_mandatory_fields", 
+			"work_on_exchange_rate", 
+			"work_on_dynamic_labels", 
+		];
+
 		$.map(event_list, (event) => frm.trigger(event));
+	},
+	"validate": (frm) => {
+		let event_list = [
+			"validate_exchange_rate", 
+		];
+
+		$.map(event_list, (event) => frm.trigger(event));
+	},
+	"validate_exchange_rate": (frm) => {
+		if (frm.doc.currency != frm.doc.company_currency && frm.doc.exchange_rate == 1.000) {
+			frappe.msgprint(__("Different currencies have been detected and exchange rate of 1"));
+		}
 	},
 	"set_queries": (frm) => {
 		let event_list = ["set_loan_application_query", "set_party_account_query"];
@@ -73,40 +90,42 @@ frappe.ui.form.on('Loan', {
 			};
 		});
 	},
+	"set_dynamic_labels": (frm) => {
+		$.map(frm.meta.fields, field => {
+			if (field.fieldtype == "Currency") {
+				let new_label = __("{0} ({1})", [field.label, frm.doc.currency]);
+				frm.set_df_property(field.fieldname, "label", new_label);
+			}
+		});
+	},
 	"toggle_mandatory_fields": (frm) => {
 		let event_list = ["toggle_loan_type_mandatory_fields"];
 		$.map(event_list, (event) => frm.trigger(event));
 	},
 	"toggle_loan_type_mandatory_fields": (frm) => {
-		if (!frm.doc.loan_type) {
-			return 0;
-		}
+		if (!frm.doc.loan_type) { return 0; }
 
 		frappe.db.get_value(frm.fields_dict.loan_type.df.options, frm.doc.loan_type, "asset_type")
 			.done((response) => {
 				let data = response.message;
 				let asset_type = data && data["asset_type"];
 
+				$.map(["toggle_reqd", "toggle_enable"], (func) => {
+					frm[func](["asset_type", "asset"], !! asset_type);
+				});
+				
 				if (asset_type) {
-					frm.toggle_reqd("asset", true);
-					frm.toggle_reqd("asset_type", true);
-					frm.toggle_enable("asset", true);
-					frm.toggle_enable("asset_type", true);
-
 					frm.doc.asset_type = asset_type;
 				} else {
-					frm.toggle_reqd("asset", false);
-					frm.toggle_reqd("asset_type", false);
-					frm.toggle_enable("asset", false);
-					frm.toggle_enable("asset_type", false);
-
-					frm.doc.asset_type = undefined;
-					frm.doc.asset = undefined;
+					frm.doc.asset_type = frm.doc.asset = undefined;
 				}
 				
 				frm.refresh_fields();
 					
 			}).fail((exec) => frappe.msgprint(__("There was a problem while loading the party default currency!")));
+	},
+	"currency": (frm) => {
+		frm.trigger("work_on_exchange_rate");
 	},
 	"loan_application": (frm) => {
 		if (frm.doc.loan_application) {
@@ -121,7 +140,7 @@ frappe.ui.form.on('Loan', {
 	},
 	"repayment_day_of_the_month": (frm) => {
 		frm.call("update_repayment_schedule_dates")
-			.done(() => frm.refresh());
+			.done(() => frm.refresh()); // to remove as this is optional now
 	},
 	"asset_type": (frm) => {
 		frm.set_value("asset", undefined);
@@ -174,5 +193,16 @@ frappe.ui.form.on('Loan', {
 				frm.set_value("mode_of_payment", undefined);
 			}
 		});
+	},
+	"work_on_exchange_rate": (frm) => {
+		if (frm.doc.currency == frm.doc.company_currency) {
+			frm.set_value("exchange_rate", 1);
+			frm.toggle_enable("exchange_rate", false);
+		} else {
+			frm.toggle_enable("exchange_rate", true);
+		}
+	},
+	"work_on_dynamic_labels": (frm) => {
+		frm.trigger("set_dynamic_labels");
 	},
 });

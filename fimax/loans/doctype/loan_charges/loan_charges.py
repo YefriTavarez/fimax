@@ -9,6 +9,9 @@ from frappe.model.document import Document
 from frappe.utils import flt, cint, cstr, nowdate
 from frappe import _ as __
 
+from erpnext.accounts.party import get_party_account
+from erpnext.accounts.utils import get_account_currency, get_balance_on
+
 from fimax.utils import DocStatus
 
 class LoanCharges(Document):
@@ -38,7 +41,6 @@ class LoanCharges(Document):
 		pass
 
 	def set_missing_values(self):
-		self.total_amount = flt(self.amount)
 		self.outstanding_amount = self.total_amount
 
 	def update_outstanding_amount(self):
@@ -71,7 +73,7 @@ class LoanCharges(Document):
 
 
 	def validate_amounts(self):
-		if not flt(self.amount):
+		if not flt(self.total_amount):
 			frappe.throw(__("Missing amount!"))
 
 		if flt(self.paid_amount) > flt(self.total_amount):
@@ -95,3 +97,46 @@ class LoanCharges(Document):
 		# it's paid if paid and total amount are equal hence there's not outstanding amount
 		if self.paid_amount == self.total_amount:
 			self.status = "Paid"
+
+	def get_double_matched_entry(self, amount, against):
+		from erpnext.accounts.utils import get_company_default
+
+		base_gl_entry = {
+			"posting_date": self.posting_date,
+			"voucher_type": self.doctype,
+			"voucher_no": self.name,
+			"cost_center": get_company_default(self.company, "cost_center"),
+		}
+
+		debit_gl_entry = frappe._dict(base_gl_entry).update({
+			"party_type": self.party_type,
+			"party": self.party,
+			"account": self.party_account,
+			"account_currency": frappe.get_value("Account", self.party_account, "account_currency"),
+			"against": against,
+			"debit": flt(amount) * flt(self.exchange_rate),
+			"debit_in_account_currency": flt(amount),
+		})
+
+		credit_gl_entry = frappe._dict(base_gl_entry).update({
+			"account": against,
+			"account_currency": frappe.get_value("Account", against, "account_currency"),
+			"against": self.party,
+			"credit":  flt(amount) * flt(self.exchange_rate),
+			"credit_in_account_currency": flt(amount),
+		})
+		
+		return [debit_gl_entry, credit_gl_entry]
+
+	def make_gl_entries(self, cancel=False, adv_adj=False):
+		from erpnext.accounts.general_ledger import make_gl_entries
+
+		# amount that was disbursed from the bank account
+		lent_amount = self.get_lent_amount()
+
+		gl_map = self.get_double_matched_entry(lent_amount, self.disbursement_account)
+		gl_map += self.get_double_matched_entry(self.legal_expenses_amount, self.income_account)
+		gl_map += self.get_double_matched_entry(self.total_interest_amount, self.income_account)
+
+		make_gl_entries(gl_map, cancel=cancel, adv_adj=adv_adj, merge_entries=False)
+	

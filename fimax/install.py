@@ -8,6 +8,7 @@ def after_install():
 	"""runs after installation"""
 	# update_customer_icons()
 	add_default_loan_charges_type()
+	add_reqd_custom_fields()
 
 def add_reqd_roles():
 	"""adds default roles for the app to run"""
@@ -42,6 +43,10 @@ def add_default_loan_charges_type():
 
 		doc.save()
 
+def add_reqd_custom_fields():
+	from fimax.hook.custom_script import add_reqd_custom_fields_in_company
+	add_reqd_custom_fields_in_company()
+	
 def update_customer_icons():
 	"""removes default apps' icon from desktop"""
 

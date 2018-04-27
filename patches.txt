@@ -1,1 +1,2 @@
 bench.patches.v3.deprecate_old_config
+fimax.patches.v2.remove_income_receipt_item_table
