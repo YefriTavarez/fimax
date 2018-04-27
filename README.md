@@ -1,4 +1,4 @@
-## FiMax
+## FiMax (UNDER DEVELOPMENT)
 
 FiMax is an application built on top of [Frappe Framework](https://github.com/frappe/frappe) intended to manage loans a repayment schedules for Customers.
 
