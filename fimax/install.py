@@ -32,19 +32,22 @@ def add_default_loan_charges_type():
 	"""adds default loan charges type for the app to run"""
 	from fimax.hook.loan_charges_type import create_loan_charges_type
 
-	for lctn in ["Capital", "Interest", "Insurance", "Late Payment Fee", "GPS"]:
-		if frappe.db.exists("Loan Charges Type", lctn):
+	loan_charges_type_list = ["Capital", "Interest", "Repayment Amount",
+		"Insurance", "Late Payment Fee", "GPS"]
+
+	for loan_charges_type in loan_charges_type_list:
+		if frappe.db.exists("Loan Charges Type", loan_charges_type):
 			continue
 
-		if lctn is "Insurance":
-			doc = create_loan_charges_type(lctn, repayment_frequency="Yearly")
+		if loan_charges_type in ["Insurance", "GPS"]:
+			doc = create_loan_charges_type(loan_charges_type, repayment_frequency="Yearly")
 		else:
-			doc = create_loan_charges_type(lctn)
+			doc = create_loan_charges_type(loan_charges_type)
 
 		doc.save()
 
 def add_reqd_custom_fields():
-	from fimax.hook.custom_script import add_reqd_custom_fields_in_company
+	from fimax.hook.custom_field import add_reqd_custom_fields_in_company
 	add_reqd_custom_fields_in_company()
 	
 def update_customer_icons():

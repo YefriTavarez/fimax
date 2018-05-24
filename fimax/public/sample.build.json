@@ -1,5 +1,5 @@
 {
 	"js/fimax.min.js": [
-		"public/js/fimax.js"
+		"public/js/app_fimax.js"
 	]
 }

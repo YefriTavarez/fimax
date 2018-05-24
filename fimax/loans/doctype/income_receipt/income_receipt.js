@@ -5,6 +5,11 @@ frappe.ui.form.on('Income Receipt', {
 	"setup": (frm) => {
 		frm.trigger("set_queries");
 	},
+	"refresh": (frm) => {
+		if (!frm.is_new()) {
+			frm.page.show_menu();
+		}
+	},
 	"set_queries": (frm) => {
 		let queries = ["set_loan_query", "set_account_query", 
 			"set_against_account_query", "set_income_account_query"];
@@ -35,7 +40,7 @@ frappe.ui.form.on('Income Receipt', {
 	"set_dynamic_labels": (frm) => {
 		$.map(frm.meta.fields, field => {
 			if (field.fieldtype == "Currency") {
-				let new_label = __("{0} ({1})", [field.label, frm.doc.currency||""]);
+				let new_label = __("{0} ({1})", [field.label, frm.doc.income_account_currency||""]);
 				frm.set_df_property(field.fieldname, "label", new_label);
 			}
 		});
@@ -50,12 +55,18 @@ frappe.ui.form.on('Income Receipt', {
 		frm.trigger("set_dynamic_labels");
 	},
 	"posting_date": (frm) => {
-		frm.trigger("fetch_loan_charges");
+		if (frm.doc.loan) {
+			frm.set_value("fetch_loan_charges");
+		}
 	},
 	"clear_all_fields": (frm) => {
+		let except_list = ["posting_date"];
+
 		$.map(frm.meta.fields, (field) => { 
 			if (!["Section Break", "Column Break"].includes(field.fieldtype)) { 
-				frm.set_value(field.fieldname, undefined); 
+				if (!except_list.includes(field.fieldname)) {
+					frm.set_value(field.fieldname, undefined); 
+				}
 			}
 		});
 	},
@@ -83,7 +94,7 @@ frappe.ui.form.on('Income Receipt', {
 	},
 	"fillup_loan_dependant_fields": (frm) => {
 		let field_list = ["company", "mode_of_payment", 
-			"party_type", "party", "party_name", "currency"];
+			"party_type", "party", "party_name", "income_account_currency"];
 
 		$.map(field_list, field => frm.set_value(field, 
 			locals["Loan"][frm.doc.loan][field]));

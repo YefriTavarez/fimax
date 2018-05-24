@@ -117,3 +117,33 @@ _f.Frm.prototype._save = function (save_action, callback, btn, on_error, resolve
 		frappe.ui.form.save(me, save_action, after_save, btn);
 	}
 };
+
+_f.Frm.prototype.set_indicator_formatter = function(fieldname, get_color, get_text) {
+	var doctype;
+	if (frappe.meta.docfield_map[this.doctype][fieldname]) {
+		doctype = this.doctype;
+	} else {
+		frappe.meta.get_table_fields(this.doctype).every(function(df) {
+			if (frappe.meta.docfield_map[df.options][fieldname]) {
+				doctype = df.options;
+				return false;
+			} else {
+				return true;
+			}
+		});
+	}
+
+	// frappe.meta.docfield_map[doctype][fieldname].formatter = function(value, df, options, doc) {
+	frappe.meta.get_docfield(doctype, fieldname, this.doc.name).formatter = function(value, df, options, doc) {
+		if (value) {
+			return repl('<a class="indicator %(color)s" href="#Form/%(doctype)s/%(name)s">%(label)s</a>', {
+				color: get_color(doc || {}),
+				doctype: df.options,
+				name: value,
+				label: get_text ? get_text(doc) : value
+			});
+		} else {
+			return '';
+		}
+	};
+}

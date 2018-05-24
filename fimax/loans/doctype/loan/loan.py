@@ -221,6 +221,16 @@ class Loan(Document):
 		add_default_loan_charges_type()
 
 		for row in self.loan_schedule:
+			args_list = [("Capital", row.capital_amount)]
+			args_list += [("Interest", row.interest_amount)]
+
+			if not frappe.db.get_single_value("Control Panel", "detail_repayment_amount"):
+				args_list = [("Repayment Amount", row.repayment_amount)]
+
+			for args in args_list:
+				lc = row.get_new_loan_charge(*args)
+				lc.submit()
+
 			capital_loan_charge = row.get_new_loan_charge("Capital", row.capital_amount)
 			capital_loan_charge.submit()
 
