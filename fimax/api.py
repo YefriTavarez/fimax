@@ -27,3 +27,21 @@ def create_loan_from_appl(doc):
 			}
 		}
 	}, target_doc, post_process)
+
+@frappe.whitelist()
+def create_insurance_card_from_loan(doc):
+	from frappe.model.mapper import get_mapped_doc
+
+	if isinstance(doc, basestring):
+		doc = frappe._dict(json.loads(doc))
+
+	def post_process(source_doc, target_doc):
+		target_doc.set_default_values()
+
+	target_doc = frappe.new_doc("Insurance Card")
+
+	return get_mapped_doc(doc.doctype, doc.name, {
+		"Loan": {
+			"doctype": "Insurance Card"
+		}
+	}, target_doc, post_process)

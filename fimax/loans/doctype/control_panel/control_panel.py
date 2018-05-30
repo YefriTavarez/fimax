@@ -7,4 +7,6 @@ import frappe
 from frappe.model.document import Document
 
 class ControlPanel(Document):
-	pass
+	
+	def validate(self):
+		self.validate_value("repayment_periods", ">", 0)
