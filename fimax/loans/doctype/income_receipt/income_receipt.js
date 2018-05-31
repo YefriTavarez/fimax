@@ -209,6 +209,7 @@ frappe.ui.form.on('Income Receipt', {
 				frm.set_value("mode_of_payment", undefined);
 			} else {
 				frm.set_value("income_account", data["default_account"]);
+				frm.trigger("income_account");
 			}
 		});
 	},
