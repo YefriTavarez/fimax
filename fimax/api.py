@@ -29,6 +29,16 @@ def create_loan_from_appl(doc):
 	}, target_doc, post_process)
 
 @frappe.whitelist()
+def get_loan(doctype, docname):
+	doc = frappe.get_doc(doctype, docname)
+
+	income_account_currency = frappe.get_value("Account", 
+		doc.income_account, "account_currency")
+
+	doc.set_onload("income_account_currency", income_account_currency)
+
+	return doc.as_dict()
+
 def create_insurance_card_from_loan(doc):
 	from frappe.model.mapper import get_mapped_doc
 
