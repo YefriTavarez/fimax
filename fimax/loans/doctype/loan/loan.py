@@ -38,16 +38,29 @@ class Loan(Document):
 	def after_insert(self):
 		pass
 
-	def before_submit(self):
-		pass
+	def update_status(self, new_status):
+		options = self.meta.get_field("status").options
+		options_list = options.split("\n")
+
+		self.status = new_status
+
+		self.validate_value("status", "in", options_list, raise_exception=True)
+
+	def toggle_paused_status(self, paused=True):
+		self.update_status("Paused" if paused else "Disbursed")
+
+	def toggle_recovered_status(self, recovered=True):
+		self.update_status("Recovered" if recovered else "Disbursed")
 
 	def on_submit(self):
 		self.make_gl_entries(cancel=False)
 		self.commit_to_loan_charges()
+		self.update_status(new_status="Disbursed")
 
 	def before_cancel(self):
 		self.make_gl_entries(cancel=True)
 		self.rollback_from_loan_charges()
+		self.update_status(new_status="Cancelled")
 
 	def on_cancel(self):
 		pass
@@ -211,6 +224,12 @@ class Loan(Document):
 		}):
 			frappe.throw(__("The selected Loan Application already has a Loan document attached to it!"))
 
+	def get_base_amount_for(self, fieldname):
+		if not self.meta.get_field(fieldname).fieldtype in ('Currency', 'Float'):
+			frappe.throw(__("Field Type for {fieldname} is not aplicable to be returned\
+				as Base Amount".format(fieldname=fieldname)))
+
+		return self.get(fieldname) * self.exchange_rate
 	def get_lent_amount(self):
 		return flt(self.loan_amount) - flt(self.legal_expenses_amount)
 
@@ -229,31 +248,25 @@ class Loan(Document):
 
 			for args in args_list:
 				lc = row.get_new_loan_charge(*args)
+				lc.currency = self.currency
 				lc.submit()
-
-			capital_loan_charge = row.get_new_loan_charge("Capital", row.capital_amount)
-			capital_loan_charge.submit()
-
-			interest_loan_charge = row.get_new_loan_charge("Interest", row.interest_amount)
-			interest_loan_charge.submit()
 
 	def rollback_from_loan_charges(self):
 		for row in self.loan_schedule:
 			[self.cancel_and_delete_loan_charge(row, lct) 
-				for lct in ('Capital', 'Interest')]
+				for lct in ('Capital', 'Interest', 'Repayment Amount')]
 
 	def cancel_and_delete_loan_charge(self, child, loan_charge_type):
 		import fimax.utils
 		
-		loan_charge = child.get_loan_charge(loan_charge_type)
+		for loan_charge in child.get_loan_charge():
+			doc = frappe.get_doc("Loan Charges", loan_charge.name)
 
-		if not loan_charge: return
-		
-		if not loan_charge.status in ("Overdue", "Pending"):
-			frappe.throw(__("Could not cancel Loan because Loan Charge {}:{} is not Pending anymore!"
-				.format(loan_charge.name, loan_charge.loan_charge_type)))
+			if not doc.status in ("Overdue", "Pending"):
+				frappe.throw(__("Could not cancel Loan because Loan Charge {}:{} is not Pending anymore!"
+					.format(doc.name, doc.loan_charge_type)))
 
-		fimax.utils.delete_doc(loan_charge)		
+			fimax.utils.delete_doc(doc, ignore_permissions=True)		
 
 		frappe.db.commit()
 
@@ -265,8 +278,10 @@ class Loan(Document):
 			"voucher_type": self.doctype,
 			"voucher_no": self.name,
 			"cost_center": get_company_default(self.company, "cost_center"),
+			"company": self.company
 		}
 
+		# use frappe._dict to make a copy of the dict and don't modify the original
 		debit_gl_entry = frappe._dict(base_gl_entry).update({
 			"party_type": self.party_type,
 			"party": self.party,
@@ -277,6 +292,7 @@ class Loan(Document):
 			"debit_in_account_currency": flt(amount),
 		})
 
+		# use frappe._dict to make a copy of the dict and don't modify the original
 		credit_gl_entry = frappe._dict(base_gl_entry).update({
 			"account": against,
 			"account_currency": frappe.get_value("Account", against, "account_currency"),
@@ -294,6 +310,7 @@ class Loan(Document):
 		lent_amount = self.get_lent_amount()
 
 		gl_map = self.get_double_matched_entry(lent_amount, self.disbursement_account)
+		# check to see for the posibility to use another account for legal_expenses income
 		gl_map += self.get_double_matched_entry(self.legal_expenses_amount, self.income_account)
 		gl_map += self.get_double_matched_entry(self.total_interest_amount, self.income_account)
 

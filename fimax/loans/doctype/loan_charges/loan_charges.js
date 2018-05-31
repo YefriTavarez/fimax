@@ -6,9 +6,45 @@ frappe.ui.form.on('Loan Charges', {
 		let event_list = ["set_queries"];
 		$.map(event_list, (event) => frm.trigger(event));
 	},
+	"onload": (frm) => {
+		if (!frm.is_new()) {
+			frm.page.show_menu();
+		}
+	},
+	"refresh": (frm) => {
+		let event_list = ["set_dynamic_labels", "set_status_indicator"];
+		$.map(event_list, (event) => frm.trigger(event));
+	},
 	"set_queries": (frm) => {
 		let event_list = ["set_reference_name_query"];
 		$.map(event_list, (event) => frm.trigger(event));
+	},
+	"set_dynamic_labels": (frm) => {
+		$.map(frm.meta.fields, field => {
+			if (field.fieldtype == "Currency") {
+				let new_label = __("{0} ({1})", [field.label, 
+					frm.doc.currency||frappe.defaults.get_default("currency")]);
+
+				frm.set_df_property(field.fieldname, "label", new_label);
+			}
+		});
+	},
+	"set_status_indicator": (frm) => {
+		frm.set_indicator_formatter("status", (doc) => {
+			let colors = {
+				"Pending": "orange",
+				"Overdue": "red",
+				"Partially": "yellow",
+				"Closed": "blue",
+				"Paid": "green",
+			};
+
+			return colors[doc.status] || "grey";
+		}, (doc) => {
+			return __(doc.status);
+		});
+
+		frm.refresh_fields();
 	},
 	"reference_type": (frm)  => {
 		frm.trigger("clear_reference_name");

@@ -7,7 +7,7 @@ class DocStatus(Enum):
 	SUBMITTED = 1
 	CANCELLED = 2
 
-def delete_doc(doc):
+def delete_doc(doc, ignore_permissions=False):
 	if DocStatus(doc.docstatus) is DocStatus.SUBMITTED:
-		doc.cancel()
-	doc.delete()
+		doc.cancel(ignore_permissions=ignore_permissions)
+	doc.delete(ignore_permissions=ignore_permissions)

@@ -27,14 +27,12 @@ class LoanRepaymentSchedule(Document):
 			'total_amount': amount
 		})
 
-	def get_loan_charge(self, loan_charges_type):
+	def get_loan_charge(self):
 		filters_dict = {
 			'repayment_date': cstr(self.repayment_date),
 			'loan': self.parent,
 			'reference_type': self.doctype,
 			'reference_name': self.name,
-			'loan_charges_type': loan_charges_type
 		}
 
-		if frappe.db.exists("Loan Charges", filters_dict):
-			return frappe.get_doc("Loan Charges", filters_dict)
+		return frappe.get_all("Loan Charges", filters_dict)

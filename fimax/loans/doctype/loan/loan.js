@@ -33,7 +33,13 @@ frappe.ui.form.on('Loan', {
 		}
 	},
 	"set_queries": (frm) => {
-		let event_list = ["set_loan_application_query", "set_party_account_query"];
+		let event_list = [
+			"set_loan_application_query", 
+			"set_party_account_query",
+			"set_income_account_query", 
+			"set_disbursement_account_query", 
+		];
+
 		$.map(event_list, (event) => frm.trigger(event));
 	},
 	"add_custom_buttons": (frm) => {
@@ -43,6 +49,8 @@ frappe.ui.form.on('Loan', {
 			$.map(button_list, (event) => frm.trigger(event));
 
 			frm.page.set_inner_btn_group_as_primary(__("New"));
+		} else {
+			// if () {} unfinished
 		}
 	},
 	"set_status_indicators": (frm) => {
@@ -86,6 +94,28 @@ frappe.ui.form.on('Loan', {
 					"is_group": 0,
 					"account_currency": frm.doc.currency,
 					"account_type": "Receivable"
+				}
+			};
+		});
+	},
+	"set_income_account_query": (frm) => {
+		frm.set_query("income_account", () => {
+			return {
+				"filters": {
+					"is_group": 0,
+					"account_currency": frm.doc.currency,
+					"account_type": "Income Account"
+				}
+			};
+		});
+	},
+	"set_disbursement_account_query": (frm) => {
+		frm.set_query("disbursement_account", () => {
+			return {
+				"filters": {
+					"is_group": 0,
+					"account_currency": frm.doc.currency,
+					"account_type": ["in", "Bank, Cash"]
 				}
 			};
 		});
