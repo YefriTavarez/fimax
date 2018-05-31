@@ -2,49 +2,84 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('Insurance Card', {
-	"refresh": (frm) => {
-
+	"refresh": (frm) => {	
 	},
-	"onload": (frm) => {
-		frm.is_new() && frm.trigger("start_date");
-		//Let's add default Fetch for Party
-		party_name = frm.doc.party_type.toLowerCase()+"_name";
-		frm.add_fetch("party", party_name, "party_name");
-
-	},
-	"party_type": (frm) => {
-		// Let's clean those fields first
-		frm.set_value("party","");
-		frm.set_value("party_name","");
-		//then let's unfetch those fields
-		frm.fetch_dict={}
-		//Let's add a new fetch with the correct party
-		party_name = frm.doc.party_type.toLowerCase()+"_name";
-		frm.add_fetch("party", party_name, "party_name");
-
-	},
-	"party": (frm) => {
-		if (!frm.doc.party){
-			frm.set_value("party_name","");
-			return
+	"onload_post_render": (frm) => {
+		if (frm.is_new()) {
+			frm.trigger("start_date");
 		}
 
+		let fields = ["party", "party_type", "party_name", "company"];
+		$.map(fields, (field)=> frm.add_fetch("loan", field, field));
 	},
 	"start_date": (frm) => {
-		frm.set_value("end_date", frappe.datetime.add_months(frm.doc.start_date,12));
+		frm.set_value("end_date", frappe.datetime.add_months(frm.doc.start_date, 12));
 	},
 	"total_amount": (frm) => {
-		frm.trigger("calculate_pending_amount");
+		events = ["calculate_pending_amount", "make_repayment_schedule"];
+		$.map(events, (event) => frm.trigger(event));
 	},
 	"initial_payment_amount": (frm) => {
 		frm.trigger("calculate_pending_amount");
+		if (frm.doc.initial_payment_amount < 0.00) {
+			let a_third_of_total_amt = frm.doc.total_amount * 0.3;
+			
+			frm.set_value("initial_payment_amount", a_third_of_total_amt);
+			frappe.throw(__("Initial Payment Amount should be greater than zero!"));
+		}
+		frm.trigger("make_repayment_schedule");
 	},
 	"calculate_pending_amount": (frm) => {
-		if (frm.doc.initial_payment_amount > frm.doc.total_amount){
-			frm.set_value("initial_payment_amount", 0.00);
-			frappe.msgprint(__(" Initial Amount can't be Higher that Total amount!"));
+		if (frm.doc.initial_payment_amount > frm.doc.total_amount) {
+			frappe.msgprint(__("Initial Payment Amount can't be greater that Total Amount!"));
 		}
 			
-		frm.set_value("pending_amount", frm.doc.total_amount - frm.doc.initial_payment_amount);
+		let pending_amount = frm.doc.total_amount - frm.doc.initial_payment_amount;
+		frm.set_value("pending_amount", pending_amount);
 	},
+	"repayment_periods": (frm) => {
+		let events = ["validate_repayment_periods", "make_repayment_schedule"];
+		$.map(events, (event) => frm.trigger(event));
+	},
+	"validate_repayment_periods": (frm) => {
+		if (frm.doc.repayment_periods <= 0.00) {
+			frm.set_value("repayment_periods", 3.00);
+			frappe.throw(__("Value for Repayment Periods should be greater than zero!"));
+		}
+	},
+	"is_paid_upfront": (frm) => {
+		frm.doc.insurance_repayment_schedule = [];
+		frm.set_value("initial_payment_amount", frm.doc.total_amount);
+	},
+	"make_repayment_schedule": (frm) => {
+		if (frm.doc.total_amount <= 0.00 || frm.doc.is_paid_upfront) { return ; }
+
+		let monthly_insurance_amount = cint(frm.doc.pending_amount / frm.doc.repayment_periods);
+		let pending_amount = frm.doc.pending_amount;
+		let allocated_amount = 0.00;
+		let row_idx = 1;
+
+		frm.doc.insurance_repayment_schedule = [];
+		let row;
+
+		while (pending_amount >= monthly_insurance_amount) {
+			row = frm.add_child("insurance_repayment_schedule", {
+				"repayment_date": frappe.datetime.add_months(frm.doc.start_date, row_idx),
+				"paid_amount": 0.00,
+				"insurance_amount": monthly_insurance_amount,
+				"pending_amount": monthly_insurance_amount,
+				"status": "Pending"
+			});
+
+			pending_amount -= monthly_insurance_amount;
+			allocated_amount += monthly_insurance_amount;
+			row_idx ++;
+		}
+
+		real_pending_amount = frm.doc.pending_amount - allocated_amount;
+		row.insurance_amount += real_pending_amount;
+		row.pending_amount += real_pending_amount;
+
+		frm.refresh_fields();
+	}
 });
