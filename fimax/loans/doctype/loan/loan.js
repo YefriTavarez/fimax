@@ -50,13 +50,9 @@ frappe.ui.form.on('Loan', {
 
 			frm.page.set_inner_btn_group_as_primary(__("New"));
 		} else {
-			// if () {} unfinished
-		}
-		else{
-			let button_list = ["add_new_insurance_card_button", 
-				"add_view_income_recepit_button"];
+			let button_list = ["add_new_insurance_card_button", "add_view_income_recepit_button"];
 			$.map(button_list, (event) => frm.trigger(event));
-			
+
 			frm.page.set_inner_btn_group_as_primary(__("Make"));
 		}
 	},
@@ -221,9 +217,10 @@ frappe.ui.form.on('Loan', {
 
 		frappe.call(opts).done((response) => {
 			let doc = response.message;
-
-			doc = frappe.model.sync(doc)[0];
-			frappe.set_route("Form", doc.doctype, doc.name);
+			if (doc) {
+				doc = frappe.model.sync(doc)[0];
+				frappe.set_route("Form", doc.doctype, doc.name);
+			}
 		}).fail((exec) => frappe.msgprint(__("There was an error while creating the Insurance Card")));
 	},
 	"remember_current_route": (frm) => {

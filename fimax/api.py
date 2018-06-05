@@ -39,6 +39,7 @@ def get_loan(doctype, docname):
 
 	return doc.as_dict()
 
+@frappe.whitelist()
 def create_insurance_card_from_loan(doc):
 	from frappe.model.mapper import get_mapped_doc
 
