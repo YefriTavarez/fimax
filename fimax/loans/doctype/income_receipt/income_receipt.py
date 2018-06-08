@@ -11,6 +11,17 @@ from erpnext.setup.utils import get_exchange_rate
 from frappe.utils import flt, cstr, cint
 
 class IncomeReceipt(Document):
+	def validate(self):
+		pass
+
+	def on_submit(self):
+		self.make_gl_entries(cancel=False)
+		self.update_loan_charges(cancel=False)
+
+	def on_cancel(self):
+		self.make_gl_entries(cancel=True)
+		self.update_loan_charges(cancel=True)
+		
 	def list_loan_charges(self):
 		fields = [
 			"name",
@@ -52,10 +63,10 @@ class IncomeReceipt(Document):
 		self.difference_amount = 0.000
 
 	def get_income_receipt_item(self, loan_doc, charge_doc):
-		against_account_currency = frappe.get_value("Account", self.income_account, "account_currency")
+		self.income_account_currency = frappe.get_value("Account", self.income_account, "account_currency")
 
 		party_exchange_rate = get_exchange_rate(loan_doc.currency, self.currency)
-		against_exchange_rate = get_exchange_rate(against_account_currency, self.currency)
+		against_exchange_rate = get_exchange_rate(self.income_account_currency, self.currency)
 
 		return frappe._dict({
 			"account": loan_doc.party_account,
@@ -63,7 +74,7 @@ class IncomeReceipt(Document):
 			"loan_charges_type": charge_doc.loan_charges_type,
 			"account_currency": loan_doc.currency,
 			"against_account": self.income_account,
-			"against_account_currency": against_account_currency,
+			"against_account_currency": self.income_account_currency,
 			"outstanding_amount": charge_doc.outstanding_amount,
 			"base_outstanding_amount": charge_doc.outstanding_amount * party_exchange_rate,
 			"allocated_amount": charge_doc.outstanding_amount * party_exchange_rate / against_exchange_rate,
@@ -88,3 +99,58 @@ class IncomeReceipt(Document):
 		account_currency = frappe.get_value("Account", income_account, "account_currency")
 
 		return (income_account, account_currency)
+
+	def get_double_matched_entry(self, row):
+		from erpnext.accounts.utils import get_company_default
+
+		base_gl_entry = {
+			"posting_date": self.posting_date,
+			"voucher_type": self.doctype,
+			"voucher_no": self.name,
+			"cost_center": get_company_default(self.company, "cost_center"),
+			"company": self.company
+		}
+
+		# use frappe._dict to make a copy of the dict and don't modify the original
+		debit_gl_entry = frappe._dict(base_gl_entry).update({
+			"account": row.against_account,
+			"account_currency": row.against_account_currency,
+			"against": self.party,
+			"debit": row.base_allocated_amount,
+			"debit_in_account_currency": row.allocated_amount,
+		})
+
+		# use frappe._dict to make a copy of the dict and don't modify the original
+		credit_gl_entry = frappe._dict(base_gl_entry).update({
+			"party_type": self.party_type,
+			"party": self.party,
+			"account": row.account,
+			"account_currency": row.account_currency,
+			"against": row.against_account,
+			"credit": row.base_allocated_amount,
+			"credit_in_account_currency": row.allocated_amount,
+		})
+
+		return [debit_gl_entry, credit_gl_entry]
+
+	def make_gl_entries(self, cancel=False, adv_adj=False):
+		from erpnext.accounts.general_ledger import make_gl_entries
+
+		gl_map = []
+		for row in self.income_receipt_items:
+			gl_map += self.get_double_matched_entry(row)
+			
+		make_gl_entries(gl_map, cancel=cancel, adv_adj=adv_adj, merge_entries=False)
+
+	def update_loan_charges(self, cancel=False):
+		for row in self.income_receipt_items:
+			loan_charge = frappe.get_doc(row.voucher_type, row.voucher_name)
+			if not cancel:
+				loan_charge.paid_amount += row.allocated_amount
+				loan_charge.outstanding_amount -= row.allocated_amount
+			else:
+				loan_charge.paid_amount -= row.allocated_amount
+				loan_charge.outstanding_amount += row.allocated_amount
+
+			loan_charge.update_status()
+			loan_charge.submit()

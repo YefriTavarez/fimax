@@ -19,6 +19,10 @@ class LoanCharges(Document):
 		self.validate_amounts()
 		self.set_missing_values()
 
+	def on_update_after_submit(self):
+		self.validate_amounts()
+		self.update_references(cancel=False)
+
 	def before_insert(self):
 		pass
 
@@ -35,10 +39,28 @@ class LoanCharges(Document):
 		pass
 
 	def on_cancel(self):
-		pass
+		self.update_references(cancel=True)
 
 	def on_trash(self):
 		pass
+
+	def update_references(self, cancel=False):
+		reference = frappe.get_doc(self.reference_type, self.reference_name)
+
+		if cancel:
+			reference.paid_amount -= self.paid_amount
+			reference.outstanding_amount += self.paid_amount
+		else:
+			reference.paid_amount += self.paid_amount
+			reference.outstanding_amount -= self.paid_amount
+
+		if hasattr(reference, "validate_amounts"):
+			reference.validate_amounts()
+
+		if hasattr(reference, "update_status"):
+			reference.update_status()
+			
+		reference.db_update()
 
 	def set_missing_values(self):
 		self.outstanding_amount = self.total_amount
@@ -76,9 +98,13 @@ class LoanCharges(Document):
 		if not flt(self.total_amount):
 			frappe.throw(__("Missing amount!"))
 
-		if flt(self.paid_amount) > flt(self.total_amount):
+		frappe.errprint(self.paid_amount)
+		frappe.errprint(self.total_amount)
+		if flt(self.paid_amount, 2) > flt(self.total_amount, 2):
 			frappe.throw(__("Paid Amount cannot be greater than Total amount!"))
-			
+
+		if flt(self.outstanding_amount) < 0.000:
+			frappe.throw(__("Outstanding Amount cannot be less than zero!"))
 
 	def update_status(self):
 

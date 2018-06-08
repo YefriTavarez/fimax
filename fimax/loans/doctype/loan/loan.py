@@ -253,20 +253,20 @@ class Loan(Document):
 
 	def rollback_from_loan_charges(self):
 		for row in self.loan_schedule:
-			[self.cancel_and_delete_loan_charge(row, lct) 
-				for lct in ('Capital', 'Interest', 'Repayment Amount')]
+			[self.cancel_and_delete_loan_charge(row, loan_charge_type) 
+				for loan_charge_type in ('Capital', 'Interest', 'Repayment Amount')]
 
 	def cancel_and_delete_loan_charge(self, child, loan_charge_type):
 		import fimax.utils
 		
-		for loan_charge in child.get_loan_charge():
-			doc = frappe.get_doc("Loan Charges", loan_charge.name)
+		loan_charge = child.get_loan_charge(loan_charge_type)
+		doc = frappe.get_doc("Loan Charges", loan_charge.name)
 
-			if not doc.status in ("Overdue", "Pending"):
-				frappe.throw(__("Could not cancel Loan because Loan Charge {}:{} is not Pending anymore!"
-					.format(doc.name, doc.loan_charge_type)))
+		if not doc.status in ("Overdue", "Pending"):
+			frappe.throw(__("Could not cancel Loan because Loan Charge {}:{} is not Pending anymore!"
+				.format(doc.name, doc.loan_charge_type)))
 
-			fimax.utils.delete_doc(doc, ignore_permissions=True)		
+		fimax.utils.delete_doc(doc, ignore_permissions=True)		
 
 		frappe.db.commit()
 
