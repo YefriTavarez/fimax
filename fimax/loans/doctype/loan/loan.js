@@ -50,7 +50,10 @@ frappe.ui.form.on('Loan', {
 
 			frm.page.set_inner_btn_group_as_primary(__("New"));
 		} else {
-			// if () {} unfinished
+			let button_list = ["add_new_insurance_card_button", "add_view_income_recepit_button"];
+			$.map(button_list, (event) => frm.trigger(event));
+
+			frm.page.set_inner_btn_group_as_primary(__("Make"));
 		}
 	},
 	"set_status_indicators": (frm) => {
@@ -196,6 +199,23 @@ frappe.ui.form.on('Loan', {
 			() => frappe.timeout(0.5),
 			() => frappe.new_doc("Property")
 		]);
+	},
+	"make_insurance_card": (frm) => {
+		let opts = {
+			"method": "fimax.api.create_insurance_card_from_loan"
+		};
+
+		opts.args = {
+			"doc": frm.doc
+		}
+
+		frappe.call(opts).done((response) => {
+			let doc = response.message;
+			if (doc) {
+				doc = frappe.model.sync(doc)[0];
+				frappe.set_route("Form", doc.doctype, doc.name);
+			}
+		}).fail((exec) => frappe.msgprint(__("There was an error while creating the Insurance Card")));
 	},
 	"remember_current_route": (frm) => {
 		fimax.loan.url = frappe.get_route();
