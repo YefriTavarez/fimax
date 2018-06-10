@@ -2,11 +2,12 @@ import frappe
 
 def before_install():
 	"""runs before installation"""
-	add_reqd_roles()
+	return check_setup_wizard_is_completed()
+
 
 def after_install():
 	"""runs after installation"""
-	# update_customer_icons()
+	add_reqd_roles()
 	add_default_loan_charges_type()
 	add_reqd_custom_fields()
 
@@ -77,3 +78,11 @@ def update_them(icon_list):
 	
 	# save the changes to the database
 	frappe.db.commit()
+
+def check_setup_wizard_is_completed():
+	if not frappe.db.get_default('desktop:home_page') == 'desktop':
+		print()
+		print("Fimax cannot be installed on a fresh site where the setup wizard is not completed")
+		print("You can run the setup wizard and come back to finish with the installation")
+		print()
+		return False
