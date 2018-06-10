@@ -1,0 +1,8 @@
+{
+	"js/fimax.min.js": [
+		"public/js/app_fimax.js"
+	],
+	"css/fimax.min.css": [
+		"public/css/app_fimax.css"
+	]
+}

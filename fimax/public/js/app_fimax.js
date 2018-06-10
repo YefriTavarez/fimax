@@ -2,6 +2,14 @@
 // For license information, please see license.txt
 
 $(frappe).ready((event) => {
+	let user_defaults = frappe.boot.user.defaults;
+
+	if (user_defaults.dark_theme) {
+		frappe.require("/assets/css/fimax.min.css");
+	}
+});
+
+$(frappe).ready((event) => {
 	$.extend(frappe.app, {
 		refresh_notifications: function() {
 			var me = this;

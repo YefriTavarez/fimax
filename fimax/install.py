@@ -48,7 +48,10 @@ def add_default_loan_charges_type():
 		doc.save()
 
 def add_reqd_custom_fields():
+	from fimax.hook.custom_field import add_reqd_custom_fields_in_user
 	from fimax.hook.custom_field import add_reqd_custom_fields_in_company
+	
+	add_reqd_custom_fields_in_user()
 	add_reqd_custom_fields_in_company()
 	
 def update_customer_icons():
