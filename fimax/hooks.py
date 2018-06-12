@@ -28,7 +28,10 @@ web_include_js = "/assets/fimax/js/web_fimax.js"
 # include js in doctype views
 doctype_js = {
 	"DocType" : "public/js/doctype.js",
-	"Customer" : "public/js/customer.js",
+	"Customer" : [
+		"public/js/customer.js",
+		"public/js/jquery.mask.min.js",
+	],
 	"Supplier" : "public/js/supplier.js",
 	"Employee" : "public/js/employee.js",
 	"Company" : [
