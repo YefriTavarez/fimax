@@ -116,7 +116,11 @@ class Loan(Document):
 
 	def set_accounts(self):
 		self.set_party_account()
-		self.income_account = frappe.get_value("Company", self.company, "default_income_account")
+		income_account = frappe.get_value("Company", self.company, "default_income_account")
+
+		if not self.income_account:
+			self.income_account = income_account
+			
 		self.disbursement_account = frappe.get_value("Company", self.company, "default_bank_account")
 		
 	def get_correct_date(self, repayment_date):
