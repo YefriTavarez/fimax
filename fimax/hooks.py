@@ -31,7 +31,10 @@ doctype_js = {
 	"Customer" : "public/js/customer.js",
 	"Supplier" : "public/js/supplier.js",
 	"Employee" : "public/js/employee.js",
-	"Company" : "public/js/company.js",
+	"Company" : [
+		"public/js/company.js",
+		"public/js/jquery.mask.min.js",
+	],
 	"User" : "public/js/user.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
