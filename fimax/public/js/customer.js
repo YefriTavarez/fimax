@@ -3,6 +3,48 @@
 
 frappe.provide("fimax.loan_appl");
 frappe.ui.form.on('Customer', {
+	"refresh": (frm) => {
+		frm.trigger("set_the_right_mask");
+	},
+	"onload": (frm) => {
+		frm.set_df_property("tax_id_type", "options", [
+			{"label": "RNC", "value": "1" },
+			{"label": "Cedula", "value": "2" },
+			{"label": "Pasaporte", "value": "3" }
+		]);
+	},
+	"tax_id_type": (frm) => {
+		if (!["1", "2", "3"].includes(frm.doc.tax_id_type)) {
+			frappe.msgprint({
+				"title": __("Value out of range"),
+				"message": __("Tax ID Type must be one of: (RNC, Cedula, Pasaporte)"),
+				"indicator": "red"
+			});
+
+			frm.set_value("tax_id_type", "1");
+		} else if (frm.doc.tax_id_type == "3") {
+			frappe.msgprint({
+				"title": __("Feature not implemented"),
+				"message": __("This feature is not implemented yet!"),
+				"indicator": "red"
+			});
+
+ 			frm.set_value("tax_id_type", "1");
+		} else {
+			frm.trigger("set_the_right_mask");
+
+			frm.set_value("tax_id", undefined);
+		}
+	},
+	"set_the_right_mask": (frm) => {
+		let possible_mask_list = ["000-00000-0", "000-0000000-0"];
+
+		$("input[data-fieldname=tax_id]")
+			.unmask();
+
+		$("input[data-fieldname=tax_id]")
+			.mask(possible_mask_list[cint(frm.doc.tax_id_type) - 1]);
+	},
 	"after_save": (frm) => {
 		let url = fimax.loan_appl.url;
 

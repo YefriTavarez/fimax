@@ -1,0 +1,2 @@
+fimax.patches.v2.add_tax_id_type_field_to_customer
+fimax.patches.v2.remove_income_receipt_item_table
