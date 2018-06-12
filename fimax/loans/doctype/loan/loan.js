@@ -207,7 +207,7 @@ frappe.ui.form.on('Loan', {
 
 		opts.args = {
 			"doc": frm.doc
-		}
+		};
 
 		frappe.call(opts).done((response) => {
 			let doc = response.message;
@@ -242,7 +242,7 @@ frappe.ui.form.on('Loan', {
 
 				frm.set_value("mode_of_payment", undefined);
 			}
-		});
+		}, "Mode of Payment");
 	},
 	"work_on_exchange_rate": (frm) => {
 		if (frm.doc.currency == frm.doc.company_currency) {
