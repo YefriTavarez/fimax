@@ -155,3 +155,18 @@ _f.Frm.prototype.set_indicator_formatter = function(fieldname, get_color, get_te
 		}
 	};
 }
+
+frappe.db.get_value = function(doctype, filters, fieldname, _callback, parent=undefined) {
+	return frappe.call({
+		method: "frappe.client.get_value",
+		args: {
+			doctype: doctype,
+			fieldname: fieldname,
+			filters: filters,
+			parent: parent || doctype
+		},
+		callback: function callback(r) {
+			_callback && _callback(r.message);
+		}
+	});
+}
