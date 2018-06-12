@@ -98,8 +98,6 @@ class LoanCharges(Document):
 		if not flt(self.total_amount):
 			frappe.throw(__("Missing amount!"))
 
-		frappe.errprint(self.paid_amount)
-		frappe.errprint(self.total_amount)
 		if flt(self.paid_amount, 2) > flt(self.total_amount, 2):
 			frappe.throw(__("Paid Amount cannot be greater than Total amount!"))
 
