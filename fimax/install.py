@@ -56,7 +56,7 @@ def add_reqd_custom_fields():
 	add_reqd_custom_fields_in_company()
 	add_reqd_custom_fields_in_customer()
 	
-def update_customer_icons():
+def update_erpnext_icons():
 	"""removes default apps' icon from desktop"""
 
 	customer_icons = frappe.get_list("Desktop Icon", {

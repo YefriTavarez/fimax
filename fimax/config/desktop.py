@@ -3,10 +3,10 @@ from __future__ import unicode_literals
 from frappe import _
 
 def get_data():
-	from fimax.install import update_customer_icons
+	from fimax.install import update_erpnext_icons
 	
 	# update the icons for erpnext on every migration
-	update_customer_icons()
+	update_erpnext_icons()
 
 	icons = [
 		{
