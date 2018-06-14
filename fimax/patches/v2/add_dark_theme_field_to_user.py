@@ -42,4 +42,4 @@ def execute():
 		'search_index': 0,
 		'unique': 0,
 		'width': None
-	}).insert(ignore_permission=True)
+	}).insert(ignore_permissions=True)
