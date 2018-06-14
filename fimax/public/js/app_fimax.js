@@ -68,7 +68,30 @@ $.extend(fimax.utils, {
 	},
 	"view_doc": (doc) => {
 		frappe.set_route("Form", doc.doctype, doc.name);
-	}
+	},
+	"add_rows_to_income_receipt_table": (frm, selections, args) => {
+		let opts = {
+			"method": "fimax.api.add_rows_to_income_receipt_table"
+		};
+
+		opts.args = {
+			"doc": frm.doc,
+			"selections": selections.join(","),
+			"args": args
+		};
+		
+		frappe.call(opts).done((response) => {
+			let doc = response.message;
+		
+			if (doc) {
+				frappe.run_serially([
+					() => frappe.model.sync(doc),
+					() => frm.refresh(),
+					() => frm.dirty()
+				]);
+			}
+		}).fail(() => frappe.msgprint("¡Ha ocurrido un error!"));
+	},
 });
 
 _f.Frm.prototype._save = function (save_action, callback, btn, on_error, resolve) {
