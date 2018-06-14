@@ -11,6 +11,7 @@ from fimax.api import create_loan_from_appl
 from fimax.api import rate_to_decimal as dec
 
 from fimax import simple, compound
+from frappe.utils import flt, cstr, cint
 
 class LoanApplication(Document):
 	def validate(self):
@@ -55,6 +56,14 @@ class LoanApplication(Document):
 			self.approved_gross_amount = self.requested_gross_amount
 
 	def validate_approved_amounts(self):
+		loan_type_field = self.meta.get_field("loan_type")
+
+		maximum_loan_amount = frappe.get_value(loan_type_field.options, 
+			self.loan_type, "maximum_loan_amount")
+
+		if self.requested_net_amount > flt(maximum_loan_amount):
+			frappe.throw(__("Requested Net Amount can not be greater than the Maximum Loan Amount in this Loan Type"))
+
 		if self.approved_gross_amount > self.requested_gross_amount:
 			frappe.throw(__("Approved Amount can not be greater than Requested Amount"))
 
