@@ -148,7 +148,8 @@ frappe.ui.form.on('Income Receipt', {
 			"get_query": () => {
 				return {
 					// "query": "fimax.queries.loan_charges_query",
-					"filters": { 
+					"filters": {
+						"loan": frm.doc.loan,
 						"status": ["not in", "Paid, Closed"],
 						"docstatus": 1
 					} 
