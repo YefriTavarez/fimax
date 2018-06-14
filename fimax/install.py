@@ -63,20 +63,28 @@ def update_erpnext_icons():
 		"module_name": "Customer",
 	}, ["name"])
 
-	update_them(customer_icons)
 
-def update_them(icon_list):
-	"""hide a list of icons"""
-	
-	doctype = "Desktop Icon"
+	todo_icons = frappe.get_list("Desktop Icon", {
+		"module_name": "ToDo",
+	}, ["name"])
 
-	for icon in icon_list:
-		doc = frappe.get_doc(doctype, icon)
+	for icon in customer_icons:
+		doc = frappe.get_doc("Desktop Icon", icon)
 		doc.update({
 			"color": "#469",
 			"icon": "fa fa-user-circle-o",
 			"type": "link",
 			"link": "List/Customer/List"
+		})
+
+		doc.db_update()
+	
+	for icon in todo_icons:
+		doc = frappe.get_doc("Desktop Icon", icon)
+		doc.update({
+			"icon": "fa fa-check",
+			"type": "link",
+			"link": "List/ToDo/List"
 		})
 
 		doc.db_update()
