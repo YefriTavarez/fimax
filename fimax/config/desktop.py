@@ -40,6 +40,14 @@ def get_data():
 			"icon": "fa fa-id-card-o" ,
 			"type": "link",
 			"link": "List/Insurance Card/List"
+		},
+		{
+			"module_name": "Loan Charges",
+			"_doctype": "Loan Charges",
+			"color": "#9e9e9e",
+			"icon": "fa fa-list-alt" ,
+			"type": "link",
+			"link": "List/Loan Charges/List"
 		}, 
 		{
 			"module_name": "GPS Installation",
