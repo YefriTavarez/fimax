@@ -5,6 +5,7 @@ def create_loan_charges_type(loan_charges_name, description=None,
 	return frappe.get_doc({
 		"description": description,
 		"doctype": "Loan Charges Type",
+		"generates_fine": 1,
 		"loan_charges_name": loan_charges_name,
 		"repayment_frequency": repayment_frequency,
 		"repayment_periods": repayment_periods

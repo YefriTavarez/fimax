@@ -40,8 +40,9 @@ def add_default_loan_charges_type():
 		if frappe.db.exists("Loan Charges Type", loan_charges_type):
 			continue
 
-		if loan_charges_type in ["Insurance", "GPS"]:
+		if loan_charges_type in ["Insurance", "GPS", "Late Payment Fee"]:
 			doc = create_loan_charges_type(loan_charges_type, repayment_frequency="Yearly")
+			doc.generates_fine = 0
 		else:
 			doc = create_loan_charges_type(loan_charges_type)
 
