@@ -513,7 +513,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 0, 
- "modified": "2018-05-31 23:13:26.929183", 
+ "modified": "2018-06-13 23:44:03.850041", 
  "modified_by": "yefri@soldeva.com", 
  "module": "Loans", 
  "name": "Loan Charges", 
@@ -605,8 +605,8 @@
  "read_only": 0, 
  "read_only_onload": 0, 
  "show_name_in_global_search": 0, 
- "sort_field": "modified", 
- "sort_order": "DESC", 
+ "sort_field": "repayment_period", 
+ "sort_order": "ASC", 
  "track_changes": 1, 
  "track_seen": 0
 }
