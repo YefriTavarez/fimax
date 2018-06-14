@@ -50,9 +50,11 @@ def add_default_loan_charges_type():
 def add_reqd_custom_fields():
 	from fimax.hook.custom_field import add_reqd_custom_fields_in_user
 	from fimax.hook.custom_field import add_reqd_custom_fields_in_company
+	from fimax.hook.custom_field import add_reqd_custom_fields_in_customer
 	
 	add_reqd_custom_fields_in_user()
 	add_reqd_custom_fields_in_company()
+	add_reqd_custom_fields_in_customer()
 	
 def update_customer_icons():
 	"""removes default apps' icon from desktop"""
