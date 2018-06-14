@@ -9,6 +9,10 @@ frappe.ui.form.on('Income Receipt', {
 		if (!frm.is_new()) {
 			frm.page.show_menu();
 		}
+
+		if (!frm.doc.docstatus && frm.doc.loan) {
+			frm.trigger("add_loan_charges_button");
+		}
 	},
 	"onload_post_render": (frm) => {
 		frm.trigger("set_dynamic_labels");
@@ -54,9 +58,11 @@ frappe.ui.form.on('Income Receipt', {
 	},
 	"loan": (frm) => {
 		if (frm.doc.loan) {
-			frm.trigger("set_missing_values");
+			$.map(["set_missing_values", "add_loan_charges_button"], 
+				(event) => frm.trigger(event));
 		} else {
-			frm.trigger("clear_all_fields");
+			$.map(["clear_all_fields", "remove_loan_charges_button"], 
+				(event) => frm.trigger(event));
 		}
 	},
 	"posting_date": (frm) => {
@@ -81,6 +87,16 @@ frappe.ui.form.on('Income Receipt', {
 	},
 	"set_missing_values": (frm) => {
 		$.map(["fetch_loan_from_server"], (event) => frm.trigger(event));
+	},
+	"add_loan_charges_button": (frm) => {
+		frm.add_custom_button(__("Loan Charges"), 
+			() => frm.trigger("fetch_from_loan_charges"),
+			__("Fetch From"));
+
+		frm.page.set_inner_btn_group_as_primary(__("Fetch From"));
+	},
+	"remove_loan_charges_button": (frm) => {
+		frm.clear_custom_buttons();
 	},
 	"fetch_loan_from_server": (frm) => {
 		let doctype = "Loan";
@@ -111,6 +127,55 @@ frappe.ui.form.on('Income Receipt', {
 			
 			frappe.call(request);
 		}
+	},
+	"fetch_from_loan_charges": (frm) => {
+		frm.fields_dict.loan_charges_type = {
+			"df": frm.fields_dict.income_receipt_items.grid.fields_map.loan_charges_type
+		};
+
+		frm.fields_dict.repayment_period = {
+			"df": frm.fields_dict.income_receipt_items.grid.fields_map.repayment_period
+		};
+
+		let d = new frappe.ui.form.MultiSelectDialog({
+			"doctype": "Loan Charges",
+			"target": frm,
+			"date_field": "repayment_date",
+			"setters": {
+				"repayment_period": undefined, // field has to defined in the current form
+				"loan_charges_type": undefined, // field has to defined in the current form
+			},
+			"get_query": () => {
+				return {
+					// "query": "fimax.queries.loan_charges_query",
+					"filters": { 
+						"status": ["not in", "Paid, Closed"],
+						"docstatus": 1
+					} 
+				};
+			},
+			"action": (selections, args) => {
+				d.dialog.hide();
+				if (selections.length == 0) { return ; }
+
+				fimax.utils.add_rows_to_income_receipt_table(frm, selections, args);
+			}
+		});
+
+		
+		let on_lct_change = function() {
+			d.get_results();
+		};
+
+		frappe.run_serially([
+			() => frappe.timeout(0.7),
+			() => {
+				let field = d.dialog.fields_dict.loan_charges_type;
+				field.df.change = on_lct_change;
+		
+				d.dialog.has_primary_action = false;
+			},
+		]);
 	},
 	"fillup_loan_dependant_fields": (frm) => {
 
@@ -276,111 +341,5 @@ frappe.ui.form.on('Income Receipt', {
 	},
 });
 
-frappe.ui.form.on('Income Receipt Items', {
-	"before_income_receipt_items_remove": (frm, cdt, cdn) => {
-		frappe.throw(__("Ajaah!"));
-	},
-	"income_receipt_items_add": (frm, cdt, cdn) => {
-		if (frm.doc.income_account) {
-			frappe.model.set_value(cdt, cdn, "against_account", frm.doc.income_account);
-		}
-	},
-	"against_account": (frm, cdt, cdn) => {
-		let doc = frappe.get_doc(cdt, cdn);
-
-		frappe.db.get_value("Account", {
-			"name": doc.against_account 
-		}, "account_currency").then((response) => {
-			let data = response.message;
-
-			if (data) {
-				frappe.model.set_value(cdt, cdn, "against_account_currency", data.account_currency);
-			}
-			
-			frm.trigger("set_dynamic_labels");
-		});
-
-		let field_lists = [
-			[["allocated_amount"], doc.currency, "income_receipt_items"],
-			[["outstanding_amount", "total_amount"], doc.currency, "income_receipt_items"],
-		]; 
-
-		$.map(field_lists, (d) => {
-			frm.set_currency_labels(d[0], d[1], d[2]);
-		});
-	},
-	"account": (frm, cdt, cdn) => {
-		let doc = frappe.get_doc(cdt, cdn);
-
-		frappe.db.get_value("Account", {
-			"name": doc.account 
-		}, "account_currency").then((response) => {
-			let data = response.message;
-
-			if (data) {
-				frappe.model.set_value(cdt, cdn, "account_currency", data.account_currency);
-			}
-		});
-	},
-	"allocated_amount": (frm, cdt, cdn) => {
-		let row = frappe.get_doc(cdt, cdn);
-		
-		let base_allocated_amount = flt(row.allocated_amount) * flt(row.against_exchange_rate);
-		frappe.model.set_value(cdt, cdn, "base_allocated_amount", base_allocated_amount);
-	},
-	"party_exchange_rate": (frm, cdt, cdn) => {
-		
-		let row = frappe.get_doc(cdt, cdn);
-
-		if (flt(row.party_exchange_rate) <= flt(0.00)) {
-			frappe.model.set_value(cdt, cdn, "party_exchange_rate", 1.000);
-			frappe.throw(__("Exchange Rate is invalid"));
-		}
-
-		let base_total_amount = flt(row.total_amount) * flt(row.party_exchange_rate);
-		let base_outstanding_amount = flt(row.outstanding_amount) * flt(row.party_exchange_rate);
-
-		frappe.model.set_value(cdt, cdn, "base_total_amount", base_total_amount);
-		frappe.model.set_value(cdt, cdn, "base_outstanding_amount", base_outstanding_amount);
-	},
-	"against_exchange_rate": (frm, cdt, cdn) => {
-		let row = frappe.get_doc(cdt, cdn);
-
-		if (flt(row.against_exchange_rate) <= flt(0.00)) {
-			frappe.model.set_value(cdt, cdn, "against_exchange_rate", 1.000);
-			frappe.throw(__("Exchange Rate is invalid"));
-		}
-
-		let base_allocated_amount = flt(row.allocated_amount) * flt(row.against_exchange_rate);
-		frappe.model.set_value(cdt, cdn, "base_allocated_amount", base_allocated_amount);
-
-	},
-	"allocated_amount": (frm, cdt, cdn) => {
-		let row = frappe.get_doc(cdt, cdn);
-
-		let base_allocated_amount = row.allocated_amount * row.against_exchange_rate;
-
-		if (flt(row.allocated_amount) < flt(0.00)) {
-			frappe.model.set_value(cdt, cdn, "allocated_amount", row.outstanding_amount);
-			frappe.throw(__("Allocated Amount cannot be less than zero!"));
-		}
-
-		frappe.model.set_value(cdt, cdn, "base_allocated_amount", base_allocated_amount);
-	},
-	"base_allocated_amount": (frm, cdt, cdn) => {
-		let row = frappe.get_doc(cdt, cdn);
-
-		let base_allocated_amount_precisioned = flt(row.base_allocated_amount, precision("base_allocated_amount", row));
-		let base_outstanding_amount_precisioned = flt(row.base_outstanding_amount, precision("base_outstanding_amount", row));
-
-		if (base_allocated_amount_precisioned > base_outstanding_amount_precisioned) {
-
-			let allocated_amount = row.base_outstanding_amount / row.against_exchange_rate;
-
-			frappe.model.set_value(cdt, cdn, "allocated_amount", allocated_amount);
-			frappe.throw(__("Allocated Amount cannot be greater than outstanding amount!"));
-		}
-
-		frm.trigger("calculate_totals");
-	},
-});
+// include income_receipt_items js file
+{% include "fimax/loans/doctype/income_receipt_items/income_receipt_items.js" %}

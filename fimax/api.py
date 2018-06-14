@@ -56,3 +56,13 @@ def create_insurance_card_from_loan(doc):
 			"doctype": "Insurance Card"
 		}
 	}, target_doc, post_process)
+	
+@frappe.whitelist()
+def add_rows_to_income_receipt_table(doc, selections, args):
+	if isinstance(doc, basestring):
+		doc = frappe.get_doc(json.loads(doc))
+
+	doc.grab_loan_charges(False, selections)
+
+	return doc.as_dict()
+
