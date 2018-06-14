@@ -193,7 +193,7 @@ frappe.ui.form.on('Loan Application', {
 					"currency",
 					"interest_type",
 					"legal_expenses_rate",
-					"repayment_day_of_the_month",
+					// "repayment_day_of_the_month",
 					"repayment_day_of_the_week",
 					"repayment_days_after_cutoff",
 					"repayment_frequency",
