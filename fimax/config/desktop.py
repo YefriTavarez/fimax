@@ -42,6 +42,14 @@ def get_data():
 			"link": "List/Insurance Card/List"
 		}, 
 		{
+			"module_name": "GPS Installation",
+			"_doctype": "GPS Installation",
+			"color": "#607d8b",
+			"icon": "fa fa-globe" ,
+			"type": "link",
+			"link": "List/GPS Installation/List"
+		}, 
+		{
 			"module_name": "Car",
 			"_doctype": "Car",
 			"color": "#3f51b5",
