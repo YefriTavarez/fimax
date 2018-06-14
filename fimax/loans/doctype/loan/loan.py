@@ -264,13 +264,16 @@ class Loan(Document):
 		import fimax.utils
 		
 		loan_charge = child.get_loan_charge(loan_charge_type)
+
+		if not loan_charge or not loan_charge.name: return
+		
 		doc = frappe.get_doc("Loan Charges", loan_charge.name)
 
 		if not doc.status in ("Overdue", "Pending"):
 			frappe.throw(__("Could not cancel Loan because Loan Charge {}:{} is not Pending anymore!"
 				.format(doc.name, doc.loan_charge_type)))
 
-		fimax.utils.delete_doc(doc, ignore_permissions=True)		
+		fimax.utils.delete_doc(doc)
 
 		frappe.db.commit()
 

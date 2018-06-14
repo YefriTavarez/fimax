@@ -36,7 +36,5 @@ class LoanRepaymentSchedule(Document):
 			'reference_name': self.name,
 		}
 
-		try:
+		if frappe.db.exists("Loan Charges", filters_dict):
 			return frappe.get_doc("Loan Charges", filters_dict)
-		except:
-			pass
