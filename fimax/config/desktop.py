@@ -10,6 +10,14 @@ def get_data():
 
 	icons = [
 		{
+			"module_name": "Control Panel",
+			"_doctype": "Control Panel",
+			"color": "#009688",
+			"icon": "fa fa-cog",
+			"type": "link",
+			"link": "Form/Control Panel"
+		}, 
+		{
 			"module_name": "Loan Application",
 			"_doctype": "Loan Application",
 			"color": "#009688",
