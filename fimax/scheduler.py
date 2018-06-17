@@ -42,5 +42,5 @@ def get_valid_loan_charges():
 			ON loan_charges.loan_charges_type = loan_charges_type.name
 		WHERE loan_charges_type.generates_fine > 0
 			AND TIMESTAMPDIFF(MONTH, loan_charges.modified, CURRENT_TIMESTAMP) > 0
-			AND loan_charges_type.repayment_date < CURDATE()
+			AND loan_charges.repayment_date < CURDATE()
 				AND loan_charges.status NOT IN ('Paid' , 'Closed')""", as_dict=True)

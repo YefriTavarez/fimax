@@ -1,0 +1,11 @@
+fimax.notifications
+fimax.scheduler
+fimax.__init__
+fimax.queries
+fimax.simple
+fimax.utils
+fimax.boot
+fimax.hooks
+fimax.install
+fimax.api
+fimax.compound

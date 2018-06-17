@@ -8,6 +8,8 @@ def rate_to_decimal(rate):
 
 @frappe.whitelist()
 def create_loan_from_appl(doc):
+	"""Creates a Loan taking a Loan Application as a base
+	:param doc: is the Loan Application object"""
 	from frappe.model.mapper import get_mapped_doc
 
 	if isinstance(doc, basestring):
@@ -30,6 +32,12 @@ def create_loan_from_appl(doc):
 
 @frappe.whitelist()
 def get_loan(doctype, docname):
+	"""Returns an existing Loan from the DB and adds the income_account_currency
+	into the __onload property
+
+	:param doctype: should be Loan
+	:param docname: should be Loan Name"""
+	
 	doc = frappe.get_doc(doctype, docname)
 
 	income_account_currency = frappe.get_value("Account", 

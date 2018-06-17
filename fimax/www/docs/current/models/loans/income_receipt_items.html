@@ -1,0 +1,458 @@
+<!-- title: Income Receipt Items -->
+<!-- add-breadcrumbs -->
+
+
+
+
+
+<h1>Income Receipt Items</h1>
+<div class="dev-header">
+
+<a class="btn btn-default btn-sm" disabled style="margin-bottom: 10px;">
+	Version 0.0.1</a>
+
+
+	<a class="btn btn-default btn-sm" href="https://github.com/YefriTavarez/fimax/tree/develop/fimax/loans/doctype/income_receipt_items"
+		target="_blank" style="margin-left: 10px; margin-bottom: 10px;"><i class="octicon octicon-mark-github"></i> Source</a>
+
+</div>
+
+
+<span class="label label-info">Child Table</span>
+
+
+    <p><b>Table Name:</b> <code>tabIncome Receipt Items</code></p>
+
+
+
+
+<h3>Fields</h3>
+
+<table class="table table-bordered docfields">
+    <thead>
+        <tr>
+            <th style="width: 5%">Sr</th>
+            <th style="width: 25%">Fieldname</th>
+            <th style="width: 20%">Type</th>
+            <th style="width: 25%">Label</th>
+            <th style="width: 25%">Options</th>
+        </tr>
+    </thead>
+    <tbody>
+        
+        <tr >
+            <td>1</td>
+            <td class="danger" title="Mandatory"><code>account</code></td>
+            <td >
+                Link</td>
+            <td >
+                Account
+                
+            </td>
+            <td>
+                
+                
+
+
+<a href="/docs/current/models/accounts/account">Account</a>
+
+
+                
+            </td>
+        </tr>
+        
+        <tr >
+            <td>2</td>
+            <td ><code>repayment_period</code></td>
+            <td >
+                Int</td>
+            <td >
+                Repayment Period
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>3</td>
+            <td ><code>repayment_date</code></td>
+            <td >
+                Date</td>
+            <td >
+                Repayment Date
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>4</td>
+            <td ><code>status</code></td>
+            <td >
+                Select</td>
+            <td >
+                Status
+                
+            </td>
+            <td>
+                <pre>Pending
+Overdue
+Partially</pre>
+            </td>
+        </tr>
+        
+        <tr >
+            <td>5</td>
+            <td ><code>loan_charges_type</code></td>
+            <td >
+                Link</td>
+            <td >
+                Loan Charges Type
+                
+            </td>
+            <td>
+                
+                
+
+
+<a href="/docs/current/models/loans/loan_charges_type">Loan Charges Type</a>
+
+
+                
+            </td>
+        </tr>
+        
+        <tr >
+            <td>6</td>
+            <td class="danger" title="Mandatory"><code>account_currency</code></td>
+            <td >
+                Link</td>
+            <td >
+                Account Currency
+                
+            </td>
+            <td>
+                
+                
+
+
+<a href="/docs/current/models/geo/currency">Currency</a>
+
+
+                
+            </td>
+        </tr>
+        
+        <tr >
+            <td>7</td>
+            <td ><code>section_break_6</code></td>
+            <td class="info">
+                Column Break</td>
+            <td >
+                
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>8</td>
+            <td class="danger" title="Mandatory"><code>mode_of_payment</code></td>
+            <td >
+                Link</td>
+            <td >
+                Mode of Payment
+                
+            </td>
+            <td>
+                
+                
+
+
+<a href="/docs/current/models/accounts/mode_of_payment">Mode of Payment</a>
+
+
+                
+            </td>
+        </tr>
+        
+        <tr >
+            <td>9</td>
+            <td class="danger" title="Mandatory"><code>against_account</code></td>
+            <td >
+                Link</td>
+            <td >
+                Against Account
+                
+            </td>
+            <td>
+                
+                
+
+
+<a href="/docs/current/models/accounts/account">Account</a>
+
+
+                
+            </td>
+        </tr>
+        
+        <tr >
+            <td>10</td>
+            <td class="danger" title="Mandatory"><code>against_account_currency</code></td>
+            <td >
+                Link</td>
+            <td >
+                Against Account Currency
+                
+            </td>
+            <td>
+                
+                
+
+
+<a href="/docs/current/models/geo/currency">Currency</a>
+
+
+                
+            </td>
+        </tr>
+        
+        <tr class="info">
+            <td>11</td>
+            <td ><code>column_break_11</code></td>
+            <td >
+                Section Break</td>
+            <td >
+                
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>12</td>
+            <td ><code>total_amount</code></td>
+            <td >
+                Currency</td>
+            <td >
+                Total Amount
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>13</td>
+            <td ><code>base_total_amount</code></td>
+            <td >
+                Currency</td>
+            <td >
+                Base Total Amount
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>14</td>
+            <td ><code>outstanding_amount</code></td>
+            <td >
+                Currency</td>
+            <td >
+                Outstanding Amount
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>15</td>
+            <td ><code>base_outstanding_amount</code></td>
+            <td >
+                Currency</td>
+            <td >
+                Base Outstanding Amount
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>16</td>
+            <td class="danger" title="Mandatory"><code>party_exchange_rate</code></td>
+            <td >
+                Float</td>
+            <td >
+                Party Exchange Rate
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>17</td>
+            <td ><code>column_break_10</code></td>
+            <td class="info">
+                Column Break</td>
+            <td >
+                
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>18</td>
+            <td class="danger" title="Mandatory"><code>allocated_amount</code></td>
+            <td >
+                Currency</td>
+            <td >
+                Allocated Amount
+                <p class="text-muted small">
+                    Allocated Amount in Account Currency</p>
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>19</td>
+            <td ><code>base_allocated_amount</code></td>
+            <td >
+                Currency</td>
+            <td >
+                Base Allocated Amount
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>20</td>
+            <td class="danger" title="Mandatory"><code>against_exchange_rate</code></td>
+            <td >
+                Float</td>
+            <td >
+                Exchange Rate
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr class="info">
+            <td>21</td>
+            <td ><code>section_break_14</code></td>
+            <td >
+                Section Break</td>
+            <td >
+                REFERENCES
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>22</td>
+            <td class="danger" title="Mandatory"><code>reference_type</code></td>
+            <td >
+                Link</td>
+            <td >
+                Reference Type
+                
+            </td>
+            <td>
+                
+                
+
+
+<a href="/docs/current/models/core/doctype">DocType</a>
+
+
+                
+            </td>
+        </tr>
+        
+        <tr >
+            <td>23</td>
+            <td ><code>reference_name</code></td>
+            <td >
+                Dynamic Link</td>
+            <td >
+                Reference Name
+                
+            </td>
+            <td>
+                <pre>reference_type</pre>
+            </td>
+        </tr>
+        
+        <tr >
+            <td>24</td>
+            <td ><code>column_break_17</code></td>
+            <td class="info">
+                Column Break</td>
+            <td >
+                
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>25</td>
+            <td class="danger" title="Mandatory"><code>voucher_type</code></td>
+            <td >
+                Link</td>
+            <td >
+                Voucher Type
+                
+            </td>
+            <td>
+                
+                
+
+
+<a href="/docs/current/models/core/doctype">DocType</a>
+
+
+                
+            </td>
+        </tr>
+        
+        <tr >
+            <td>26</td>
+            <td class="danger" title="Mandatory"><code>voucher_name</code></td>
+            <td >
+                Dynamic Link</td>
+            <td >
+                Voucher Name
+                
+            </td>
+            <td>
+                <pre>voucher_type</pre>
+            </td>
+        </tr>
+        
+    </tbody>
+</table>
+
+
+    
+    
+    <h4>Child Table Of</h4>
+    <ul>
+    
+        <li>
+
+
+<a href="/docs/current/models/loans/income_receipt">Income Receipt</a>
+
+</li>
+    
+    </ul>
+    
+
+
+<!-- autodoc -->
+<!-- jinja -->
+<!-- static -->

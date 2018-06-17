@@ -1,0 +1,207 @@
+<!-- title: Control Panel -->
+<!-- add-breadcrumbs -->
+
+
+
+
+
+<h1>Control Panel</h1>
+<div class="dev-header">
+
+<a class="btn btn-default btn-sm" disabled style="margin-bottom: 10px;">
+	Version 0.0.1</a>
+
+
+	<a class="btn btn-default btn-sm" href="https://github.com/YefriTavarez/fimax/tree/develop/fimax/loans/doctype/control_panel"
+		target="_blank" style="margin-left: 10px; margin-bottom: 10px;"><i class="octicon octicon-mark-github"></i> Source</a>
+
+</div>
+
+<span class="label label-info">Single</span>
+
+
+
+
+
+
+<h3>Fields</h3>
+
+<table class="table table-bordered docfields">
+    <thead>
+        <tr>
+            <th style="width: 5%">Sr</th>
+            <th style="width: 25%">Fieldname</th>
+            <th style="width: 20%">Type</th>
+            <th style="width: 25%">Label</th>
+            <th style="width: 25%">Options</th>
+        </tr>
+    </thead>
+    <tbody>
+        
+        <tr >
+            <td>1</td>
+            <td class="danger" title="Mandatory"><code>simple_interest_rate</code></td>
+            <td >
+                Percent</td>
+            <td >
+                Default Simple Interest Rate
+                <p class="text-muted small">
+                    %</p>
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>2</td>
+            <td class="danger" title="Mandatory"><code>allow_change_action</code></td>
+            <td >
+                Check</td>
+            <td >
+                 Allow to Change Action
+                <p class="text-muted small">
+                    Allow the user to change the status of a document after being Approved / Denied</p>
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>3</td>
+            <td class="danger" title="Mandatory"><code>repayment_frequency</code></td>
+            <td >
+                Select</td>
+            <td >
+                Default Repayment Frequency
+                
+            </td>
+            <td>
+                <pre>Daily
+Weekly
+BiWeekly
+Monthly
+Quartely
+Half-Yearly
+Yearly</pre>
+            </td>
+        </tr>
+        
+        <tr >
+            <td>4</td>
+            <td ><code>detail_repayment_amount</code></td>
+            <td >
+                Check</td>
+            <td >
+                Detail Repayment Amount
+                <p class="text-muted small">
+                    If checked the system will break into two the Repayment Amount and will create two Loan Charges for each row in the Loan. 
+
+<br>One for the Capital and the other for the Interest amount</p>
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr class="info">
+            <td>5</td>
+            <td ><code>insurance_defaults</code></td>
+            <td >
+                Section Break</td>
+            <td >
+                Insurance Defaults
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>6</td>
+            <td ><code>repayment_periods</code></td>
+            <td >
+                Int</td>
+            <td >
+                Repayment Periods
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>7</td>
+            <td ><code>column_break_7</code></td>
+            <td class="info">
+                Column Break</td>
+            <td >
+                
+                
+            </td>
+            <td></td>
+        </tr>
+        
+        <tr >
+            <td>8</td>
+            <td ><code>insurance_supplier</code></td>
+            <td >
+                Link</td>
+            <td >
+                Insurance Supplier
+                
+            </td>
+            <td>
+                
+                
+
+
+<a href="/docs/current/models/buying/supplier">Supplier</a>
+
+
+                
+            </td>
+        </tr>
+        
+    </tbody>
+</table>
+
+
+    <hr>
+    <h3>Controller</h3>
+    <h4>fimax.loans.doctype.control_panel.control_panel</h4>
+
+    
+
+
+
+	
+        
+	<h3 style="font-weight: normal;">Class <b>ControlPanel</b></h3>
+    
+    <p style="padding-left: 30px;"><i>Inherits from frappe.model.document.Document</i></h4>
+    
+    <div class="docs-attr-desc"><p></p>
+</div>
+    <div style="padding-left: 30px;">
+        
+        
+    
+    
+	<p class="docs-attr-name">
+        <a name="validate" href="#validate" class="text-muted small">
+            <i class="fa fa-link small" style="color: #ccc;"></i></a>
+		<b>validate</b>
+        <i class="text-muted">(self)</i>
+    </p>
+	<div class="docs-attr-desc"><p><span class="text-muted">No docs</span></p>
+</div>
+	<br>
+
+        
+    </div>
+    <hr>
+
+	
+
+
+    
+    
+
+
+<!-- autodoc -->
+<!-- jinja -->
+<!-- static -->

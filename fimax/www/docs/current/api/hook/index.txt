@@ -1,0 +1,6 @@
+fimax.hook.desktop_icon
+fimax.hook.customer
+fimax.hook.role
+fimax.hook.custom_field
+fimax.hook
+fimax.hook.loan_charges_type

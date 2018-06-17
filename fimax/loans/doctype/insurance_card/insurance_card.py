@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
 
-from frappe.utils import flt, cint, cstr
+from frappe.utils import flt, cint, cstr, nowdate
 
 class InsuranceCard(Document):
 	def validate(self):
@@ -16,17 +16,20 @@ class InsuranceCard(Document):
 		self.validate_value("repayment_periods", "<=", cint(loan_repayment_periods))	
 
 	def on_submit(self):
-		pass
+		self.commit_to_loan_charges()
 
 	def on_cancel(self):
-		pass
+		self.status = "Cancelled"
 
 	def update_status(self):
 		pass	
-		# No se me va a olvidar
+
+	def before_submit(self):
+		if self.start_date <= nowdate() and nowdate() <= self.end_date:
+			self.status = "Active"
 
 	def before_cancel(self):
-		self.status = "Cancelled"
+		self.rollback_from_loan_charges()
 
 	def set_missing_and_default_values(self):
 		self.set_missing_values()
@@ -46,7 +49,78 @@ class InsuranceCard(Document):
 		# run this to make sure default loan charges type are set
 		add_default_loan_charges_type()
 
-		for repayment in self.insurance_repayment_schedule:
-			lc = row.get_new_loan_charge([("Insurance", repayment.repayment_amount)])
+		if self.initial_payment_amount > 0.000:
+			self.setup_initial_payment()
+			
+
+		for row in self.insurance_repayment_schedule:
+			lc = row.get_new_loan_charge("Insurance", row.repayment_amount)
+			lc.status = "Overdue"
 			lc.currency = self.currency
 			lc.submit()
+
+	def rollback_from_loan_charges(self):
+		if self.initial_payment_amount > 0.000:
+			self.rollback_initial_payment()
+
+		for row in self.insurance_repayment_schedule:
+			self.cancel_and_delete_loan_charge(row, "Insurance")
+
+	def cancel_and_delete_loan_charge(self, child, loan_charge_type):
+		loan_charge = child.get_loan_charge(loan_charge_type)
+
+		if not loan_charge or not loan_charge.name: return
+		
+		doc = frappe.get_doc("Loan Charges", loan_charge.name)
+		
+		self.validate_and_delete_loan_charge(doc)
+
+	def validate_and_delete_loan_charge(self, doc):
+		import fimax.utils
+
+		if not doc.status in ("Overdue", "Pending"):
+			frappe.throw(__("Could not cancel Insurance because Loan Charge {}:{} is not Pending anymore!"
+				.format(doc.name, doc.loan_charge_type)))
+
+		fimax.utils.delete_doc(doc)
+
+		frappe.db.commit()
+
+	def setup_initial_payment(self):
+		lc = frappe.get_doc({
+			'doctype': 'Loan Charges',
+			'loan_charges_type': "Insurance",
+			'outstanding_amount': self.initial_payment_amount,
+			'paid_amount': 0.000,
+			'reference_type': self.doctype,
+			'reference_name': self.name,
+			'loan': self.loan,
+			'repayment_date': cstr(self.start_date),
+			'status': 'Pending',
+			'repayment_period': self.get_current_repayment_period(),
+			'total_amount': self.initial_payment_amount
+		})
+
+		lc.currency = self.currency
+		lc.submit()
+
+	def rollback_initial_payment(self):
+		filters_dict = {
+			'loan_charges_type': "Insurance",
+			'repayment_date': cstr(self.start_date),
+			'loan': self.loan,
+			'reference_type': self.doctype,
+			'reference_name': self.name,
+		}
+
+		if frappe.db.exists("Loan Charges", filters_dict):
+			doc = frappe.get_doc("Loan Charges", filters_dict)
+			self.validate_and_delete_loan_charge(doc)
+
+	def get_current_repayment_period(self):
+		return frappe.get_value("Loan Repayment Schedule", {
+			"parent": self.loan,
+			"parenttype": "Loan",
+			"parentfield": "loan_schedule",
+			"status": ["not in", ["Closed", "Paid"]]
+		}, ["idx"], order_by="idx") or 1

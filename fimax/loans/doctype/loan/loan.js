@@ -181,8 +181,14 @@ frappe.ui.form.on('Loan', {
 	"add_new_vehicle_button": (frm) => {
 		frm.add_custom_button(__("Vehicle"), () => frm.trigger("new_vehicle"), __("New"));
 	},
+	"add_new_insurance_card_button": (frm) => {
+		frm.add_custom_button(__("Insurance"), () => frm.trigger("make_insurance_card"), __("Make"));
+	},
 	"add_new_property_button": (frm) => {
 		frm.add_custom_button(__("Property"), () => frm.trigger("new_property"), __("New"));
+	},
+	"add_view_income_recepit_button": (frm) => {
+		frm.add_custom_button(__("Income Receipts"), () => frm.trigger("view_income_receipts"), __("View"));
 	},
 	"new_vehicle": (frm) => {
 		frappe.run_serially([
@@ -212,10 +218,15 @@ frappe.ui.form.on('Loan', {
 		frappe.call(opts).done((response) => {
 			let doc = response.message;
 			if (doc) {
-				doc = frappe.model.sync(doc)[0];
-				frappe.set_route("Form", doc.doctype, doc.name);
+				frappe.model.sync(doc);
+				fimax.utils.view_doc(doc);
 			}
 		}).fail((exec) => frappe.msgprint(__("There was an error while creating the Insurance Card")));
+	},
+	"view_income_receipts": (frm) => {
+		frappe.set_route("List", "Income Receipt", {
+			"loan": frm.docname
+		});
 	},
 	"remember_current_route": (frm) => {
 		fimax.loan.url = frappe.get_route();
