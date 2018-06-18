@@ -103,7 +103,7 @@ frappe.ui.form.on('Insurance Card', {
 			let indicator = {
 				"Pending": "indicator orange",
 				"Overdue": "indicator red",
-				"Partially Paid": "indicator yellow",
+				"Partially": "indicator yellow",
 				"Paid": "indicator green",
 			}[doc.status];
 

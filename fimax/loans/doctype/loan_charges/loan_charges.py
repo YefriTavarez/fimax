@@ -21,7 +21,7 @@ class LoanCharges(Document):
 
 	def on_update_after_submit(self):
 		self.validate_amounts()
-		self.update_references(cancel=False)
+		# self.update_references(cancel=False)
 
 	def before_insert(self):
 		pass
@@ -39,20 +39,24 @@ class LoanCharges(Document):
 		pass
 
 	def on_cancel(self):
-		self.update_references(cancel=True)
+		pass
+		# self.update_references(cancel=True)
 
 	def on_trash(self):
 		pass
 
 	def update_references(self, cancel=False):
+		print("Updating reference type {}".format(self.reference_type))
+		print("Updating reference name {}".format(self.reference_name))
 		reference = frappe.get_doc(self.reference_type, self.reference_name)
 
-		if cancel:
-			reference.paid_amount -= self.paid_amount
-			reference.outstanding_amount += self.paid_amount
-		else:
+		print("For Cancel {}".format(cancel))
+		if not cancel:
 			reference.paid_amount += self.paid_amount
 			reference.outstanding_amount -= self.paid_amount
+		else:
+			reference.paid_amount -= self.paid_amount
+			reference.outstanding_amount += self.paid_amount
 
 		if hasattr(reference, "validate_amounts"):
 			reference.validate_amounts()
@@ -60,7 +64,8 @@ class LoanCharges(Document):
 		if hasattr(reference, "update_status"):
 			reference.update_status()
 			
-		reference.db_update()
+		reference.submit()
+		print("Success {}".format(cancel))
 
 	def set_missing_values(self):
 		self.outstanding_amount = self.total_amount
@@ -75,7 +80,6 @@ class LoanCharges(Document):
 			frappe.throw(__("Outstanding amount cannot be negative!"))
 
 		self.outstanding_amount = outstanding_amount
-			
 
 	def validate_reference_name(self):
 		if not self.loan:
@@ -92,7 +96,6 @@ class LoanCharges(Document):
 
 		if DocStatus(docstatus) is not DocStatus.SUBMITTED:
 			frappe.throw(__("Selected {0} is not submitted!".format(self.reference_type)))
-
 
 	def validate_amounts(self):
 		if not flt(self.total_amount):
@@ -164,3 +167,7 @@ class LoanCharges(Document):
 
 		make_gl_entries(gl_map, cancel=cancel, adv_adj=adv_adj, merge_entries=False)
 	
+	def is_elegible_for_deletion(self):
+		if self.outstanding_amount == 0 \
+			or self.paid_amount > 0: return False
+		return True

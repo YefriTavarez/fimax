@@ -2,7 +2,13 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('Series', {
-	refresh: function(frm) {
+	"onload": function(frm) {
+		if (!frm.doc.creation) {
+			frm.set_value("creation", frappe.datetime.now_datetime());
+		}
 
-	}
+		if (!frm.doc.owner) {
+			frm.set_value("owner", frappe.session.user);
+		}
+	},
 });

@@ -7,6 +7,7 @@ import frappe
 from frappe.model.document import Document
 
 from frappe.utils import flt, cint, cstr, nowdate
+from frappe import _
 
 class LoanRepaymentSchedule(Document):
 	def autoname(self):
@@ -30,6 +31,15 @@ class LoanRepaymentSchedule(Document):
 		if self.paid_amount == self.repayment_amount:
 			self.status = "Paid"
 
+	def validate_amounts(self):
+		if not flt(self.repayment_amount):
+			frappe.throw(_("Missing amount!"))
+
+		if flt(self.paid_amount, 2) > flt(self.repayment_amount, 2):
+			frappe.throw(_("Paid Amount cannot be greater than Total amount!"))
+
+		if flt(self.outstanding_amount) < 0.000:
+			frappe.throw(_("Outstanding Amount cannot be less than zero!"))
 
 	def get_new_loan_charge(self, loan_charges_type, amount):
 		return frappe.get_doc({

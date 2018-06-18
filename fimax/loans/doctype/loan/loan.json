@@ -169,7 +169,7 @@
   }, 
   {
    "allow_bulk_edit": 0, 
-   "allow_on_submit": 0, 
+   "allow_on_submit": 1, 
    "bold": 0, 
    "collapsible": 0, 
    "columns": 0, 
@@ -1407,7 +1407,7 @@
  "issingle": 0, 
  "istable": 0, 
  "max_attachments": 10, 
- "modified": "2018-06-14 15:40:12.278213", 
+ "modified": "2018-06-18 11:20:00.951065", 
  "modified_by": "Administrator", 
  "module": "Loans", 
  "name": "Loan", 

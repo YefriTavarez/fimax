@@ -20,6 +20,16 @@ frappe.ui.form.on('Loan', {
 
 		$.map(event_list, (event) => frm.trigger(event));
 	},
+	"onload_post_render": (frm) => {
+		frappe.realtime.on("syncing_with_loan_charges", function(data) {
+			frappe.show_progress(__("Syncing with Loan Charges"), flt(data.progress));
+
+			if (data.progress == 1) {
+				frappe.hide_progress();
+				frm.reload_doc();
+			}
+		});
+	},
 	"validate": (frm) => {
 		let event_list = [
 			"validate_exchange_rate", 
@@ -50,7 +60,8 @@ frappe.ui.form.on('Loan', {
 
 			frm.page.set_inner_btn_group_as_primary(__("New"));
 		} else {
-			let button_list = ["add_new_insurance_card_button", "add_view_income_recepit_button"];
+			let button_list = ["add_new_insurance_card_button",
+				"add_view_income_recepit_button", "add_sync_with_loan_charges_button"];
 			$.map(button_list, (event) => frm.trigger(event));
 
 			frm.page.set_inner_btn_group_as_primary(__("Make"));
@@ -67,7 +78,7 @@ frappe.ui.form.on('Loan', {
 			let indicator = {
 				"Pending": "indicator orange",
 				"Overdue": "indicator red",
-				"Partially Paid": "indicator yellow",
+				"Partially": "indicator yellow",
 				"Paid": "indicator green",
 			}[doc.status];
 
@@ -190,6 +201,9 @@ frappe.ui.form.on('Loan', {
 	"add_view_income_recepit_button": (frm) => {
 		frm.add_custom_button(__("Income Receipts"), () => frm.trigger("view_income_receipts"), __("View"));
 	},
+	"add_sync_with_loan_charges_button": (frm) => {
+		frm.add_custom_button(__("Sync With Loan Charges"), () => frm.trigger("sync_with_loan_charges"));
+	},
 	"new_vehicle": (frm) => {
 		frappe.run_serially([
 			() => frm.trigger("remember_current_route"),
@@ -227,6 +241,10 @@ frappe.ui.form.on('Loan', {
 		frappe.set_route("List", "Income Receipt", {
 			"loan": frm.docname
 		});
+	},
+	"sync_with_loan_charges": (frm) => {
+		frm.call("sync_this_with_loan_charges")
+			.then(() => frm.reload_doc());
 	},
 	"remember_current_route": (frm) => {
 		fimax.loan.url = frappe.get_route();
@@ -267,3 +285,5 @@ frappe.ui.form.on('Loan', {
 		frm.trigger("set_dynamic_labels");
 	},
 });
+
+{% include "fimax/loans/doctype/loan_repayment_schedule/loan_repayment_schedule.js" %}

@@ -50,7 +50,8 @@ class IncomeReceipt(Document):
 		return frappe.get_list("Loan Charges", filters=filters, fields=fields, order_by='name')
 
 	def grab_loan_charges(self, new_table=False, loan_charges_list=None):
-		if new_table or not self.income_receipt_items or not self.income_receipt_items[0].loan_charges_type:
+		if new_table or not self.get("income_receipt_items") \
+			or not self.get("income_receipt_items")[0].loan_charges_type:
 			# empty the table first
 			self.set("income_receipt_items", [])
 
@@ -159,6 +160,7 @@ class IncomeReceipt(Document):
 	def update_loan_charges(self, cancel=False):
 		for row in self.income_receipt_items:
 			loan_charge = frappe.get_doc(row.voucher_type, row.voucher_name)
+
 			if not cancel:
 				loan_charge.paid_amount += row.allocated_amount
 				loan_charge.outstanding_amount -= row.allocated_amount
@@ -166,6 +168,7 @@ class IncomeReceipt(Document):
 				loan_charge.paid_amount -= row.allocated_amount
 				loan_charge.outstanding_amount += row.allocated_amount
 
+			loan_charge.update_references(cancel=cancel)
 			loan_charge.update_status()
 			loan_charge.submit()
 

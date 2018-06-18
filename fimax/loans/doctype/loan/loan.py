@@ -52,6 +52,9 @@ class Loan(Document):
 	def toggle_recovered_status(self, recovered=True):
 		self.update_status("Recovered" if recovered else "Disbursed")
 
+	def before_submit(self):
+		self.status = "Disbursed"
+
 	def on_submit(self):
 		self.make_gl_entries(cancel=False)
 		self.commit_to_loan_charges()
@@ -253,25 +256,27 @@ class Loan(Document):
 			for args in args_list:
 				lc = row.get_new_loan_charge(*args)
 				lc.currency = self.currency
+
+				lc.update_status()
 				lc.submit()
 
 	def rollback_from_loan_charges(self):
 		for row in self.loan_schedule:
-			[self.cancel_and_delete_loan_charge(row, loan_charge_type) 
-				for loan_charge_type in ('Capital', 'Interest', 'Repayment Amount')]
+			[self.cancel_and_delete_loan_charge(row, loan_charges_type) 
+				for loan_charges_type in ('Capital', 'Interest', 'Repayment Amount')]
 
-	def cancel_and_delete_loan_charge(self, child, loan_charge_type):
+	def cancel_and_delete_loan_charge(self, child, loan_charges_type):
 		import fimax.utils
 		
-		loan_charge = child.get_loan_charge(loan_charge_type)
+		loan_charge = child.get_loan_charge(loan_charges_type)
 
 		if not loan_charge or not loan_charge.name: return
 		
 		doc = frappe.get_doc("Loan Charges", loan_charge.name)
 
-		if not doc.status in ("Overdue", "Pending"):
-			frappe.throw(__("Could not cancel Loan because Loan Charge {}:{} is not Pending anymore!"
-				.format(doc.name, doc.loan_charge_type)))
+		if not doc.is_elegible_for_deletion():
+			frappe.throw(__("Could not cancel this Loan because the loan charge <i>{1}</i>:<b>{0}</b> is not pending anymore!"
+				.format(doc.name, doc.loan_charges_type)))
 
 		fimax.utils.delete_doc(doc)
 
@@ -322,3 +327,28 @@ class Loan(Document):
 		gl_map += self.get_double_matched_entry(self.total_interest_amount, self.income_account)
 
 		make_gl_entries(gl_map, cancel=cancel, adv_adj=adv_adj, merge_entries=False)
+
+	def sync_this_with_loan_charges(self):
+		records = len(self.loan_schedule)
+
+		for idx, row in enumerate(self.loan_schedule):
+			self.publish_realtime(idx, records)
+
+			paid_amount, last_status = frappe.db.get_value("Loan Charges", filters={
+				"docstatus": 1,
+				"status": ["in", ('Overdue', 'Partially', 'Paid')],
+				"reference_type": row.doctype,
+				"reference_name": row.name,
+			}, fieldname=[
+				"SUM(paid_amount)",
+				"status"], order_by="name ASC")
+
+			row.paid_amount = flt(paid_amount)
+			row.outstanding_amount = row.repayment_amount - row.paid_amount
+			row.status = last_status or row.status
+			row.submit()
+
+	def publish_realtime(self, idx, records):
+		frappe.publish_realtime("syncing_with_loan_charges", {
+			"progress": flt(idx) / flt(records) * 100, 
+		}, user=frappe.session.user)
