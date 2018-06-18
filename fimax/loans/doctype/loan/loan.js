@@ -24,7 +24,7 @@ frappe.ui.form.on('Loan', {
 		frappe.realtime.on("syncing_with_loan_charges", function(data) {
 			frappe.show_progress(__("Syncing with Loan Charges"), flt(data.progress));
 
-			if (data.progress == 1) {
+			if (cstr(data.progress) == "100") {
 				frappe.hide_progress();
 				frm.reload_doc();
 			}

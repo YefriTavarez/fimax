@@ -46,11 +46,8 @@ class LoanCharges(Document):
 		pass
 
 	def update_references(self, cancel=False):
-		print("Updating reference type {}".format(self.reference_type))
-		print("Updating reference name {}".format(self.reference_name))
 		reference = frappe.get_doc(self.reference_type, self.reference_name)
 
-		print("For Cancel {}".format(cancel))
 		if not cancel:
 			reference.paid_amount += self.paid_amount
 			reference.outstanding_amount -= self.paid_amount
@@ -65,7 +62,6 @@ class LoanCharges(Document):
 			reference.update_status()
 			
 		reference.submit()
-		print("Success {}".format(cancel))
 
 	def set_missing_values(self):
 		self.outstanding_amount = self.total_amount

@@ -329,10 +329,10 @@ class Loan(Document):
 		make_gl_entries(gl_map, cancel=cancel, adv_adj=adv_adj, merge_entries=False)
 
 	def sync_this_with_loan_charges(self):
-		records = len(self.loan_schedule)
+		records = len(self.loan_schedule) or 1
 
 		for idx, row in enumerate(self.loan_schedule):
-			self.publish_realtime(idx, records)
+			self.publish_realtime(idx + 1, records)
 
 			paid_amount, last_status = frappe.db.get_value("Loan Charges", filters={
 				"docstatus": 1,
