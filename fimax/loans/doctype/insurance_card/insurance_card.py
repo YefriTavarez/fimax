@@ -27,6 +27,8 @@ class InsuranceCard(Document):
 	def before_submit(self):
 		if self.start_date <= nowdate() and nowdate() <= self.end_date:
 			self.status = "Active"
+		else:
+			self.status = "Inactive"
 
 	def before_cancel(self):
 		self.rollback_from_loan_charges()
@@ -55,8 +57,9 @@ class InsuranceCard(Document):
 
 		for row in self.insurance_repayment_schedule:
 			lc = row.get_new_loan_charge("Insurance", row.repayment_amount)
-			lc.status = "Overdue"
 			lc.currency = self.currency
+
+			lc.update_status()
 			lc.submit()
 
 	def rollback_from_loan_charges(self):
@@ -96,7 +99,7 @@ class InsuranceCard(Document):
 			'reference_name': self.name,
 			'loan': self.loan,
 			'repayment_date': cstr(self.start_date),
-			'status': 'Pending',
+			'status': 'Overdue',
 			'repayment_period': self.get_current_repayment_period(),
 			'total_amount': self.initial_payment_amount
 		})

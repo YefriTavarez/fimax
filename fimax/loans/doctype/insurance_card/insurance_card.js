@@ -22,6 +22,7 @@ frappe.ui.form.on('Insurance Card', {
 	},
 	"start_date": (frm) => {
 		frm.set_value("end_date", frappe.datetime.add_months(frm.doc.start_date, 12));
+		frm.trigger("make_repayment_schedule");
 	},
 	"total_amount": (frm) => {
 		events = ["calculate_outstanding_amount", "make_repayment_schedule"];

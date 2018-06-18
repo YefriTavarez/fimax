@@ -8,11 +8,12 @@ from frappe.model.document import Document
 from erpnext.accounts.utils import get_balance_on
 from erpnext.setup.utils import get_exchange_rate
 
-from frappe.utils import flt, cstr, cint
+from frappe.utils import flt, cstr, cint, nowdate
+from frappe import _
 
 class IncomeReceipt(Document):
 	def validate(self):
-		pass
+		self.validate_income_receipt_items()
 
 	def on_submit(self):
 		self.make_gl_entries(cancel=False)
@@ -167,3 +168,10 @@ class IncomeReceipt(Document):
 
 			loan_charge.update_status()
 			loan_charge.submit()
+
+	def validate_income_receipt_items(self):
+
+		for row in self.income_receipt_items:
+			if cstr(row.repayment_date) < nowdate() and not flt(row.allocated_amount):
+				frappe.throw(_("""Missing allocated amount for due Loan Charge in row: {}
+					""".format(row.idx)))
