@@ -55,7 +55,7 @@ class IncomeReceipt(Document):
 			# empty the table first
 			self.set("income_receipt_items", [])
 
-		loan_doc = frappe.get_doc("Loan", self.loan)
+		loan_doc = frappe.get_doc(self.meta.get_field("loan").options, self.loan)
 		self.income_account, self.income_account_currency = self.get_income_account_and_currency(loan_doc)
 
 		self.exchange_rate = get_exchange_rate(loan_doc.currency, self.income_account_currency)
@@ -171,6 +171,9 @@ class IncomeReceipt(Document):
 			loan_charge.update_references(cancel=cancel)
 			loan_charge.update_status()
 			loan_charge.submit()
+
+		frappe.get_doc(self.meta.get_field("loan").options, self.loan)\
+			.sync_this_with_loan_charges()
 
 	def validate_income_receipt_items(self):
 

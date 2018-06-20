@@ -21,12 +21,14 @@ frappe.ui.form.on('Loan', {
 		$.map(event_list, (event) => frm.trigger(event));
 	},
 	"onload_post_render": (frm) => {
-		frappe.realtime.on("syncing_with_loan_charges", function(data) {
-			frappe.show_progress(__("Syncing with Loan Charges"), flt(data.progress));
+		frappe.realtime.on("real_progress", function(data) {
+			frappe.show_progress(__("Wait"), flt(data.progress));
 
 			if (cstr(data.progress) == "100") {
-				frappe.hide_progress();
-				frm.reload_doc();
+				frappe.run_serially([
+					() => frappe.timeout(1),
+					() => frappe.hide_progress()
+				]);
 			}
 		});
 	},
@@ -61,7 +63,7 @@ frappe.ui.form.on('Loan', {
 			frm.page.set_inner_btn_group_as_primary(__("New"));
 		} else {
 			let button_list = ["add_new_insurance_card_button",
-				"add_view_income_recepit_button", "add_sync_with_loan_charges_button"];
+				"add_view_income_recepit_button", /*"add_sync_with_loan_charges_button"*/];
 			$.map(button_list, (event) => frm.trigger(event));
 
 			frm.page.set_inner_btn_group_as_primary(__("Make"));
@@ -167,6 +169,12 @@ frappe.ui.form.on('Loan', {
 				frm.refresh_fields();
 					
 			}).fail((exec) => frappe.msgprint(__("There was a problem while loading the party default currency!")));
+	},
+	"party": (frm) => {
+		if (frm.doc.party) {
+			frm.call("set_accounts")
+				.then(() => frm.refresh());
+		}
 	},
 	"currency": (frm) => {
 		frm.trigger("work_on_exchange_rate");

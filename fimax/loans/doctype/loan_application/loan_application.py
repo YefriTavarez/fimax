@@ -53,6 +53,9 @@ class LoanApplication(Document):
 
 	def set_approved_amounts(self):
 		if frappe.session.user == self.owner:
+			if self.docstatus == 1 and not self.approved_gross_amount == self.requested_gross_amount:
+				frappe.msgprint(__("You won't be able to change the approved amount as you are the one requesting!"))
+
 			self.approved_gross_amount = self.requested_gross_amount
 
 	def validate_approved_amounts(self):

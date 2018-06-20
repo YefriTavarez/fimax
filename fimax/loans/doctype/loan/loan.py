@@ -140,6 +140,8 @@ class Loan(Document):
 	def set_party_account(self):
 		from erpnext.accounts.party import get_party_account
 
+		if self.party_account: return
+
 		if self.party_type in ("Customer", "Supplier"):
 			self.party_account = get_party_account(self.party_type, self.party, self.company)
 		else:
@@ -243,10 +245,14 @@ class Loan(Document):
 	def commit_to_loan_charges(self):
 		from fimax.install import add_default_loan_charges_type
 		
+		records = len(self.loan_schedule) or 1
+
 		# run this to make sure default loan charges type are set
 		add_default_loan_charges_type()
 
-		for row in self.loan_schedule:
+		for idx, row in enumerate(self.loan_schedule):
+			self.publish_realtime(idx + 1, records)
+			
 			args_list = [("Capital", row.capital_amount)]
 			args_list += [("Interest", row.interest_amount)]
 
@@ -261,7 +267,11 @@ class Loan(Document):
 				lc.submit()
 
 	def rollback_from_loan_charges(self):
-		for row in self.loan_schedule:
+		records = len(self.loan_schedule) or 1
+			
+		for idx, row in enumerate(self.loan_schedule):
+			self.publish_realtime(idx + 1, records)
+
 			[self.cancel_and_delete_loan_charge(row, loan_charges_type) 
 				for loan_charges_type in ('Capital', 'Interest', 'Repayment Amount')]
 
@@ -336,7 +346,7 @@ class Loan(Document):
 
 			paid_amount, last_status = frappe.db.get_value("Loan Charges", filters={
 				"docstatus": 1,
-				"status": ["in", ('Overdue', 'Partially', 'Paid')],
+				"status": ["!=", "Closed"],
 				"reference_type": row.doctype,
 				"reference_name": row.name,
 			}, fieldname=[
@@ -344,11 +354,11 @@ class Loan(Document):
 				"status"], order_by="name ASC")
 
 			row.paid_amount = flt(paid_amount)
-			row.outstanding_amount = row.repayment_amount - row.paid_amount
+			row.outstanding_amount = flt(row.repayment_amount - row.paid_amount)
 			row.status = last_status or row.status
 			row.submit()
 
-	def publish_realtime(self, idx, records):
-		frappe.publish_realtime("syncing_with_loan_charges", {
-			"progress": flt(idx) / flt(records) * 100, 
+	def publish_realtime(self, current, total):
+		frappe.publish_realtime("real_progress", {
+			"progress": flt(current) / flt(total) * 100, 
 		}, user=frappe.session.user)

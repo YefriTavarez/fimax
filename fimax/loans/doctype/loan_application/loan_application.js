@@ -431,7 +431,12 @@ frappe.ui.form.on('Loan Application', {
 		}
 	},
 	"update_repayment_amount": (frm) => {
-		frm.call("validate").then(() => frm.refresh());
+		frm.call("validate").then(() => {
+			frappe.run_serially([
+				() => frm.refresh(),
+				() => frm.dirty()
+			]);
+		});
 	},
 	"calculate_loan_amount": (frm) => {
 		let can_proceed = frm.doc.requested_gross_amount && frm.doc.legal_expenses_rate;
@@ -463,6 +468,8 @@ frappe.ui.form.on('Loan Application', {
 		refresh_field("legal_expenses_amount");
 	},
 	"calculate_requested_net_amount": (frm) => {
+		if (frm.doc.docstatus) { return ; }
+
 		frm.doc.requested_net_amount = flt(frm.doc.requested_gross_amount) 
 			* flt(fimax.utils.from_percent_to_decimal(frm.doc.legal_expenses_rate) + 1);
 

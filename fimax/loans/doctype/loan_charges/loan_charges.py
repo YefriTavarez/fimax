@@ -48,12 +48,10 @@ class LoanCharges(Document):
 	def update_references(self, cancel=False):
 		reference = frappe.get_doc(self.reference_type, self.reference_name)
 
-		if not cancel:
-			reference.paid_amount += self.paid_amount
-			reference.outstanding_amount -= self.paid_amount
-		else:
-			reference.paid_amount -= self.paid_amount
-			reference.outstanding_amount += self.paid_amount
+		if not cancel: pass
+
+		reference.paid_amount = self.get_paid_amount()
+		reference.outstanding_amount = self.get_outstanding_amount()
 
 		if hasattr(reference, "validate_amounts"):
 			reference.validate_amounts()
@@ -66,6 +64,26 @@ class LoanCharges(Document):
 	def set_missing_values(self):
 		self.outstanding_amount = self.total_amount
 
+	def get_outstanding_amount(self):
+		total_amount = frappe.db.get_value("Loan Charges", filters={
+			"docstatus": 1,
+			"status": ["!=", "Closed"],
+			"reference_type": self.reference_type,
+			"reference_name": self.reference_name,
+		}, fieldname=["SUM(total_amount)"])
+
+		return flt(total_amount, 2) - self.get_paid_amount()
+
+	def get_paid_amount(self):
+		paid_amount = frappe.db.get_value("Loan Charges", filters={
+			"docstatus": 1,
+			"status": ["!=", "Closed"],
+			"reference_type": self.reference_type,
+			"reference_name": self.reference_name,
+		}, fieldname=["SUM(paid_amount)"])
+
+		return flt(paid_amount, 2)
+
 	def update_outstanding_amount(self):
 		if not self.docstatus == 1.000:
 			frappe.throw(__("Please submit this Loan Charge before updating the outstanding amount!"))
@@ -75,7 +93,7 @@ class LoanCharges(Document):
 		if outstanding_amount < 0.000:
 			frappe.throw(__("Outstanding amount cannot be negative!"))
 
-		self.outstanding_amount = outstanding_amount
+		self.outstanding_amount = flt(outstanding_amount, 2)
 
 	def validate_reference_name(self):
 		if not self.loan:
@@ -106,7 +124,7 @@ class LoanCharges(Document):
 	def update_status(self):
 
 		# it's pending if repayment date is in the future and has nothing paid
-		if cstr(self.repayment_date) >= nowdate() and self.paid_amount == 0.000:
+		if cstr(self.repayment_date) >= nowdate() and self.outstanding_amount > 0.000:
 			self.status = "Pending"
 
 		# it's partially paid if repayment date is in the future and has something paid
@@ -114,11 +132,11 @@ class LoanCharges(Document):
 			self.status = "Partially"
 
 		# it's overdue if repayment date is in the past and is not fully paid
-		if cstr(self.repayment_date) < nowdate() and self.outstanding_amount > 0.000:
+		if cstr(self.repayment_date) <= nowdate() and self.outstanding_amount > 0.000:
 			self.status = "Overdue"
 
 		# it's paid if paid and total amount are equal hence there's not outstanding amount
-		if self.paid_amount == self.total_amount:
+		if flt(self.paid_amount, 2) == flt(self.total_amount, 2) or not flt(self.outstanding_amount, 0):
 			self.status = "Paid"
 
 	def get_double_matched_entry(self, amount, against):

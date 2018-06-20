@@ -2,8 +2,6 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('Insurance Card', {
-	"refresh": (frm) => {	
-	},
 	"onload_post_render": (frm) => {
 		if (frm.is_new()) {
 			frm.trigger("start_date");

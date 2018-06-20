@@ -18,7 +18,7 @@ class InsuranceRepaymentSchedule(Document):
 	def update_status(self):
 
 		# it's pending if repayment date is in the future and has nothing paid
-		if cstr(self.repayment_date) >= nowdate() and self.paid_amount == 0.000:
+		if cstr(self.repayment_date) >= nowdate() and self.outstanding_amount > 0.000:
 			self.status = "Pending"
 
 		# it's partially paid if repayment date is in the future and has something paid
@@ -26,11 +26,11 @@ class InsuranceRepaymentSchedule(Document):
 			self.status = "Partially"
 
 		# it's overdue if repayment date is in the past and is not fully paid
-		if cstr(self.repayment_date) < nowdate() and self.outstanding_amount > 0.000:
+		if cstr(self.repayment_date) <= nowdate() and self.outstanding_amount > 0.000:
 			self.status = "Overdue"
 
 		# it's paid if paid and total amount are equal hence there's not outstanding amount
-		if self.paid_amount == self.repayment_amount:
+		if flt(self.paid_amount, 2) == flt(self.repayment_amount, 2):
 			self.status = "Paid"
 
 	def validate_amounts(self):
