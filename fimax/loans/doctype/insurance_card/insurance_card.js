@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('Insurance Card', {
-	"onload_post_render": (frm) => {
+	"onload": (frm) => {
 		if (frm.is_new()) {
 			frm.trigger("start_date");
 		}
@@ -17,6 +17,18 @@ frappe.ui.form.on('Insurance Card', {
 		}, (key, value)=> frm.add_fetch("loan", key, value));
 
 		frm.trigger("set_status_indicators");
+	},
+	"onload_post_render": (frm) => {
+		frappe.realtime.on("real_progress", function(data) {
+			frappe.show_progress(__("Wait"), flt(data.progress));
+
+			if (cstr(data.progress) == "100") {
+				frappe.run_serially([
+					() => frappe.timeout(1),
+					() => frappe.hide_progress()
+				]);
+			}
+		});
 	},
 	"on_submit": (frm) => {
 		frappe.run_serially([
@@ -131,5 +143,8 @@ frappe.ui.form.on('Insurance Card', {
 			html.find("div[data-fieldname=status] .static-area.ellipsis").addClass(indicator);
 		});
 	},
-
+	"sync_with_loan_charges": (frm) => {
+		frm.call("sync_this_with_loan_charges")
+			.then(() => frm.reload_doc());
+	},
 });

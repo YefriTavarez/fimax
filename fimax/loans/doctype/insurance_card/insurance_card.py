@@ -127,3 +127,28 @@ class InsuranceCard(Document):
 			"parentfield": "loan_schedule",
 			"status": ["not in", ["Closed", "Paid"]]
 		}, ["idx"], order_by="idx") or 1
+
+	def sync_this_with_loan_charges(self):
+		records = len(self.insurance_repayment_schedule) or 1
+
+		for idx, row in enumerate(self.insurance_repayment_schedule):
+			self.publish_realtime(idx + 1, records)
+
+			paid_amount, last_status = frappe.db.get_value("Loan Charges", filters={
+				"docstatus": 1,
+				"status": ["!=", "Closed"],
+				"reference_type": row.doctype,
+				"reference_name": row.name,
+			}, fieldname=[
+				"SUM(paid_amount)",
+				"status"], order_by="name ASC")
+
+			row.paid_amount = flt(paid_amount)
+			row.outstanding_amount = flt(row.repayment_amount - row.paid_amount)
+			row.status = last_status or row.status
+			row.submit()
+
+	def publish_realtime(self, current, total):
+		frappe.publish_realtime("real_progress", {
+			"progress": flt(current) / flt(total) * 100, 
+		}, user=frappe.session.user)
