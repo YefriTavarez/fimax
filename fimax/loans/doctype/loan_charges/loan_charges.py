@@ -21,31 +21,16 @@ class LoanCharges(Document):
 
 	def on_update_after_submit(self):
 		self.validate_amounts()
-		# self.update_references(cancel=False)
-
-	def before_insert(self):
-		pass
-
-	def after_insert(self):
-		pass
-
-	def before_submit(self):
-		pass
 
 	def on_submit(self):
 		self.update_outstanding_amount()
 
-	def before_cancel(self):
-		pass
-
-	def on_cancel(self):
-		pass
-		# self.update_references(cancel=True)
-
-	def on_trash(self):
-		pass
-
 	def update_references(self, cancel=False):
+		# list of reference types that don't need to update the outstanding and paid amount
+		skipped_list = ["Insurance Card", "GPS Installation"]
+
+		if self.reference_type in skipped_list: return
+		
 		reference = frappe.get_doc(self.reference_type, self.reference_name)
 
 		if not cancel: pass
