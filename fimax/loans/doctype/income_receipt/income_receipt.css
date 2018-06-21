@@ -1,3 +1,7 @@
 div[data-fieldname=income_receipt_items] .btn.btn-xs.btn-default.grid-add-row {
 	display: none;
 }
+
+div[data-fieldname=income_receipt_items] .row-index.sortable-handle.col.col-xs-1 > span {
+	display: none;
+}
