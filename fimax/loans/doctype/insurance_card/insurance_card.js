@@ -18,6 +18,23 @@ frappe.ui.form.on('Insurance Card', {
 
 		frm.trigger("set_status_indicators");
 	},
+	"on_submit": (frm) => {
+		frappe.run_serially([
+			() => frappe.timeout(1.5),
+			() => frm.trigger("save_initial_payment_receipt")
+		]);
+	},
+	"save_initial_payment_receipt": (frm) => {
+		frappe.new_doc("Income Receipt", {
+			"loan": frm.doc.loan,
+			"posting_date": frappe.datetime.now_date(),
+			"user_remarks": __("Initial Payment for Insurance: {0}", [frm.docname]),
+		}, () => {
+			setTimeout(function() {
+				cur_frm.save();
+			}, 1500)
+		});
+	},
 	"start_date": (frm) => {
 		frm.set_value("end_date", frappe.datetime.add_months(frm.doc.start_date, 12));
 		frm.trigger("make_repayment_schedule");
