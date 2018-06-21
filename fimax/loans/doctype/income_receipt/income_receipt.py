@@ -158,6 +158,8 @@ class IncomeReceipt(Document):
 		make_gl_entries(gl_map, cancel=cancel, adv_adj=adv_adj, merge_entries=False)
 
 	def update_loan_charges(self, cancel=False):
+		from frappe.utils import has_common
+
 		for row in self.income_receipt_items:
 			loan_charge = frappe.get_doc(row.voucher_type, row.voucher_name)
 
@@ -172,8 +174,11 @@ class IncomeReceipt(Document):
 			loan_charge.update_status()
 			loan_charge.submit()
 
-		frappe.get_doc(self.meta.get_field("loan").options, self.loan)\
-			.sync_this_with_loan_charges()
+		loan_charges_type_list = [d.loan_charges_type for d in self.income_receipt_items]
+
+		if has_common(["Repayment Amount", "Interest", "Capital"], loan_charges_type_list):
+			frappe.get_doc(self.meta.get_field("loan").options, self.loan)\
+				.sync_this_with_loan_charges()
 
 	def validate_income_receipt_items(self):
 
