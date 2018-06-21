@@ -45,7 +45,7 @@
   {
    "allow_bulk_edit": 0, 
    "allow_on_submit": 0, 
-   "bold": 1, 
+   "bold": 0, 
    "collapsible": 0, 
    "columns": 0, 
    "default": "0.00", 
@@ -265,7 +265,7 @@
  "issingle": 0, 
  "istable": 1, 
  "max_attachments": 0, 
- "modified": "2018-06-18 12:47:14.481905", 
+ "modified": "2018-06-21 00:00:26.343917", 
  "modified_by": "Administrator", 
  "module": "Loans", 
  "name": "Insurance Repayment Schedule", 
