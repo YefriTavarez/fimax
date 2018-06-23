@@ -82,6 +82,15 @@ def get_data():
 			"link": "List/Property/List"
 		}, 
 		{
+			"module_name": "Income Receipt Express",
+			"label": "Payment Express",
+			"_doctype": "Income Receipt Express",
+			"color": "#4caf50",
+			"icon": "fa fa-paper-plane" ,
+			"type": "link",
+			"link": "List/Income Receipt Express/List"
+		}, 
+		{
 			"module_name": "Income Receipt",
 			"_doctype": "Income Receipt",
 			"color": "#9e9e9e",
