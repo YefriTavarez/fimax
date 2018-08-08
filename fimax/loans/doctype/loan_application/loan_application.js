@@ -9,6 +9,7 @@ frappe.ui.form.on('Loan Application', {
 			"show_hide_fields_based_on_role", "add_custom_buttons"
 		];
 		$.map(event_list, (event) => frm.trigger(event));
+
 	},
 	"onload": (frm) => {
 		let event_list = ["set_approver", "set_defaults", "set_dynamic_labels"];
@@ -203,6 +204,8 @@ frappe.ui.form.on('Loan Application', {
 					fimax.utils.frequency_in_years(frm.doc.repayment_frequency);
 
 				frm.doc["interest_rate"] = repayment_interest_rate;
+				//Let's update the label of repayment_frequency's field 
+				frm.trigger("update_interest_rate_label");
 				frm.refresh_fields();
 			});
 	},
@@ -348,6 +351,7 @@ frappe.ui.form.on('Loan Application', {
 			return 0;
 		}
 
+		console.log(frm.fields_dict.loan_type.df.options, frm.doc.loan_type);
 		frappe.db.get_value(frm.fields_dict.loan_type.df.options, frm.doc.loan_type, "interest_rate")
 			.done((response) => {
 				let data = response.message;
