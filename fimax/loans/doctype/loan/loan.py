@@ -120,10 +120,14 @@ class Loan(Document):
 	def set_accounts(self):
 		self.set_party_account()
 		income_account = frappe.get_value("Company", self.company, "default_income_account")
-		default_mode_of_payment  = frappe.get_value("Company", self.company, "default_cash_account")
+
+		default_mode_of_payment = frappe.db.get_single_value("Control Panel", "default_mode_of_payments")
 
 		if not self.income_account:
 			self.income_account = income_account
+
+		if not self.mode_of_payment:
+			self.mode_of_payment = default_mode_of_payment
 			
 		if not self.mode_of_payment:
 			self.mode_of_payment = default_mode_of_payment
@@ -211,7 +215,7 @@ class Loan(Document):
 			frappe.throw(__("Selected party account is not Receivable!"))
 
 		if not currency == self.currency:
-			frappe.throw(__("Selected party account currency does not match with the Loan's Currency!"))
+			frappe.throw(__("Customer's currency and Loan's currency must be the same, you may want to create a new customer with the desired currency if necessary!"))
 
 	def validate_exchange_rate(self):
 		if not self.exchange_rate:
