@@ -120,9 +120,13 @@ class Loan(Document):
 	def set_accounts(self):
 		self.set_party_account()
 		income_account = frappe.get_value("Company", self.company, "default_income_account")
+		default_mode_of_payment  = frappe.get_value("Company", self.company, "default_cash_account")
 
 		if not self.income_account:
 			self.income_account = income_account
+			
+		if not self.mode_of_payment:
+			self.mode_of_payment = default_mode_of_payment
 			
 		self.disbursement_account = frappe.get_value("Company", self.company, "default_bank_account")
 		
