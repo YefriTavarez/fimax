@@ -5,3 +5,17 @@ div[data-fieldname=income_receipt_items] .btn.btn-xs.btn-default.grid-add-row {
 div[data-fieldname=income_receipt_items] .row-index.sortable-handle.col.col-xs-1 > span {
 	display: none;
 }
+
+div[data-fieldname=income_receipt_items] div.row-index.sortable-handle.col.col-xs-1 {
+	display: none;
+}
+
+div[data-fieldname=income_receipt_items]  .octicon-triangle-down:before {
+	content: '\f04e';
+	font-size: 20px;
+	margin-right: -20px;
+}
+
+div[data-fieldname=income_receipt_items]  .octicon-triangle-up:before {
+	content: '\f03a';
+}
