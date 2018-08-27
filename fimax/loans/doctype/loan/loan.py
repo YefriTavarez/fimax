@@ -11,6 +11,7 @@ from fimax.api import create_loan_from_appl
 
 from fimax import simple
 from fimax import compound
+from fimax.utils import delete_doc
 
 from frappe.utils import flt, cint, cstr
 from frappe import _ as __
@@ -36,7 +37,12 @@ class Loan(Document):
 		self.validate_loan_application()
 
 	def after_insert(self):
-		pass
+		# Let's create the a Loan Record for future follow up.
+		l_record = frappe.new_doc("Loan Record")
+		l_record.loan = self.name
+		l_record.party_type = self.party_type
+		l_record.party = self.party
+		l_record.insert()
 
 	def update_status(self, new_status):
 		options = self.meta.get_field("status").options
@@ -66,7 +72,10 @@ class Loan(Document):
 		self.update_status(new_status="Cancelled")
 
 	def on_cancel(self):
-		pass
+		l_record = frappe.get_doc("Loan Record", self.name)
+
+		if l_record:
+			delete_doc(l_record) 
 
 	def on_trash(self):
 		pass
@@ -284,7 +293,6 @@ class Loan(Document):
 				for loan_charges_type in ('Capital', 'Interest', 'Repayment Amount')]
 
 	def cancel_and_delete_loan_charge(self, child, loan_charges_type):
-		import fimax.utils
 		
 		loan_charge = child.get_loan_charge(loan_charges_type)
 
