@@ -17,6 +17,15 @@ frappe.ui.form.on('Income Receipt', {
 	"onload_post_render": (frm) => {
 		frm.trigger("set_dynamic_labels");
 	},
+	"validate": (frm) => {
+		let total_discount = 0;
+
+		$.map(frm.doc.income_receipt_items, (row) => total_discount += row.discount);
+
+		if (!frm.doc.write_off_amount == total_discount) {
+			frappe.throw(__("Total allocated discount should be the same as the Write off amount!"))
+		}
+	},
 	"set_queries": (frm) => {
 		let queries = ["set_loan_query", "set_account_query", 
 			"set_against_account_query", "set_income_account_query"];
@@ -74,6 +83,24 @@ frappe.ui.form.on('Income Receipt', {
 			frm.trigger("fetch_loan_charges");
 		}
 	},
+	"write_off_amount": (frm) => {
+		let income_receipt_items = frm.doc.income_receipt_items;
+		let records = income_receipt_items.length;
+		
+		if (!records) { return ; }
+
+		let row_discount = cint(frm.doc.write_off_amount / records);
+		let remaining = frm.doc.write_off_amount - flt(row_discount * records);
+
+		let idx = 0;
+		$.each(income_receipt_items, (key, value) => {
+			idx = key;
+			value.discount = row_discount;
+		});
+
+		frm.doc.income_receipt_items[idx].discount += remaining;
+		frm.refresh_fields();
+	},
 	"clear_all_fields": (frm) => {
 		let except_list = ["posting_date"];
 
@@ -129,6 +156,7 @@ frappe.ui.form.on('Income Receipt', {
 		}
 	},
 	"fetch_from_loan_charges": (frm) => {
+		// fake fields in the form
 		frm.fields_dict.loan_charges_type = {
 			"df": frm.fields_dict.income_receipt_items.grid.fields_map.loan_charges_type
 		};
@@ -142,8 +170,8 @@ frappe.ui.form.on('Income Receipt', {
 			"target": frm,
 			"date_field": "repayment_date",
 			"setters": {
-				"repayment_period": undefined, // field has to defined in the current form
-				"loan_charges_type": undefined, // field has to defined in the current form
+				"repayment_period": undefined,
+				"loan_charges_type": undefined,
 			},
 			"get_query": () => {
 				return {
@@ -329,10 +357,11 @@ frappe.ui.form.on('Income Receipt', {
 		
 		frm.set_currency_labels(["total_paid", "grand_total",
 			"total_outstanding", "difference_amount"], frm.doc.currency);
+		frm.set_currency_labels(["write_off_amount"], frm.doc.loan_currency);
 
 		let field_lists = [
 			[["allocated_amount"], frm.doc.income_account_currency, 'income_receipt_items'],
-			[["outstanding_amount", "total_amount"], frm.doc.loan_currency, 'income_receipt_items'],
+			[["outstanding_amount", "total_amount", "discount"], frm.doc.loan_currency, 'income_receipt_items'],
 			[["base_allocated_amount", "base_outstanding_amount", "base_total_amount"], frm.doc.currency, 'income_receipt_items'],
 		];
 

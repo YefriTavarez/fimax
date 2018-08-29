@@ -351,7 +351,6 @@ frappe.ui.form.on('Loan Application', {
 			return 0;
 		}
 
-		console.log(frm.fields_dict.loan_type.df.options, frm.doc.loan_type);
 		frappe.db.get_value(frm.fields_dict.loan_type.df.options, frm.doc.loan_type, "interest_rate")
 			.done((response) => {
 				let data = response.message;

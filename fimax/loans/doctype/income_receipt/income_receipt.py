@@ -14,6 +14,7 @@ from frappe import _
 class IncomeReceipt(Document):
 	def validate(self):
 		self.validate_income_receipt_items()
+		self.validate_discount_amounts()
 
 	def on_submit(self):
 		self.make_gl_entries(cancel=False)
@@ -164,11 +165,11 @@ class IncomeReceipt(Document):
 			loan_charge = frappe.get_doc(row.voucher_type, row.voucher_name)
 
 			if not cancel:
-				loan_charge.paid_amount += row.allocated_amount
-				loan_charge.outstanding_amount -= row.allocated_amount
+				loan_charge.paid_amount += row.base_allocated_amount
+				loan_charge.outstanding_amount -= row.base_allocated_amount
 			else:
-				loan_charge.paid_amount -= row.allocated_amount
-				loan_charge.outstanding_amount += row.allocated_amount
+				loan_charge.paid_amount -= row.base_allocated_amount
+				loan_charge.outstanding_amount += row.base_allocated_amount
 
 			loan_charge.update_references(cancel=cancel)
 			loan_charge.update_status()
@@ -181,8 +182,24 @@ class IncomeReceipt(Document):
 				.sync_this_with_loan_charges()
 
 	def validate_income_receipt_items(self):
-
 		for row in self.income_receipt_items:
 			if cstr(row.repayment_date) < nowdate() and not flt(row.allocated_amount):
-				frappe.throw(_("""Missing allocated amount for due Loan Charge in row: {}
-					""".format(row.idx)))
+				frappe.throw(_("Missing allocated amount for due Loan Charge in row: {0}" \
+					.format(row.idx)))
+
+	def validate_discount_amounts(self):
+		total_discount = sum([row.discount for row in self.income_receipt_items])
+
+		if not flt(self.write_off_amount) == total_discount:
+			frappe.throw(_("Total Discount should be equals to Write off Amount!"))
+
+	def validate_write_off_account(self):
+		if not self.write_off_amount: 
+			self.write_off_account = None
+
+		if self.write_off_account:
+			root_type = frappe.get_value("Account", self.write_off_account, "root_type")
+
+			if not root_type == "Expense":
+				frappe.throw(_("Write off account should a Expense account!"))
+
