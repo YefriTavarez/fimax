@@ -38,11 +38,11 @@ class Loan(Document):
 
 	def after_insert(self):
 		# Let's create the a Loan Record for future follow up.
-		l_record = frappe.new_doc("Loan Record")
-		l_record.loan = self.name
-		l_record.party_type = self.party_type
-		l_record.party = self.party
-		l_record.insert()
+		record = frappe.new_doc("Loan Record")
+		record.loan = self.name 
+		record.party_type = self.party_type 
+		record.party = self.party 
+		record.insert(ignore_permissions=True)
 
 	def update_status(self, new_status):
 		options = self.meta.get_field("status").options
@@ -72,13 +72,14 @@ class Loan(Document):
 		self.update_status(new_status="Cancelled")
 
 	def on_cancel(self):
-		l_record = frappe.get_doc("Loan Record", self.name)
-
-		if l_record:
-			delete_doc(l_record) 
+		pass
 
 	def on_trash(self):
-		pass
+		record = frappe.db.exists("Loan Record", self.name)
+
+		if record:
+			record = frappe.get_doc("Loan Record", self.name)
+			delete_doc(record) 
 
 	def make_loan(self):
 		if self.loan_application:
@@ -304,7 +305,7 @@ class Loan(Document):
 			frappe.throw(__("Could not cancel this Loan because the loan charge <i>{1}</i>:<b>{0}</b> is not pending anymore!"
 				.format(doc.name, doc.loan_charges_type)))
 
-		fimax.utils.delete_doc(doc)
+		delete_doc(doc)
 
 		frappe.db.commit()
 
