@@ -63,7 +63,7 @@ def create_loan_charges_fines_for_(company):
 
 	for name, in frappe.get_list(doctype, {
 		"status": "Overdue",
-		"repayment_date": ["<=", due_date]
+		"repayment_date": [">=", due_date]
 	}, as_list=True):
 
 		reference_type, reference_name = frappe.get_value(doctype, name, 
