@@ -11,6 +11,7 @@ from fimax.api import create_loan_from_appl
 
 from fimax import simple
 from fimax import compound
+from fimax.utils import delete_doc
 
 from frappe.utils import flt, cint, cstr
 from frappe import _ as __
@@ -36,7 +37,12 @@ class Loan(Document):
 		self.validate_loan_application()
 
 	def after_insert(self):
-		pass
+		# Let's create the a Loan Record for future follow up.
+		record = frappe.new_doc("Loan Record")
+		record.loan = self.name 
+		record.party_type = self.party_type 
+		record.party = self.party 
+		record.insert(ignore_permissions=True)
 
 	def update_status(self, new_status):
 		options = self.meta.get_field("status").options
@@ -69,7 +75,11 @@ class Loan(Document):
 		pass
 
 	def on_trash(self):
-		pass
+		record = frappe.db.exists("Loan Record", self.name)
+
+		if record:
+			record = frappe.get_doc("Loan Record", self.name)
+			delete_doc(record) 
 
 	def make_loan(self):
 		if self.loan_application:
@@ -121,8 +131,16 @@ class Loan(Document):
 		self.set_party_account()
 		income_account = frappe.get_value("Company", self.company, "default_income_account")
 
+		default_mode_of_payment = frappe.db.get_single_value("Control Panel", "default_mode_of_payments")
+
 		if not self.income_account:
 			self.income_account = income_account
+
+		if not self.mode_of_payment:
+			self.mode_of_payment = default_mode_of_payment
+			
+		if not self.mode_of_payment:
+			self.mode_of_payment = default_mode_of_payment
 			
 		self.disbursement_account = frappe.get_value("Company", self.company, "default_bank_account")
 		
@@ -207,7 +225,7 @@ class Loan(Document):
 			frappe.throw(__("Selected party account is not Receivable!"))
 
 		if not currency == self.currency:
-			frappe.throw(__("Selected party account currency does not match with the Loan's Currency!"))
+			frappe.throw(__("Customer's currency and Loan's currency must be the same, you may want to create a new customer with the desired currency if necessary!"))
 
 	def validate_exchange_rate(self):
 		if not self.exchange_rate:
@@ -276,7 +294,6 @@ class Loan(Document):
 				for loan_charges_type in ('Capital', 'Interest', 'Repayment Amount')]
 
 	def cancel_and_delete_loan_charge(self, child, loan_charges_type):
-		import fimax.utils
 		
 		loan_charge = child.get_loan_charge(loan_charges_type)
 
@@ -288,7 +305,7 @@ class Loan(Document):
 			frappe.throw(__("Could not cancel this Loan because the loan charge <i>{1}</i>:<b>{0}</b> is not pending anymore!"
 				.format(doc.name, doc.loan_charges_type)))
 
-		fimax.utils.delete_doc(doc)
+		delete_doc(doc)
 
 		frappe.db.commit()
 
