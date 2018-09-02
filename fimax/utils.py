@@ -11,3 +11,15 @@ def delete_doc(doc):
 	if DocStatus(doc.docstatus) is DocStatus.SUBMITTED:
 		doc.cancel()
 	doc.delete()
+
+def create_loan_record(doc):
+	record = frappe.new_doc("Loan Record")
+
+	record.update({
+		"loan": doc.name,
+		"status": doc.status,
+		"party_type": doc.party_type,
+		"party": doc.party
+	})
+
+	return record.insert(ignore_permissions=True)
