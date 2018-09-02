@@ -63,7 +63,7 @@ def create_loan_charges_fines_for_(company):
 
 	for name, in frappe.get_list(doctype, {
 		"status": "Overdue",
-		"repayment_date": [">=", due_date]
+		"repayment_date": ["<=", due_date]
 	}, as_list=True):
 
 		reference_type, reference_name = frappe.get_value(doctype, name, 
@@ -80,7 +80,7 @@ def create_loan_charges_fines_for_(company):
 			time_to_run = add_months(doc.last_run, 1)
 
 		if time_to_run and not cstr(time_to_run) <= nowdate():
-			return
+			continue
 
 		amount = late_payment_fee_rate * total_amount if late_payment_fee_on_total_amount \
 			else outstanding_amount
