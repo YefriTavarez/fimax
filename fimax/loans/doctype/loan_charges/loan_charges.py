@@ -170,3 +170,27 @@ class LoanCharges(Document):
 		if self.outstanding_amount == 0 \
 			or self.paid_amount > 0: return False
 		return True
+
+def on_doctype_update():
+	# Let's drop the view if exists
+	frappe.db.sql("""DROP VIEW IF EXISTS `viewPaid Fine`""")
+	
+	# Let's create the view
+	frappe.db.sql("""
+		CREATE VIEW `viewPaid Fine` AS SELECT 
+			loan.name as loan,
+			loan.party as party,
+			charge.repayment_period as repayment,
+			(SELECT DATE(MAX(t.creation)) FROM `tabIncome Receipt Items` t WHERE t.voucher_name = charge.name) as fecha,
+			charge.total_amount as paid_amount,
+			charge.total_amount as total_amount,
+			charge.loan_charges_type as type, 
+			charge.status as status
+		FROM 
+			`tabLoan Charges` charge
+		JOIN 
+			`tabLoan` loan 
+		ON 
+			loan.name = charge.loan
+		""")
+	print("Termine!!")

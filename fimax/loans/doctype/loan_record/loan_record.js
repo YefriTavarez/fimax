@@ -3,6 +3,6 @@
 
 frappe.ui.form.on('Loan Record', {
 	refresh: function(frm) {
-		frm.toggle_display("loan", 1);
+		frm.toggle_display("loan", true);
 	}
 });
