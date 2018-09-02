@@ -2,7 +2,115 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on('GPS Installation', {
-	refresh: function(frm) {
+	"onload": (frm) => {
+		if (frm.is_new()) {
+			frm.trigger("starts_date");
+		}
+	},
+	"starts_date": (frm) => {
+		frm.set_value("ends_date", frappe.datetime.add_months(frm.doc.starts_date, 12));
+	},
+	"refresh": function(frm) {
 
+		$.each({
+			"party": "party",
+			"party_type": "party_type",
+			"party_name": "party_name",
+			"company": "company",
+			"company_currency": "company_currency",
+			"currency": "currency"
+		}, (key, value)=> frm.add_fetch("loan", key, value));
+	},
+	"total_amount":(frm)=>{
+		events = ["calculate_outstanding_amount", "make_repayment_schedule"];
+		$.map(events, (event) => frm.trigger(event));
+
+	},
+	"calculate_outstanding_amount": (frm) => {
+		if (frm.doc.initial_payment_amount >= frm.doc.total_amount) {
+			frappe.msgprint(__("Initial Payment Amount can't be greater that Total Amount!"));
+			frm.set_value("initial_payment_amount", 0.00);
+		}
+			
+		let outstanding_amount = frm.doc.total_amount - frm.doc.initial_payment_amount;
+		frm.set_value("outstanding_amount", outstanding_amount);
+	},
+	"initial_payment_amount": (frm) => {
+		frm.trigger("calculate_outstanding_amount");
+		if (frm.doc.initial_payment_amount < 0.00) {
+			let a_third_of_total_amt = frm.doc.total_amount * 0.3;
+			
+			frm.set_value("initial_payment_amount", a_third_of_total_amt);
+			frappe.throw(__("Initial Payment Amount should be greater than zero!"));
+		}
+		frm.trigger("make_repayment_schedule");
+	},
+	"make_repayment_schedule": (frm) => {
+		if (frm.doc.total_amount <= 0.00 || frm.doc.is_paid_upfront) { return ; }
+
+		let monthly_repayment_amount = cint(frm.doc.outstanding_amount / frm.doc.repayment_periods);
+		let outstanding_amount = frm.doc.outstanding_amount;
+		let allocated_amount = 0.00;
+		let row_idx = 1;
+
+		frm.doc.gps_repayment_schedule = [];
+		let row;
+
+		while (outstanding_amount >= monthly_repayment_amount) {
+			row = frm.add_child("gps_repayment_schedule", {
+				"repayment_date": frappe.datetime.add_months(frm.doc.start_date, row_idx),
+				"paid_amount": 0.00,
+				"repayment_amount": monthly_repayment_amount,
+				"outstanding_amount": monthly_repayment_amount,
+				"status": "Pending"
+			});
+
+			outstanding_amount -= monthly_repayment_amount;
+			allocated_amount += monthly_repayment_amount;
+			row_idx ++;
+		}
+
+		real_outstanding_amount = frm.doc.outstanding_amount - allocated_amount;
+		row.repayment_amount += real_outstanding_amount;
+		row.outstanding_amount += real_outstanding_amount;
+
+		frm.trigger("set_status_indicators");
+		frm.refresh_fields();
+	},
+	"set_status_indicators": (frm) => {
+		let grid = frm.get_field('gps_repayment_schedule').grid;
+
+		grid.wrapper.find("div.rows .grid-row").each((idx, vhtml) => {
+			let doc = frm.doc.gps_repayment_schedule[idx];
+
+			let html = $(vhtml);
+
+			let indicator = {
+				"Pending": "indicator orange",
+				"Overdue": "indicator red",
+				"Partially": "indicator yellow",
+				"Paid": "indicator green",
+			}[doc.status];
+
+			// let's remove any previous set class
+			$.map(["orange", "red", "yellow", "green"], (color) => {
+				html.find("div[data-fieldname=status] .static-area.ellipsis")
+					.removeClass(__("indicator {0}", [color]));
+			});
+
+			html.find("div[data-fieldname=status] .static-area.ellipsis").addClass(indicator);
+		});
+	},
+	"repayment_periods": (frm) => {
+		let events = ["validate_repayment_periods", "make_repayment_schedule"];
+		$.map(events, (event) => frm.trigger(event));
+	},
+
+	"validate_repayment_periods": (frm) => {
+		if (frm.doc.repayment_periods <= 0.00) {
+			frm.set_value("repayment_periods", 3.00);
+			frappe.throw(__("Value for Repayment Periods should be greater than zero!"));
+		}
 	}
+
 });
