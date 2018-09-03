@@ -4,11 +4,11 @@
 frappe.ui.form.on('GPS Installation', {
 	"onload": (frm) => {
 		if (frm.is_new()) {
-			frm.trigger("starts_date");
+			frm.trigger("start_date");
 		}
 	},
-	"starts_date": (frm) => {
-		frm.set_value("ends_date", frappe.datetime.add_months(frm.doc.starts_date, 12));
+	"start_date": (frm) => {
+		frm.set_value("ends_date", frappe.datetime.add_months(frm.doc.start_date, 12));
 	},
 	"refresh": function(frm) {
 
