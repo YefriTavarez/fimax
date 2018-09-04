@@ -137,12 +137,15 @@ frappe.ui.form.on('Loan', {
 		});
 	},
 	"set_dynamic_labels": (frm) => {
-		$.map(frm.meta.fields, field => {
+		let currency_fields = $.grep(frm.meta.fields, field => {
 			if (field.fieldtype == "Currency") {
-				let new_label = __("{0} ({1})", [field.label, frm.doc.currency]);
-				frm.set_df_property(field.fieldname, "label", new_label);
+				return true;
 			}
-		});
+
+			return false;
+		}).map(field => field.fieldname);
+
+		frm.set_currency_labels(currency_fields, frm.doc.currency);
 	},
 	"toggle_mandatory_fields": (frm) => {
 		let event_list = ["toggle_loan_type_mandatory_fields"];

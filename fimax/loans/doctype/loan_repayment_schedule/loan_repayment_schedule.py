@@ -28,7 +28,8 @@ class LoanRepaymentSchedule(Document):
 			self.status = "Overdue"
 
 		# it's paid if paid and total amount are equal hence there's not outstanding amount
-		if flt(self.paid_amount, 2) == flt(self.repayment_amount, 2) or not flt(self.outstanding_amount, 0):
+		if flt(self.paid_amount, 2) == flt(self.repayment_amount, 2)\
+			or not flt(self.outstanding_amount, 0):
 			self.status = "Paid"
 
 	def validate_amounts(self):
@@ -57,6 +58,8 @@ class LoanRepaymentSchedule(Document):
 		})
 
 	def get_loan_charge(self, loan_charges_type):
+		doctype = "Loan Charges"
+
 		filters_dict = {
 			'loan_charges_type': loan_charges_type,
 			'repayment_date': cstr(self.repayment_date),
@@ -65,5 +68,26 @@ class LoanRepaymentSchedule(Document):
 			'reference_name': self.name,
 		}
 
-		if frappe.db.exists("Loan Charges", filters_dict):
-			return frappe.get_doc("Loan Charges", filters_dict)
+		if frappe.db.exists(doctype, filters_dict):
+			return frappe.get_doc(doctype, filters_dict)
+
+	def set_pending_fine(self, amount=0.000):
+		self.fine_amount = self.get_pending_fine()
+
+		if amount:
+			self.fine_amount = amount
+
+	def get_pending_fine(self):
+		result = frappe.db.sql("""SELECT
+				SUM(total_amount) - SUM(paid_amount) AS pending_fine
+			FROM `tabLoan Charges` 
+			WHERE loan_charges_type = 'Late Payment Fee'
+				AND status not in ('Closed', 'Paid')
+				AND reference_type = %s
+				AND reference_name = %s
+			""", (self.doctype, self.name), as_list=True)
+
+		if result:
+			result = result[0][0]
+
+		return frappe.utils.flt(result)

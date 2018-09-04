@@ -24,12 +24,15 @@ frappe.ui.form.on('Loan Application', {
 		$.map(queries, (event) => frm.trigger(event));
 	},
 	"set_dynamic_labels": (frm) => {
-		$.map(frm.meta.fields, field => {
+		let currency_fields = $.grep(frm.meta.fields, field => {
 			if (field.fieldtype == "Currency") {
-				let new_label = __("{0} ({1})", [field.label, frm.doc.currency]);
-				frm.set_df_property(field.fieldname, "label", new_label);
+				return true;
 			}
-		});
+
+			return false;
+		}).map(field => field.fieldname);
+
+		frm.set_currency_labels(currency_fields, frm.doc.currency);
 	},
 	"add_fecthes": (frm) => {
 		let queries = ["add_party_fetch"];
@@ -116,7 +119,7 @@ frappe.ui.form.on('Loan Application', {
 			day_of_the_month = 30;
 		}
 
-		frm.set_value("repayment_day_of_the_month", day_of_the_month);
+		//frm.set_value("repayment_day_of_the_month", day_of_the_month);
 	},
 	"party_type": (frm) => {
 		frm.trigger("clear_party") && frm.trigger("refresh");
@@ -204,7 +207,8 @@ frappe.ui.form.on('Loan Application', {
 					fimax.utils.frequency_in_years(frm.doc.repayment_frequency);
 
 				frm.doc["interest_rate"] = repayment_interest_rate;
-				//Let's update the label of repayment_frequency's field 
+				
+				// let's update the label of repayment_frequency's field 
 				frm.trigger("update_interest_rate_label");
 				frm.refresh_fields();
 			});
@@ -364,8 +368,7 @@ frappe.ui.form.on('Loan Application', {
 			});
 	},
 	"update_interest_rate_label": (frm) => {
-		let new_label = __("Interest Rate ({0})", [frm.doc.repayment_frequency]);
-		frm.set_df_property("interest_rate", "label", new_label);
+		frm.set_currency_labels(["interest_rate"], __(frm.doc.repayment_frequency));
 	},
 	"add_approved_button": (frm) => {
 		frm.add_custom_button(__("Approve"), () => frm.trigger("approve_loan_appl"), __("Action"));
