@@ -13,6 +13,7 @@ def delete_doc(doc):
 	doc.delete()
 
 def create_loan_record(doc):
+	"""Creates a Loan Record given the Loan doc"""
 	record = frappe.new_doc("Loan Record")
 
 	record.update({

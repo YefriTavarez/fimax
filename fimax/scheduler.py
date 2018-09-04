@@ -93,9 +93,10 @@ def create_loan_charges_fines_for_(company):
 
 		loan_repayment.db_update()
 
-		update_loan_record(
-			frappe.get_doc(loan_repayment.parenttype, 
-				loan_repayment.parent))
+		if loan_repayment.parenttype == "Loan":
+			update_loan_record(
+				frappe.get_doc(loan_repayment.parenttype, 
+					loan_repayment.parent))
 
 		loan_charges.submit()
 
@@ -115,9 +116,9 @@ def get_valid_loan_charges():
 		as_dict=True)
 
 def update_loan_record(doc):
-	tbody, doc, doctype = [], get_loan_record(doc), "Loan"
+	tbody, doc = [], get_loan_record(doc)
 
-	for loan_repayment in frappe.get_doc(doctype, doc.name)\
+	for loan_repayment in frappe.get_doc(doc.meta.get_field("loan").options, doc.name)\
 		.get("loan_schedule"):
 		
 		# if loan_repayment.status in ("Overdue")		
