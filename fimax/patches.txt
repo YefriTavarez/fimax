@@ -3,3 +3,5 @@ fimax.patches.v2.remove_income_receipt_item_table
 fimax.patches.v2.add_dark_theme_field_to_user
 execute:frappe.db.sql("drop table if exists tabRecord")
 fimax.patches.v2.update_loan_record_status
+execute:frappe.db.sql("update `tabGPS Installation` set start_date = starts_date where start_date is null")
+fimax.patches.v2.drop_column_starts_date_in_gps_form
