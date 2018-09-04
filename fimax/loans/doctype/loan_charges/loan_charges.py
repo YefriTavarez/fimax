@@ -172,10 +172,10 @@ class LoanCharges(Document):
 		return True
 
 def on_doctype_update():
-	# Let's drop the view if exists
+	# let's drop the view if exists
 	frappe.db.sql("""DROP VIEW IF EXISTS `viewPaid Fine`""")
 	
-	# Let's create the view
+	# let's create the view
 	frappe.db.sql("""
 		CREATE VIEW `viewPaid Fine` AS SELECT 
 			loan.name as loan,
@@ -193,4 +193,3 @@ def on_doctype_update():
 		ON 
 			loan.name = charge.loan
 		""")
-	print("Termine!!")
