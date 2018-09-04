@@ -36,14 +36,17 @@ frappe.ui.form.on('GPS Installation', {
 		frm.set_value("outstanding_amount", outstanding_amount);
 	},
 	"initial_payment_amount": (frm) => {
-		frm.trigger("calculate_outstanding_amount");
 		if (frm.doc.initial_payment_amount < 0.00) {
 			let a_third_of_total_amt = frm.doc.total_amount * 0.3;
 			
 			frm.set_value("initial_payment_amount", a_third_of_total_amt);
 			frappe.throw(__("Initial Payment Amount should be greater than zero!"));
 		}
-		frm.trigger("make_repayment_schedule");
+
+		frappe.run_serially([
+			() => frm.trigger("calculate_outstanding_amount"),
+			() => frm.trigger("make_repayment_schedule"),
+		]);
 	},
 	"make_repayment_schedule": (frm) => {
 		if (frm.doc.total_amount <= 0.00 || frm.doc.is_paid_upfront) { return ; }
