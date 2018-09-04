@@ -66,8 +66,9 @@ frappe.ui.form.on('Insurance Card', {
 		frm.trigger("make_repayment_schedule");
 	},
 	"calculate_outstanding_amount": (frm) => {
-		if (frm.doc.initial_payment_amount > frm.doc.total_amount) {
-			frappe.msgprint(__("Initial Payment Amount can't be greater that Total Amount!"));
+		if (frm.doc.initial_payment_amount >= frm.doc.total_amount) {
+			frappe.msgprint(__("Initial Payment Amount can't be greater or equals that Total Amount!"));
+			frm.set_value("initial_payment_amount", 0.00);
 		}
 			
 		let outstanding_amount = frm.doc.total_amount - frm.doc.initial_payment_amount;

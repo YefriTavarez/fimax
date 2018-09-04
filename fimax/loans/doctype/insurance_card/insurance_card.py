@@ -5,9 +5,9 @@
 from __future__ import unicode_literals
 import frappe
 from frappe.model.document import Document
-
+from frappe.utils import formatdate
 from frappe.utils import flt, cint, cstr, nowdate
-
+from frappe import _ as __
 class InsuranceCard(Document):
 	def validate(self):
 		loan_repayment_periods = frappe.get_value("Loan", 
@@ -17,6 +17,16 @@ class InsuranceCard(Document):
 
 	def on_submit(self):
 		self.commit_to_loan_charges()
+		self.create_event()
+
+	def create_event(self):
+		event = frappe.new_doc("Event")
+		event.subject = __("The insurance card {} is due on {}".format(self.name, formatdate(self.end_date)))
+		event.starts_on = self.end_date
+		event.ends_on = "{} 23:59:59".format(cstr(self.end_date)) 
+		event.event_type = "Public"
+		event.all_day = True
+		event.insert(ignore_permissions=True)
 
 	def on_cancel(self):
 		self.status = "Cancelled"
