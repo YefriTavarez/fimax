@@ -37,12 +37,10 @@ class Loan(Document):
 		self.validate_loan_application()
 
 	def after_insert(self):
-		# Let's create the a Loan Record for future follow up.
-		record = frappe.new_doc("Loan Record")
-		record.loan = self.name 
-		record.party_type = self.party_type 
-		record.party = self.party 
-		record.insert(ignore_permissions=True)
+		import fimax.utils
+
+		# let's create the a Loan Record for future follow up
+		fimax.utils.create_loan_record(self.as_dict())
 
 	def update_status(self, new_status):
 		options = self.meta.get_field("status").options
@@ -374,6 +372,15 @@ class Loan(Document):
 			row.outstanding_amount = flt(row.repayment_amount - row.paid_amount)
 			row.status = last_status or row.status
 			row.submit()
+
+		self.update_index_for_loan_schedule()
+
+	def update_index_for_loan_schedule(self):
+		index = 1
+		for each in sorted(self.loan_schedule, key=lambda d: d.repayment_date):
+		    each.idx = index
+		    index += 1
+		    each.db_update()
 
 	def publish_realtime(self, current, total):
 		frappe.publish_realtime("real_progress", {
