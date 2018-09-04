@@ -8,5 +8,5 @@ def execute():
 		"docstatus": ["<", "2"]
 	}, ["name"], as_list=True):
 		doc = frappe.get_doc(doctype, docname)
-
-		create_loan_record(doc)
+                if not frappe.db.exists("Loan Record", docname):
+			create_loan_record(doc)
