@@ -63,6 +63,7 @@ def create_loan_charges_fines_for_(company):
 
 	for name, in frappe.get_list(doctype, {
 		"status": "Overdue",
+		"docstatus": "1",
 		"repayment_date": ["<=", due_date]
 	}, as_list=True):
 
@@ -112,32 +113,35 @@ def get_valid_loan_charges():
 		WHERE loan_charges_type.generates_fine > 0
 			AND TIMESTAMPDIFF(MONTH, loan_charges.modified, CURRENT_TIMESTAMP) > 0
 			AND loan_charges.repayment_date < CURDATE()
-				AND loan_charges.status NOT IN ('Paid' , 'Closed')""",
+			AND loan_charges.status NOT IN ('Paid' , 'Closed')""",
 		as_dict=True)
 
 def update_loan_record(doc):
 	tbody, doc = [], get_loan_record(doc)
 
-	for loan_repayment in frappe.get_doc(doc.meta.get_field("loan").options, doc.name)\
-		.get("loan_schedule"):
+	for loan_repayment in frappe.get_doc(doc.meta.get_field("loan").options, 
+		doc.name).get("loan_schedule"):
 		
-		# if loan_repayment.status in ("Overdue")		
+		loan_repayment.set_pending_fine()
 
 		trow = u"""<tr>
 			<td>{idx}</td>
 			<td>{repayment_date}</td>
 			<td>{repayment_amount}</td>
 			<td>{outstanding_amount}</td>
+			<td>{fine_amount}</td>
 			<td>{paid_amount}</td>
 			<td>{status}</td>
 		</tr>""".format(idx=cint(loan_repayment.idx),
 			repayment_date=frappe.utils.formatdate(loan_repayment.repayment_date),
 			repayment_amount=frappe.format_value(loan_repayment.repayment_amount, df={"fieldtype": "Currency"}),
+			fine_amount=frappe.format_value(loan_repayment.fine_amount, df={"fieldtype": "Currency"}),
 			paid_amount=frappe.format_value(loan_repayment.paid_amount, df={"fieldtype": "Currency"}),
 			outstanding_amount=frappe.format_value(loan_repayment.outstanding_amount, df={"fieldtype": "Currency"}),
 			status=loan_repayment.status)
 
 		tbody.append(trow)
+		loan_repayment.db_update()
 
 	doc.details = u"""<div class="table-responsive">          
 		<table class="table">
@@ -146,8 +150,9 @@ def update_loan_record(doc):
 					<th>#</th>
 					<th>{repayment_date_label}</th>
 					<th>{repayment_amount_label}</th>
-					<th>{paid_amount}</th>
 					<th>{outstanding_amount_label}</th>
+					<th>{fine_amount_label}</th>
+					<th>{paid_amount_label}</th>
 					<th>{status_label}</th>
 				</tr>
 			</thead>
@@ -157,9 +162,10 @@ def update_loan_record(doc):
 		</table>
 	</div>""".format(tbody="".join(tbody),
 		repayment_date_label=_("Date"),
-		repayment_amount_label=_("Repayment Amount"),
-		outstanding_amount_label=_("Oustanding Amount"),
-		paid_amount=_("Paid Amount"),
+		repayment_amount_label=_("Repayment"),
+		outstanding_amount_label=_("Outstanding"),
+		fine_amount_label=_("Fine"),
+		paid_amount_label=_("Paid"),
 		status_label=_("Status"))
 
   	doc.save()
