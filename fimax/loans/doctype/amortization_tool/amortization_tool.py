@@ -9,6 +9,7 @@ from fimax.api import rate_to_decimal as dec
 from fimax import simple, compound
 from frappe.utils import flt, cint, cstr, nowdate
 from fimax.utils import daily, weekly, biweekly, monthly, quartely, half_yearly, yearly
+from frappe import _ as __
 
 class AmortizationTool(Document):
 	def validate(self):
@@ -50,6 +51,10 @@ class AmortizationTool(Document):
 		self.make_repayment_schedule()
 
 	def make_repayment_schedule(self):
+		if not self.approved_net_amount\
+			or not self.repayment_periods\
+			or not self.interest_rate: return
+
 		soc = simple
 		
 		if self.interest_type == "Compound":

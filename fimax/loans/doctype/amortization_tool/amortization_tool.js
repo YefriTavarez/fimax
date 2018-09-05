@@ -3,9 +3,10 @@
 
 frappe.ui.form.on('Amortization Tool', {
 	"refresh": (frm) => {
-			let event_list = [ "update_interest_rate_label", "show_hide_fields_based_on_role",
-				 "add_custom_buttons", "set_default_repayment_day"
+		let event_list = [ "update_interest_rate_label",
+			"add_custom_buttons", "set_default_repayment_day"
 		];
+
 		$.map(event_list, (event) => frm.trigger(event));
 	},
 	"set_default_repayment_day": (frm) => {
@@ -23,12 +24,10 @@ frappe.ui.form.on('Amortization Tool', {
 		frm.set_value("repayment_day_of_the_month", day_of_the_month);
 	},
 	"currency": (frm) => {
-		frm.trigger("set_dynamic_labels");
+		frm.trigger("set_dynamic_labels"); // where is this function @Villar?
 	},
 	"loan_type": (frm) => {
-		if (!frm.doc.loan_type) {
-			return 0; // exit code is zero
-		}
+		if (!frm.doc.loan_type) { return 0; }
 
 		frappe.db.get_value(frm.fields_dict.loan_type.df.options, frm.doc.loan_type, "*")
 			.done((response) => {
@@ -55,7 +54,8 @@ frappe.ui.form.on('Amortization Tool', {
 					fimax.utils.frequency_in_years(frm.doc.repayment_frequency);
 
 				frm.doc["interest_rate"] = repayment_interest_rate;
-				//Let's update the label of repayment_frequency's field 
+				
+				//let's update the label of repayment_frequency's field 
 				frm.trigger("update_interest_rate_label");
 				frm.refresh_fields();
 			});
@@ -147,8 +147,7 @@ frappe.ui.form.on('Amortization Tool', {
 			});
 	},
 	"update_interest_rate_label": (frm) => {
-		let new_label = __("Interest Rate ({0})", [frm.doc.repayment_frequency]);
-		frm.set_df_property("interest_rate", "label", new_label);
+		frm.set_currency_labels(["interest_rate"], __(frm.doc.repayment_frequency));
 	},
 	"show_hide_fields_based_on_role": (frm) => {
 
