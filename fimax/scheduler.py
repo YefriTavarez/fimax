@@ -120,7 +120,8 @@ def update_loan_record(doc):
 	tbody, doc = [], get_loan_record(doc)
 
 	doc.details = frappe.render_template("templates/loan_record_details.html", { 
-		"rows": frappe.get_doc(doc.meta.get_field("loan").options, doc.name).get("loan_schedule") })
+		"rows": frappe.get_doc(doc.meta.get_field("loan").options, doc.name).get("loan_schedule")
+	})
 
   	doc.save()
 	
