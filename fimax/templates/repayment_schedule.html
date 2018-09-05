@@ -1,0 +1,63 @@
+<div class="frappe-control" data-fieldtype="Table" data-fieldname="loan_schedule" title="loan_schedule">
+   <div data-fieldname="loan_schedule">
+      <div class="form-grid">
+         <div class="grid-heading-row">
+            <div class="grid-row">
+               <div class="data-row row">
+                  <div class="row-index sortable-handle col col-xs-1">Sr</div>
+                  <div class="col grid-static-col col-xs-3 " data-fieldname="repayment_date" data-fieldtype="Date">
+                     <div class="field-area" style="display: none;"></div>
+                     <div class="static-area ellipsis">{{ _("Repayment Date") }}</div>
+                  </div>
+                  <div class="col grid-static-col col-xs-3 " data-fieldname="repayment_date" data-fieldtype="Currency">
+                     <div class="field-area" style="display: none;"></div>
+                     <div class="static-area ellipsis">{{ _("Repayment") }}</div>
+                  </div>
+                  <div class="col grid-static-col col-xs-2  text-right" data-fieldname="capital_amount" data-fieldtype="Currency">
+                     <div class="field-area" style="display: none;"></div>
+                     <div class="static-area ellipsis">{{ _("Capital") }}</div>
+                  </div>
+                  <div class="col grid-static-col col-xs-2  text-right" data-fieldname="interest_amount" data-fieldtype="Currency">
+                     <div class="field-area" style="display: none;"></div>
+                     <div class="static-area ellipsis">{{ _("Interest") }}</div>
+                  </div>
+               </div>
+            </div>
+         </div>
+         <div class="grid-body">
+            <div class="rows">
+               {%for row in rows %}
+                  <div class="grid-row" data-name="Amortization Tool-NO-1" data-idx="1">
+                     <div class="data-row row">
+                        <div class="row-index sortable-handle col col-xs-1">
+                           <span>{{row.idx}}</span>
+                        </div>
+                        <div class="col grid-static-col col-xs-3 " data-fieldname="repayment_date" data-fieldtype="Date">
+                           <div class="field-area" style="display: none;"></div>
+                           <div class="static-area ellipsis">{{ row.repayment_date }}</div>
+                        </div>
+                        <div class="col grid-static-col col-xs-3 " data-fieldname="repayment_amount" data-fieldtype="Currency">
+                           <div class="field-area" style="display: none;"></div>
+                           <div class="static-area ellipsis">$ {{ frappe.format(row.repayment_amount) }}</div>
+                        </div>
+                        <div class="col grid-static-col col-xs-2  text-right" data-fieldname="capital_amount" data-fieldtype="Currency">
+                           <div class="field-area" style="display: none;"></div>
+                           <div class="static-area ellipsis">
+                              <div style="text-align: right">$ {{ frappe.format(row.capital_amount) }}</div>
+                           </div>
+                        </div>
+                        <div class="col grid-static-col col-xs-2  text-right" data-fieldname="interest_amount" data-fieldtype="Currency">
+                           <div class="field-area" style="display: none;"></div>
+                           <div class="static-area ellipsis">
+                              <div style="text-align: right">$ {{ frappe.format(row.interest_amount) }}</div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               {% endfor %}
+            </div>
+         </div>
+      </div>
+   </div>
+</div>
+

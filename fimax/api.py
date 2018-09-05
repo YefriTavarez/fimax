@@ -31,6 +31,26 @@ def create_loan_from_appl(doc):
 	}, target_doc, post_process)
 
 @frappe.whitelist()
+def create_loan_appl_from_tool(doc):
+	"""Creates a Loan Application  taking an Amortization Tool
+	:param doc: is the Amortization Tool object"""
+	from frappe.model.mapper import get_mapped_doc
+
+	if isinstance(doc, basestring):
+		doc = frappe._dict(json.loads(doc))
+
+	def post_process(source_doc, target_doc):
+		target_doc.set_missing_values()
+
+	target_doc = frappe.new_doc("Loan Application")
+
+	return get_mapped_doc(doc.doctype, doc.name, {
+		"Amortization Tool": {
+			"doctype": "Loan Application"
+		}
+	}, target_doc, post_process)
+
+@frappe.whitelist()
 def get_loan(doctype, docname):
 	"""Returns an existing Loan from the DB and adds the income_account_currency
 	into the __onload property
