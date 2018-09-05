@@ -192,7 +192,7 @@ frappe.ui.form.on('Amortization Tool', {
 		});
 	},
 	"calculate_loan_amount": (frm) => {
-		let can_proceed = frm.doc.requested_gross_amount && frm.doc.legal_expenses_rate;
+		let can_proceed = frm.doc.requested_gross_amount;
 
 		if (can_proceed) {
 			frappe.run_serially([
