@@ -26,11 +26,11 @@
          </div>
          <div class="grid-body">
             <div class="rows">
-               {%for row in rows %}
+               {%- for row in rows -%}
                   <div class="grid-row" data-name="Amortization Tool-NO-1" data-idx="1">
                      <div class="data-row row">
                         <div class="row-index sortable-handle col col-xs-1">
-                           <span>{{row.idx}}</span>
+                           <span>{{ row.idx }}</span>
                         </div>
                         <div class="col grid-static-col col-xs-3 " data-fieldname="repayment_date" data-fieldtype="Date">
                            <div class="field-area" style="display: none;"></div>
@@ -54,7 +54,7 @@
                         </div>
                      </div>
                   </div>
-               {% endfor %}
+               {%- endfor -%}
             </div>
          </div>
       </div>
