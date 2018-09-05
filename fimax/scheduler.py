@@ -118,50 +118,9 @@ def get_valid_loan_charges():
 def update_loan_record(doc):
 	tbody, doc = [], get_loan_record(doc)
 
-	for loan_repayment in frappe.get_doc(doc.meta.get_field("loan").options, doc.name)\
-		.get("loan_schedule"):
-		
-		# if loan_repayment.status in ("Overdue")		
-
-		trow = u"""<tr>
-			<td>{idx}</td>
-			<td>{repayment_date}</td>
-			<td>{repayment_amount}</td>
-			<td>{outstanding_amount}</td>
-			<td>{paid_amount}</td>
-			<td>{status}</td>
-		</tr>""".format(idx=cint(loan_repayment.idx),
-			repayment_date=frappe.utils.formatdate(loan_repayment.repayment_date),
-			repayment_amount=frappe.format_value(loan_repayment.repayment_amount, df={"fieldtype": "Currency"}),
-			paid_amount=frappe.format_value(loan_repayment.paid_amount, df={"fieldtype": "Currency"}),
-			outstanding_amount=frappe.format_value(loan_repayment.outstanding_amount, df={"fieldtype": "Currency"}),
-			status=loan_repayment.status)
-
-		tbody.append(trow)
-
-	doc.details = u"""<div class="table-responsive">          
-		<table class="table">
-			<thead>
-				<tr>
-					<th>#</th>
-					<th>{repayment_date_label}</th>
-					<th>{repayment_amount_label}</th>
-					<th>{paid_amount}</th>
-					<th>{outstanding_amount_label}</th>
-					<th>{status_label}</th>
-				</tr>
-			</thead>
-			<tbody>
-				{tbody}
-			</tbody>
-		</table>
-	</div>""".format(tbody="".join(tbody),
-		repayment_date_label=_("Date"),
-		repayment_amount_label=_("Repayment Amount"),
-		outstanding_amount_label=_("Oustanding Amount"),
-		paid_amount=_("Paid Amount"),
-		status_label=_("Status"))
-
+	doc.details = frappe.render_template("templates/loan_record_details.html", { 
+		"rows": frappe.get_doc(doc.meta.get_field("loan").options, doc.name).get("loan_schedule") })
+	
   	doc.save()
 	
 def get_loan_record(doc):

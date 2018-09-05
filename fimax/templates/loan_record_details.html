@@ -1,0 +1,31 @@
+<div class="table-responsive">          
+	<table class="table">
+		<thead>
+			<tr>
+				<th>#</th>
+					<th>{{ _("Date") }}</th>
+					<th>{{ _("Repayment Amount") }}</th>
+					<th>{{ _("Oustanding Amount") }}</th>
+					<th>{{ _("Paid Amount") }}</th>
+					<th>{{ _("Status") }}</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for row in rows %}
+			<tr>
+				<td>{{ row.idx }}</td>
+				<td>{{ frappe.format(row.repayment_date) }}</td>
+				<td>$ {{ frappe.format( row.repayment_amount) }}</td>
+				<td>$ {{ frappe.format(row.outstanding_amount) }}</td>
+				<td>$ {{ frappe.format(row.paid_amount) }}</td>
+				{% if row.status == _("Overdue") %}
+					<td style="color: #e26f6f;"><b>{{ row.status }}</b></td>
+				{% else %}
+					<td>{{ row.status }}</td>
+				{% endif %}
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+</div>
+
