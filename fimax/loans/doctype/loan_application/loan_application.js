@@ -116,7 +116,7 @@ frappe.ui.form.on('Loan Application', {
 			day_of_the_month = 30;
 		}
 
-		frm.set_value("repayment_day_of_the_month", day_of_the_month);
+		//frm.set_value("repayment_day_of_the_month", day_of_the_month);
 	},
 	"party_type": (frm) => {
 		frm.trigger("clear_party") && frm.trigger("refresh");
