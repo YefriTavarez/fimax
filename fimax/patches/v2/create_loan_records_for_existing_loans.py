@@ -4,6 +4,10 @@ from fimax.utils import create_loan_record
 def execute():
 
 	doctype = "Loan"
+	try:
+		frappe.reload_doctype("Loan Record")
+	except: pass
+
 	for docname, in frappe.get_list(doctype, {
 		"docstatus": ["<", "2"]
 	}, ["name"], as_list=True):

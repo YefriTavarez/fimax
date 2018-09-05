@@ -63,6 +63,7 @@ def create_loan_charges_fines_for_(company):
 
 	for name, in frappe.get_list(doctype, {
 		"status": "Overdue",
+		"docstatus": "1",
 		"repayment_date": ["<=", due_date]
 	}, as_list=True):
 
@@ -112,7 +113,7 @@ def get_valid_loan_charges():
 		WHERE loan_charges_type.generates_fine > 0
 			AND TIMESTAMPDIFF(MONTH, loan_charges.modified, CURRENT_TIMESTAMP) > 0
 			AND loan_charges.repayment_date < CURDATE()
-				AND loan_charges.status NOT IN ('Paid' , 'Closed')""",
+			AND loan_charges.status NOT IN ('Paid' , 'Closed')""",
 		as_dict=True)
 
 def update_loan_record(doc):
@@ -120,7 +121,7 @@ def update_loan_record(doc):
 
 	doc.details = frappe.render_template("templates/loan_record_details.html", { 
 		"rows": frappe.get_doc(doc.meta.get_field("loan").options, doc.name).get("loan_schedule") })
-	
+
   	doc.save()
 	
 def get_loan_record(doc):
