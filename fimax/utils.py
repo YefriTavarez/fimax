@@ -1,6 +1,5 @@
 import frappe
 from frappe.utils import add_to_date, cint, nowdate
-
 from enum import Enum
 
 class DocStatus(Enum):
