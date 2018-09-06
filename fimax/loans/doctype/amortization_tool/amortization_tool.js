@@ -3,14 +3,11 @@
 
 frappe.ui.form.on('Amortization Tool', {
 	"refresh": (frm) => {
-		let event_list = ["fix_date_options", "update_interest_rate_label",
+		let event_list = ["update_interest_rate_label",
 			"add_custom_buttons"
 		];
 
 		$.map(event_list, (event) => frm.trigger(event));
-	},
-	"currency": (frm) => {
-		frm.trigger("set_dynamic_labels"); // where is this function @Villar?
 	},
 	"loan_type": (frm) => {
 		if (!frm.doc.loan_type) { return 0; }
@@ -219,15 +216,6 @@ frappe.ui.form.on('Amortization Tool', {
 	"calculate_approved_net_amount": (frm) => {
 		frm.doc.approved_net_amount = flt(frm.doc.legal_expenses_amount) + flt(frm.doc.approved_gross_amount);
 		refresh_field("approved_net_amount");
-	},
-	"fix_date_options": (frm) => {
-		let last_day_of_month = eval(frappe.datetime.month_end().split("-")[2]);
-		let days = Array.from(Array(last_day_of_month).keys());
-		// days is an array of int that starts on 0, I need the options to start on 1
-		days.forEach((key, value) => {
-			days[key] = value + 1;
-		})
-		frm.set_df_property("repayment_day_of_the_month", "options", days.join("\n"));
 	},
 	"clear_form": (frm) => {
 		frm.make_new("Amortization Tool");
