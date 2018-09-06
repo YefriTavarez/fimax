@@ -76,7 +76,7 @@ class AmortizationTool(Document):
 				"Quartely": quartely,
 				"Half-Yearly": half_yearly,
 				"Yearly": yearly
-			}).get(self.repayment_frequency)(nowdate(), row.idx)
+			}).get(self.repayment_frequency)(self.disbursement_date, row.idx)
 
 			row.update({
 				"repayment_date": frappe.format_value(repayment_date, df={"fieldtype": "Date"})

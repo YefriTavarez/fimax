@@ -3,28 +3,11 @@
 
 frappe.ui.form.on('Amortization Tool', {
 	"refresh": (frm) => {
-		let event_list = [ "update_interest_rate_label",
-			"add_custom_buttons", "set_default_repayment_day"
+		let event_list = ["update_interest_rate_label",
+			"add_custom_buttons"
 		];
 
 		$.map(event_list, (event) => frm.trigger(event));
-	},
-	"set_default_repayment_day": (frm) => {
-		if (!frm.is_new()) {
-			return 0;
-		}
-
-		let js_date = new Date();
-		let day_of_the_month = js_date.getDate();
-
-		if (day_of_the_month == 31) {
-			day_of_the_month = 30;
-		}
-
-		frm.set_value("repayment_day_of_the_month", day_of_the_month);
-	},
-	"currency": (frm) => {
-		frm.trigger("set_dynamic_labels"); // where is this function @Villar?
 	},
 	"loan_type": (frm) => {
 		if (!frm.doc.loan_type) { return 0; }
@@ -44,9 +27,6 @@ frappe.ui.form.on('Amortization Tool', {
 					"currency",
 					"interest_type",
 					"legal_expenses_rate",
-					// "repayment_day_of_the_month",
-					"repayment_day_of_the_week",
-					"repayment_days_after_cutoff",
 					"repayment_frequency",
 				], fieldname => frm.doc[fieldname] = loan_type[fieldname]);
 
@@ -91,6 +71,11 @@ frappe.ui.form.on('Amortization Tool', {
 			() => frm.trigger("validate_repayment_periods"),
 			() => frm.trigger("calculate_loan_amount")
 		]);
+	},
+	"disbursement_date": (frm) => {
+		if (frm.doc.disbursement_date) {
+			frm.trigger("calculate_loan_amount");
+		}
 	},
 	"legal_expenses_rate": (frm) => {
 		if (frm.doc.legal_expenses_rate) {
@@ -192,7 +177,7 @@ frappe.ui.form.on('Amortization Tool', {
 		});
 	},
 	"calculate_loan_amount": (frm) => {
-		let can_proceed = frm.doc.requested_gross_amount && frm.doc.legal_expenses_rate;
+		let can_proceed = frm.doc.requested_gross_amount;
 
 		if (can_proceed) {
 			frappe.run_serially([
