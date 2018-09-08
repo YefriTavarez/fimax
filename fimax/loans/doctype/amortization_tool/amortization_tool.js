@@ -177,9 +177,7 @@ frappe.ui.form.on('Amortization Tool', {
 		});
 	},
 	"calculate_loan_amount": (frm) => {
-		let can_proceed = frm.doc.requested_gross_amount;
-
-		if (can_proceed) {
+		if (frm.doc.requested_gross_amount) {
 			frappe.run_serially([
 				() => frm.trigger("calculate_legal_expenses_amount"),
 				() => frappe.timeout(0.5),
@@ -194,10 +192,12 @@ frappe.ui.form.on('Amortization Tool', {
 				}
 			]);
 		} else {
-			frm.doc.legal_expenses_amount = 0.000;
-			frm.doc.approved_net_amount = 0.000;
+			frappe.msgprint(__("Invalid value for Requested Gross Amount!"));
+			
+			$.map(["legal_expenses_amount", "approved_net_amount"], fieldname => {
+				frm.doc[fieldname] = 0.000;
+			});
 		}
-
 	},
 	"calculate_legal_expenses_amount": (frm) => {
 		frm.doc.legal_expenses_amount = flt(frm.doc.approved_gross_amount) 
