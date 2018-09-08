@@ -44,7 +44,7 @@ frappe.ui.form.on('Amortization Tool', {
 		frm.add_custom_button(__("Clear"), () => frm.trigger("clear_form"));
 		if(!frm.is_dirty()){
 			frm.add_custom_button(__("Make Loan Application"), () => frm.trigger("make_loan_application"), __("Make"));
-			frm.page.set_inner_btn_group_as_primary("Make")
+			frm.page.set_inner_btn_group_as_primary(__("Make"));
 		}
 	},
 	"requested_gross_amount": (frm) => {
@@ -229,10 +229,8 @@ frappe.ui.form.on('Amortization Tool', {
 			"doc": frm.doc
 		}
 
-		frappe.call(opts).done((response) => {
-			let doc = response.message;
-
-			doc = frappe.model.sync(doc)[0];
+		frappe.call(opts).done(({ message }) => {
+			let doc = frappe.model.sync(message)[0];
 			frappe.set_route("Form", doc.doctype, doc.name);
 		}).fail((exec) => frappe.msgprint(__("There was an error while creating the Loan Application")));
 	},
