@@ -34,7 +34,7 @@ def add_default_loan_charges_type():
 	from fimax.hook.loan_charges_type import create_loan_charges_type
 
 	loan_charges_type_list = ["Capital", "Interest", "Repayment Amount",
-		"Insurance", "Late Payment Fee", "GPS"]
+		"Insurance", "Late Payment Fee", "GPS", "Recovery Expenses"]
 
 	for loan_charges_type in loan_charges_type_list:
 		if frappe.db.exists("Loan Charges Type", loan_charges_type):
