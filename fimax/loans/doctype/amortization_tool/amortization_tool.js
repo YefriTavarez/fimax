@@ -194,8 +194,10 @@ frappe.ui.form.on('Amortization Tool', {
 				}
 			]);
 		} else {
+			frappe.msgprint(__("Requested Amount can't be Zero"))
 			frm.doc.legal_expenses_amount = 0.000;
 			frm.doc.approved_net_amount = 0.000;
+			return
 		}
 
 	},

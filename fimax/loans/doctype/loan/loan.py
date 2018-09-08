@@ -14,17 +14,18 @@ from fimax import compound
 from fimax.utils import delete_doc
 
 from frappe.utils import flt, cint, cstr
+from fimax.utils import daily, weekly, biweekly, monthly, quartely, half_yearly, yearly
 from frappe import _ as __
 
 class Loan(Document):
 	def validate(self):
 		loan_schedule_ids = [row.name.split()[0] 
 			for row in self.loan_schedule]
-			
+		self.set_missing_values()
 		if __("New") in loan_schedule_ids:
 			self.set_missing_values()
 
-		self.update_repayment_schedule_dates()
+		# self.update_repayment_schedule_dates()
 		self.validate_company()
 		self.validate_currency()
 		self.validate_party_account()
@@ -112,11 +113,22 @@ class Loan(Document):
 		for row in soc.get_as_array(self.total_capital_amount,
 			dec(self.interest_rate), self.repayment_periods):
 
-			repayment_date = frappe.utils.add_months(self.posting_date, row.idx)
+			# repayment_date = frappe.utils.add_months(self.posting_date, row.idx)
+
+			repayment_date = frappe._dict({
+				"Daily": daily,
+				"Weekly": weekly,
+				"BiWeekly": biweekly,
+				"Monthly": monthly,
+				"Quartely": quartely,
+				"Half-Yearly": half_yearly,
+				"Yearly": yearly
+			}).get(self.repayment_frequency)(self.disbursement_date, row.idx)
 
 			self.append("loan_schedule", row.update({
 				"status": "Pending",
-				"repayment_date": self.get_correct_date(repayment_date),
+				# "repayment_date": frappe.format_value(repayment_date, df={"fieldtype": "Date"}),
+				"repayment_date": repayment_date,
 				"outstanding_amount": row.repayment_amount,
 				"paid_amount": 0.000
 			}))
