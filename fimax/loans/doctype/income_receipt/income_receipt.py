@@ -10,6 +10,7 @@ from erpnext.setup.utils import get_exchange_rate
 
 from frappe.utils import flt, cstr, cint, nowdate
 from frappe import _
+from fimax.utils import apply_changes_from_quick_income_receipt as apply_changes
 
 class IncomeReceipt(Document):
 	def validate(self):
@@ -24,7 +25,7 @@ class IncomeReceipt(Document):
 		self.make_gl_entries(cancel=True)
 		self.update_loan_charges(cancel=True)
 		
-	def list_loan_charges(self, loan_charges_list=None):
+	def list_loan_charges(self, loan_charges_list=None, ignore_repayment_date=False):
 		fields = [
 			"name",
 			"outstanding_amount",
@@ -39,20 +40,27 @@ class IncomeReceipt(Document):
 
 		filters = {
 			'loan': ['=', self.loan],
-			'repayment_date': ['<=', self.posting_date],
 			'status': ['not in', 'Paid, Closed'],
 		}
 
+		if not ignore_repayment_date:
+			filters.update({
+				'repayment_date': ['<=', self.posting_date]
+			})
 		if loan_charges_list:
 			filters = {
 				"name": ["in", loan_charges_list]
 			}
 
-		return frappe.get_list("Loan Charges", filters=filters, fields=fields, order_by='name')
+		return frappe.get_list("Loan Charges", filters=filters, fields=fields, order_by='repayment_period')
+
+	def apply_changes(self, insurance_amount=.000, gps_amount=.000, capital_amount=.000, interest_amount=.000,
+		repayment_amount=.000, recovery_amount=.000, fine_amount=.000, total_amount=.000):
+		apply_changes(self, insurance_amount, gps_amount, capital_amount, interest_amount,
+			repayment_amount, recovery_amount, fine_amount, total_amount)
 
 	def grab_loan_charges(self, new_table=False, loan_charges_list=None):
-		if new_table or not self.get("income_receipt_items") \
-			or not self.get("income_receipt_items")[0].loan_charges_type:
+		if new_table or not self.get("income_receipt_items"):
 			# empty the table first
 			self.set("income_receipt_items", [])
 
@@ -69,11 +77,7 @@ class IncomeReceipt(Document):
 			if not loan_charge.get("voucher_name") in [d.get("voucher_name") 
 				for d in self.income_receipt_items]: self.append("income_receipt_items", loan_charge)
 
-		self.grand_total = sum([row.base_total_amount for row in self.income_receipt_items])
-		self.total_outstanding = sum([row.base_outstanding_amount for row in self.income_receipt_items])
-		self.total_paid = self.total_outstanding
-
-		self.difference_amount = 0.000
+		self.calculate_totals()
 
 	def get_income_receipt_item(self, loan_doc, charge_doc):
 		self.income_account_currency = frappe.get_value("Account", self.income_account, "account_currency")
@@ -104,6 +108,13 @@ class IncomeReceipt(Document):
 			"voucher_type": "Loan Charges",
 			"voucher_name": charge_doc.name,
 		})
+
+	def calculate_totals(self):
+		self.grand_total = sum([row.base_total_amount for row in self.income_receipt_items])
+		self.total_outstanding = sum([row.base_outstanding_amount for row in self.income_receipt_items])
+		self.total_paid = self.total_outstanding
+
+		self.difference_amount = 0.000
 
 	def get_income_account_and_currency(self, loan_doc):
 
@@ -182,6 +193,9 @@ class IncomeReceipt(Document):
 				.sync_this_with_loan_charges()
 
 	def validate_income_receipt_items(self):
+		if not self.income_receipt_items:
+			frappe.throw(_("Income Receipt Items is mandatory!"))
+			
 		for row in self.income_receipt_items:
 			if cstr(row.repayment_date) < nowdate() and not flt(row.allocated_amount):
 				frappe.throw(_("Missing allocated amount for due Loan Charge in row: {0}" \

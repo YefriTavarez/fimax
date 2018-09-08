@@ -1,11 +1,12 @@
 // Copyright (c) 2017, Yefri Tavarez and contributors
 // For license information, please see license.txt
 
+frappe.provide("cur_prompt");
 frappe.ui.form.on('Income Receipt', {
-	"setup": (frm) => {
+	"setup": frm => {
 		frm.trigger("set_queries");
 	},
-	"refresh": (frm) => {
+	"refresh": frm => {
 		if (!frm.is_new()) {
 			frm.page.show_menu();
 		}
@@ -14,28 +15,29 @@ frappe.ui.form.on('Income Receipt', {
 			frm.trigger("add_loan_charges_button");
 		}
 	},
-	"onload_post_render": (frm) => {
+	"onload_post_render": frm => {
 		frm.trigger("set_dynamic_labels");
 	},
-	"validate": (frm) => {
+	"validate": frm => {
 		let total_discount = 0;
 
 		$.map(frm.doc.income_receipt_items, (row) => total_discount += row.discount);
 
 		if (!frm.doc.write_off_amount == total_discount) {
-			frappe.throw(__("Total allocated discount should be the same as the Write off amount!"))
+			frappe.throw(__(`Total allocated discount should 
+				be the same as the Write off amount!`));
 		}
 	},
-	"set_queries": (frm) => {
+	"set_queries": frm => {
 		let queries = ["set_loan_query", "set_account_query", 
 			"set_against_account_query", "set_income_account_query"];
 
 		$.map(queries, query => frm.trigger(query));
 	},
-	"set_loan_query": (frm) => {
+	"set_loan_query": frm => {
 		frm.set_query("loan", {	"docstatus": "1" });
 	},
-	"set_account_query": (frm) => {
+	"set_account_query": frm => {
 		frm.set_query("account", "income_receipt_items", () => {
 			return {
 				"filters": {
@@ -45,7 +47,7 @@ frappe.ui.form.on('Income Receipt', {
 			};
 		});
 	},
-	"set_against_account_query": (frm) => {
+	"set_against_account_query": frm => {
 		frm.set_query("against_account", "income_receipt_items", () => {
 			return {
 				"filters": {
@@ -55,7 +57,7 @@ frappe.ui.form.on('Income Receipt', {
 			};
 		});
 	},
-	"set_income_account_query": (frm) => {
+	"set_income_account_query": frm => {
 		frm.set_query("income_account", () => {
 			return {
 				"filters":  {
@@ -65,16 +67,20 @@ frappe.ui.form.on('Income Receipt', {
 			};
 		});
 	},
-	"loan": (frm) => {
+	"loan": frm => {
 		if (frm.doc.loan) {
+			if (frm.is_new()) {
+				frm.trigger("add_quick_entry_button");
+			}
+
 			$.map(["set_missing_values", "add_loan_charges_button"], 
-				(event) => frm.trigger(event));
+				event => frm.trigger(event));
 		} else {
-			$.map(["clear_all_fields", "remove_loan_charges_button"], 
-				(event) => frm.trigger(event));
+			$.map(["clear_all_fields", "remove_loan_charges_button", "remove_quick_entry_button"], 
+				event => frm.trigger(event));
 		}
 	},
-	"posting_date": (frm) => {
+	"posting_date": frm => {
 		if (!frm.doc.posting_date) {
 			frm.set_value("loan", undefined);
 		}
@@ -83,7 +89,7 @@ frappe.ui.form.on('Income Receipt', {
 			frm.trigger("fetch_loan_charges");
 		}
 	},
-	"write_off_amount": (frm) => {
+	"write_off_amount": frm => {
 		let income_receipt_items = frm.doc.income_receipt_items;
 		let records = income_receipt_items.length;
 		
@@ -101,7 +107,7 @@ frappe.ui.form.on('Income Receipt', {
 		frm.doc.income_receipt_items[idx].discount += remaining;
 		frm.refresh_fields();
 	},
-	"clear_all_fields": (frm) => {
+	"clear_all_fields": frm => {
 		let except_list = ["posting_date"];
 
 		$.map(frm.meta.fields, (field) => { 
@@ -112,20 +118,48 @@ frappe.ui.form.on('Income Receipt', {
 			}
 		});
 	},
-	"set_missing_values": (frm) => {
-		$.map(["fetch_loan_from_server"], (event) => frm.trigger(event));
+	"set_missing_values": frm => {
+		$.map(["fetch_loan_from_server"], event => frm.trigger(event));
 	},
-	"add_loan_charges_button": (frm) => {
-		frm.add_custom_button(__("Loan Charges"), 
-			() => frm.trigger("fetch_from_loan_charges"),
-			__("Fetch From"));
+	"add_quick_entry_button": frm => {
+		frappe.run_serially([
+			() => frm.trigger("remove_quick_entry_button"),
+			() => frm.add_custom_button(__("Quick Entry"), 
+				event => frm.trigger("show_quick_entry"))
+		]);
+	},
+	"add_loan_charges_button": frm => {
+		frappe.run_serially([
+			() => frappe.timeout(1),
+			() => frm.add_custom_button(__("Loan Charges"), 
+				event => frm.trigger("fetch_from_loan_charges"), __("Fetch From")),
+			() => frm.page.set_inner_btn_group_as_primary(__("Fetch From"))
+		]);
+	},
+	"remove_quick_entry_button": frm => {
+		frm.remove_custom_button(__("Quick Entry"));
+	},
+	"remove_loan_charges_button": frm => {
+		frm.remove_custom_button(__("Loan Charges"), __("Fetch From"));
+	},
+	"show_quick_entry": frm => {
+		const fields = fimax.quick_entry.get_fields(frm),
+			title = __("Quick Income Receipt"),
 
-		frm.page.set_inner_btn_group_as_primary(__("Fetch From"));
+			primary_label = __("Apply Changes"),
+
+			callback = (args) => {
+				frm.call(method="apply_changes", args=args)
+					.then(response => { 
+						frm.refresh();
+						frm.trigger("add_quick_entry_button");
+					});
+			};
+
+		cur_prompt = frappe.prompt(fields, callback, title, primary_label);
+		cur_prompt.has_primary_action = false;	
 	},
-	"remove_loan_charges_button": (frm) => {
-		frm.clear_custom_buttons();
-	},
-	"fetch_loan_from_server": (frm) => {
+	"fetch_loan_from_server": frm => {
 		let doctype = "Loan";
 		let docname = frm.doc.loan;
 
@@ -155,7 +189,7 @@ frappe.ui.form.on('Income Receipt', {
 			frappe.call(request);
 		}
 	},
-	"fetch_from_loan_charges": (frm) => {
+	"fetch_from_loan_charges": frm => {
 		// fake fields in the form
 		frm.fields_dict.loan_charges_type = {
 			"df": frm.fields_dict.income_receipt_items.grid.fields_map.loan_charges_type
@@ -206,7 +240,7 @@ frappe.ui.form.on('Income Receipt', {
 			},
 		]);
 	},
-	"fillup_loan_dependant_fields": (frm) => {
+	"fillup_loan_dependant_fields": frm => {
 
 		let doc = frappe.get_doc("Loan", frm.doc.loan);
 
@@ -228,31 +262,30 @@ frappe.ui.form.on('Income Receipt', {
 
 		frm.trigger("fetch_loan_charges");
 	},
-	"company": (frm) => {
+	"company": frm => {
 		frappe.db.get_value("Company", frm.doc.company, "default_currency")
-			.then(response => {
-				let data = response.message;
-				if (data) {
-					frm.set_value("currency", data['default_currency']);
+			.then(({ message }) => {
+				if (message) {
+					frm.set_value("currency", message['default_currency']);
 				}
 			});
 	},
-	"fetch_loan_charges": (frm) => {
+	"fetch_loan_charges": frm => {
 		frm.call("grab_loan_charges")
-			.then(() => frm.trigger("set_dynamic_labels"));
+			.then(response => frm.trigger("set_dynamic_labels"));
 	},
-	"mode_of_payment": (frm) => {
+	"mode_of_payment": frm => {
 		$.map(["set_default_income_account"],
-			(event) => frm.trigger(event));
+			event => frm.trigger(event));
 	},
-	"show_hide_exchange_currency_field": (frm) => {
+	"show_hide_exchange_currency_field": frm => {
 		frm.set_value("exchange_rate", 1.000);
 
 		// compare loan currency with the cash / bank account currency
 		frm.toggle_display("exchange_rate", 
 			frm.doc.currency != frm.doc.income_account_currency);
 	},
-	"fetch_exchange_rates": (frm) => {
+	"fetch_exchange_rates": frm => {
 		let request = {
 		    "method": "erpnext.setup.utils.get_exchange_rate"
 		};
@@ -273,7 +306,7 @@ frappe.ui.form.on('Income Receipt', {
 		
 		frappe.call(request);
 	},
-	"update_income_receipt_items_with_mode_of_payment": (frm) => {
+	"update_income_receipt_items_with_mode_of_payment": frm => {
 		$.map(frm.doc["income_receipt_items"], row => {
 			row.mode_of_payment = frm.doc.mode_of_payment;
 			row.against_account = frm.doc.income_account;
@@ -286,7 +319,7 @@ frappe.ui.form.on('Income Receipt', {
 
 		frm.refresh_fields();
 	},
-	"set_default_income_account": (frm) => {
+	"set_default_income_account": frm => {
 		if (!frm.doc.mode_of_payment||!frm.doc.company) { return ; }
 
 		frappe.db.get_value("Mode of Payment Account", {
@@ -307,7 +340,7 @@ frappe.ui.form.on('Income Receipt', {
 			}
 		});
 	},
-	"income_account": (frm) => {
+	"income_account": frm => {
 		if (!frm.doc.income_account) { return ;	}
 
 		frappe.db.get_value("Account", {
@@ -319,19 +352,19 @@ frappe.ui.form.on('Income Receipt', {
 				if (data["account_currency"]) {
 					frm.set_value("income_account_currency", data["account_currency"]);
 				}
-			}).then(() => frm.trigger("show_hide_exchange_currency_field"))
-		.then(() => frm.trigger("fetch_exchange_rates"))
-		.then(() => frm.trigger("update_income_receipt_items_with_mode_of_payment"))
+			}).then(response => frm.trigger("show_hide_exchange_currency_field"))
+		.then(response => frm.trigger("fetch_exchange_rates"))
+		.then(response => frm.trigger("update_income_receipt_items_with_mode_of_payment"))
 	},
-	"income_account_currency": (frm) => {
+	"income_account_currency": frm => {
 		if (frm.doc.income_account_currency) {
 			frm.set_currency_labels(["allocated_amount"], 
 				frm.doc.income_account_currency, "income_receipt_items");
 		}
 	},
-	"exchange_rate": (frm) => {
+	"exchange_rate": frm => {
 		$.map(["update_income_receipt_items_with_mode_of_payment"],
-			(event) => frm.trigger(event));
+			event => frm.trigger(event));
 	},
 	"calculate_totals": (frm, cdt, cdn) => {
 		let total_paid = 0.000;
@@ -370,6 +403,9 @@ frappe.ui.form.on('Income Receipt', {
 		frm.refresh_field("income_receipt_items");
 	},
 });
+
+// include quick_income_receipt js file
+{% include "fimax/loans/doctype/income_receipt/quick_income_receipt.js" %}
 
 // include income_receipt_items js file
 {% include "fimax/loans/doctype/income_receipt_items/income_receipt_items.js" %}
