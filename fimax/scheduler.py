@@ -113,7 +113,7 @@ def get_valid_loan_charges():
 		WHERE loan_charges_type.generates_fine > 0
 			AND TIMESTAMPDIFF(MONTH, loan_charges.modified, CURRENT_TIMESTAMP) > 0
 			AND loan_charges.repayment_date < CURDATE()
-			AND loan_charges.status NOT IN ('Paid' , 'Closed')""",
+			AND loan_charges.status NOT IN ('Paid', 'Paused', 'Closed')""",
 		as_dict=True)
 
 def update_loan_record(doc):
