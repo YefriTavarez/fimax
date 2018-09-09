@@ -5,7 +5,7 @@ frappe.provide("fimax.loan_appl");
 frappe.ui.form.on('Customer', {
 	"refresh": (frm) => {
 		frm.trigger("set_the_right_mask");
-		//frm.trigger("set_defaults");
+		frm.trigger("set_defaults");
 	},
 	"onload": (frm) => {
 		frm.set_df_property("tax_id_type", "options", [
@@ -50,8 +50,10 @@ frappe.ui.form.on('Customer', {
 			.mask(possible_mask_list[cint(frm.doc.tax_id_type) - 1]);
 	},
 	"set_defaults": (frm) => {
-		if(frm.is_new())
+		if(frm.is_new()) {
 			frm.set_value("tax_id_type", 2);
+		}
+		
 		frm.toggle_display("territory", false);
 	},
 	"after_save": (frm) => {

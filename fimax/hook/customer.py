@@ -25,9 +25,8 @@ def validate(doc, event):
 		AND 
 			cl.customer_references > %s
 
-		GROUP BY l.name
-
-		""",(doc.customer_name, references), as_dict=True, debug=True)
+		GROUP BY l.name	""",(doc.customer_name, references), as_dict=True, debug=True)
+	
 	if result:
 		frappe.throw(_("""This customer requires at least {customer_references} 
 			references according to loan {loan}""").format(**result[0]))
