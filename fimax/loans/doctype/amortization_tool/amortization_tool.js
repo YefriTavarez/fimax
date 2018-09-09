@@ -4,7 +4,7 @@
 frappe.ui.form.on('Amortization Tool', {
 	"refresh": (frm) => {
 		let event_list = ["update_interest_rate_label",
-			"add_custom_buttons"
+			"add_custom_buttons", "show_menu"
 		];
 
 		$.map(event_list, (event) => frm.trigger(event));
@@ -39,6 +39,9 @@ frappe.ui.form.on('Amortization Tool', {
 				frm.trigger("update_interest_rate_label");
 				frm.refresh_fields();
 			});
+	},
+	"show_menu": (frm) => {
+		frm.page.show_menu();	
 	},
 	"add_custom_buttons": (frm) => {
 		frm.add_custom_button(__("Clear"), () => frm.trigger("clear_form"));
