@@ -1,7 +1,9 @@
 // Copyright (c) 2017, Yefri Tavarez and contributors
 // For license information, please see license.txt
 
-frappe.provide("cur_prompt");
+$.map(["cur_prompt", "frappe.loan_charges_count"], 
+	namespace => frappe.provide(namespace));
+
 frappe.ui.form.on('Income Receipt', {
 	"setup": frm => {
 		frm.trigger("set_queries");
@@ -70,7 +72,8 @@ frappe.ui.form.on('Income Receipt', {
 	"loan": frm => {
 		if (frm.doc.loan) {
 			if (frm.is_new()) {
-				frm.trigger("add_quick_entry_button");
+				$.map(["add_quick_entry_button", "count_loan_charges"], 
+					event => frm.trigger(event));
 			}
 
 			$.map(["set_missing_values", "add_loan_charges_button"], 
@@ -79,6 +82,19 @@ frappe.ui.form.on('Income Receipt', {
 			$.map(["clear_all_fields", "remove_loan_charges_button", "remove_quick_entry_button"], 
 				event => frm.trigger(event));
 		}
+	},
+	"count_loan_charges": frm => {
+		$.map([
+			"Capital", "Interest", "Repayment Amount",
+			"Insurance", "Late Payment Fee", "GPS", "Recovery Expenses"
+		], key => {
+			frappe.db.get_value("Loan Charges", {
+				"loan_charges_type": key,
+				"loan": frm.doc.loan
+			}, ["count(1) as records"], ({ records }) => {
+				frappe.loan_charges_count[key] = records;
+			});		
+		});
 	},
 	"posting_date": frm => {
 		if (!frm.doc.posting_date) {

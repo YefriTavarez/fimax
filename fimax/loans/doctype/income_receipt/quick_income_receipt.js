@@ -65,6 +65,7 @@ $.extend(fimax.quick_entry, {
 				"default": "0.000",
 				"precision": 2,
 				"reqd": true,
+				"hidden": !frappe.loan_charges_count["Insurance"],
 				"onchange": event => fimax.quick_entry.insurance_amount(frm, event)
 			},
 			{
@@ -74,6 +75,7 @@ $.extend(fimax.quick_entry, {
 				"default": "0.000",
 				"precision": 2,
 				"reqd": true,
+				"hidden": !frappe.loan_charges_count["GPS"],
 				"onchange": event => fimax.quick_entry.gps_amount(frm, event)
 			},
 			{
@@ -82,6 +84,7 @@ $.extend(fimax.quick_entry, {
 				"label": __("Fine Amount"),
 				"default": "0.000",
 				"precision": 2,
+				"hidden": !frappe.loan_charges_count["Late Payment Fee"],
 				"reqd": true,
 				"onchange": event => fimax.quick_entry.fine_amount(frm, event)
 			},
@@ -91,6 +94,7 @@ $.extend(fimax.quick_entry, {
 				"label": __("Recovery Amount"),
 				"default": "0.000",
 				"precision": 2,
+				"hidden": !frappe.loan_charges_count["Recovery Expenses"],
 				"reqd": true,
 				"onchange": event => fimax.quick_entry.recovery_amount(frm, event)
 			},
