@@ -16,7 +16,18 @@ frappe.ui.form.on('Insurance Card', {
 			"currency": "currency"
 		}, (key, value)=> frm.add_fetch("loan", key, value));
 
-		frm.trigger("set_status_indicators");
+		$.map(["set_status_indicators", "set_queries"], event => frm.trigger(event));
+	},
+	"set_queries": (frm) => {
+		frm.set_query("loan", function() {
+			return {
+				"query": "fimax.queries.get_loans",
+				"filters": {
+					"asset_type": "Car",
+					"docstatus": "1"
+				}
+			};
+		});
 	},
 	"onload_post_render": (frm) => {
 		frappe.realtime.on("real_progress", function(data) {

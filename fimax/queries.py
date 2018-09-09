@@ -64,3 +64,32 @@ def loan_unlinked_application_query(doctype, txt, searchfield, start, page_len, 
 			'start': start,
 			'page_len': page_len
 		})
+
+
+def get_loans(doctype, txt, searchfield, start, page_len, filters):
+	return frappe.db.sql("""SELECT 
+			`tabLoan`.name, 
+			`tabLoan`.party_type,
+			`tabLoan`.party, 
+			`tabLoan`.party_name 
+		FROM `tabLoan`
+		INNER JOIN `tabCustom Loan`
+			ON `tabLoan`.loan_type = `tabCustom Loan`.name
+		WHERE `tabCustom Loan`.asset_type = %(asset_type)s
+			AND ({key} LIKE %(txt)s)
+			{mcond}
+		ORDER BY
+			if(locate(%(_txt)s, `tabLoan`.name), locate(%(_txt)s, `tabLoan`.name), 99999),
+			if(locate(%(_txt)s, `tabLoan`.party), locate(%(_txt)s, `tabLoan`.party), 99999),
+			if(locate(%(_txt)s, `tabLoan`.party_name), locate(%(_txt)s, `tabLoan`.party_name), 99999),
+			`tabLoan`.name, `tabLoan`.party
+		LIMIT %(start)s, %(page_len)s""".format(**{
+			'key': "`tab{0}`.{1}".format(doctype, searchfield),
+			'mcond':get_match_cond(doctype)
+		}), {
+			'txt': "%%%s%%" % txt,
+			'_txt': txt.replace("%", ""),
+			'start': start,
+			'page_len': page_len,
+			'asset_type': filters.get("asset_type")
+		})
