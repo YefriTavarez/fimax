@@ -8,6 +8,7 @@ frappe.ui.form.on('Amortization Tool', {
 		];
 
 		$.map(event_list, (event) => frm.trigger(event));
+		frm.page.show_menu();
 	},
 	"loan_type": (frm) => {
 		if (!frm.doc.loan_type) { return 0; }

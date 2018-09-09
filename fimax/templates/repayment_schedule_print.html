@@ -1,0 +1,24 @@
+<div class="table-responsive">          
+   <table class="table">
+      <thead>
+         <tr>
+            <th>#</th>
+            <th>{{ _("Repayment Date") }}</th>
+            <th>{{ _("Repayment") }}</th>
+            <th>{{ _("Capital Amount") }}</th>
+            <th>{{ _("Interest Amount") }}</th>
+         </tr>
+      </thead>
+      <tbody>
+         {%- for row in rows -%}
+            <tr>
+               <td>{{ row.idx }}</td>
+               <td>{{ row.repayment_date }}</td>
+               <td>$ {{ frappe.format(row.repayment_amount) }}</td>
+               <td>$ {{ frappe.format(row.capital_amount) }}</td>
+               <td>$ {{ frappe.format(row.interest_amount) }}</td>
+            </tr>
+         {% endfor %}
+      </tbody>
+   </table>
+</div>
