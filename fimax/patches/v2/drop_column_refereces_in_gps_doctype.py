@@ -1,7 +1,8 @@
 import frappe
 
 def execute():
-	try:
-		frappe.db.sql("alter table `tabGPS Installation` drop column reference_type")
-		frappe.db.sql("alter table `tabGPS Installation` drop column reference_name")
-	except: pass
+	for fieldname in ("reference_type", "reference_name"):
+		try:
+			frappe.db.sql("alter table `tabGPS Installation` drop column {0}".format(fieldname))
+		except: 
+			pass
