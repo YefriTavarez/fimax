@@ -18,6 +18,7 @@ class LoanApplication(Document):
 		self.set_missing_values()
 		self.set_approved_amounts()
 		self.validate_approved_amounts()
+		self.validate_customer_references()
 		self.set_repayment_amount()
 
 	def on_update_after_submit(self):
@@ -79,6 +80,13 @@ class LoanApplication(Document):
 
 		if not self.repayment_periods:
 			frappe.throw(__("Missing Repayment Periods"))
+
+	def validate_customer_references(self):
+		req_references = frappe.get_value("Custom Loan", self.loan_type, "customer_references")
+
+		if self.party_type == "Customer" and \
+			len(frappe.get_list("Customer Reference", {"parent": self.party})) < req_references:
+			frappe.throw(__("This loan type requires at least %d customer references")%req_references )
 
 	def set_repayment_amount(self):
 		# simple or compound variable
