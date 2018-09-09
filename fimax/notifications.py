@@ -4,16 +4,17 @@ def get_notification_config():
 	return {
 		"for_doctype": {
 			"Loan": "fimax.notifications.loans",
-			"Loan Application": "fimax.notifications.loan_appls",
+			"Loan Application": { "status": "Open" },
+			# "Loan Application": "fimax.notifications.loan_appls",
 		}
 	}
 
 def loans(as_list=False):
-	if not frappe.has_permission("Journal Entry", "submit"):
+	if not frappe.has_permission("Income Receipt", "submit"):
 		return 0.000
 
 	data = frappe.get_list("Loan", {
-		"status": ["in", ["Open", "Approved"]]
+		"status": ["in", ["Open", "Legal"]]
 	}, ["name"])
 
 	return data if as_list else len(data)
