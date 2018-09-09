@@ -16,9 +16,7 @@ frappe.ui.form.on('Insurance Card', {
 			"currency": "currency"
 		}, (key, value)=> frm.add_fetch("loan", key, value));
 
-		frm.trigger("set_status_indicators");
-		
-		frm.trigger("set_queries");
+		$.map(["set_status_indicators", "set_queries"], event => frm.trigger(event));
 	},
 	"set_queries": (frm) => {
 		frm.set_query("loan", function() {
