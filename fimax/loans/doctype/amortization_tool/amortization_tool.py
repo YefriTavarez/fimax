@@ -12,14 +12,14 @@ from fimax.utils import daily, weekly, biweekly, monthly, quartely, half_yearly,
 from frappe import _ as __
 
 class AmortizationTool(Document):
-	def validate(self):
-		self.set_repayment_amount()
-
 	def onload(self):
 		self.make_repayment_schedule()
 
 	def before_print(self):
 		self.make_print_schedule()
+
+	def validate(self):
+		self.set_repayment_amount()
 	
 	def validate_required_fields_for_repayment_amount(self):
 		if not self.approved_net_amount:
@@ -55,7 +55,7 @@ class AmortizationTool(Document):
 		
 		self.amortization_schedule = frappe.render_template(
 			"templates/repayment_schedule_print.html", {
-				"rows": rows
+				"rows": rows or []
 			}
 		)
 
@@ -99,6 +99,6 @@ class AmortizationTool(Document):
 
 		self.amortization_schedule = frappe.render_template(
 			"templates/repayment_schedule_form.html", {
-				"rows": rows
+				"rows": rows or []
 			}
 		)
