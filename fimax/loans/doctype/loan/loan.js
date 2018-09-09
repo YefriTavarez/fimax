@@ -67,7 +67,7 @@ frappe.ui.form.on('Loan', {
 			frm.page.set_inner_btn_group_as_primary(__("New"));
 		} else {
 			let button_list = ["add_new_insurance_card_button",
-				"add_view_income_recepit_button", /*"add_sync_with_loan_charges_button"*/];
+				"add_view_income_recepit_button"];
 			$.map(button_list, (event) => frm.trigger(event));
 
 			frm.page.set_inner_btn_group_as_primary(__("Make"));
@@ -79,11 +79,11 @@ frappe.ui.form.on('Loan', {
 			fieldname = ["default_mode_of_payment", "disbursement_account"], 
 			callback = ({ default_mode_of_payment, disbursement_account }) => {
 				$.each({
-					"mode_of_payment": default_mode_of_payment
+					"mode_of_payment": default_mode_of_payment,
 					"disbursement_account": disbursement_account 
 				}, (key, value) => frm.set_value(key, value || ""));
 			};
-		frappe.db.get_value(doctype=doctype, filters=filters, fieldname=fieldname, callback=callback);
+		frappe.db.get_value(doctype, filters, fieldname, callback);
 	},
 	"set_status_indicators": (frm) => {
 		let grid = frm.get_field('loan_schedule').grid;
