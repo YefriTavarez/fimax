@@ -3,7 +3,10 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
+
 import frappe
+import fimax.utils
+
 from frappe.model.document import Document
 
 from fimax.api import rate_to_decimal as dec
@@ -39,10 +42,7 @@ class Loan(Document):
 		self.validate_loan_application()
 
 	def after_insert(self):
-		import fimax.utils
-
-		# let's create the a Loan Record for future follow up
-		fimax.utils.create_loan_record(self.as_dict())
+		pass
 
 	def update_status(self, new_status):
 		options = self.meta.get_field("status").options
@@ -58,8 +58,13 @@ class Loan(Document):
 	def toggle_recovered_status(self, recovered=True):
 		self.update_status("Recovered" if recovered else "Disbursed")
 
+	def create_loan_record(self):
+		# let's create the a Loan Record for future follow up
+		fimax.utils.create_loan_record(self.as_dict())
+		
 	def before_submit(self):
-		self.status = "Disbursed"
+		self.status = "Disbursed" # duplicated with line 71?
+		self.create_loan_record()
 
 	def on_submit(self):
 		self.make_gl_entries(cancel=False)
