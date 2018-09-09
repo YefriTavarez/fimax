@@ -140,8 +140,7 @@ class Loan(Document):
 
 			self.append("loan_schedule", row.update({
 				"status": "Pending",
-				# "repayment_date": frappe.format_value(repayment_date, df={"fieldtype": "Date"}),
-				"repayment_date": repayment_date,
+				"repayment_date": frappe.format_value(repayment_date, df={"fieldtype": "Date"}),
 				"outstanding_amount": row.repayment_amount,
 				"paid_amount": 0.000
 			}))
