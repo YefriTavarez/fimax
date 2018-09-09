@@ -10,6 +10,7 @@ def after_install():
 	add_reqd_roles()
 	add_default_loan_charges_type()
 	add_reqd_custom_fields()
+	create_database_views()
 
 def add_reqd_roles():
 	"""adds default roles for the app to run"""
@@ -57,6 +58,17 @@ def add_reqd_custom_fields():
 	add_reqd_custom_fields_in_company()
 	add_reqd_custom_fields_in_customer()
 	
+def create_database_views():
+	from frappe.modules import load_doctype_module
+
+	module = load_doctype_module("Loan Charges", "loans")
+
+	frappe.flags.in_install = False
+	if hasattr(module, "on_doctype_update"):
+		getattr(module, "on_doctype_update")()
+
+	frappe.flags.in_install = "fimax"
+
 def update_erpnext_icons():
 	"""removes default apps' icon from desktop"""
 

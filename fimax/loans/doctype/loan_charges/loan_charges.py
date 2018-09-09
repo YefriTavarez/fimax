@@ -172,24 +172,26 @@ class LoanCharges(Document):
 		return True
 
 def on_doctype_update():
+	if frappe.flags.in_install == "fimax": return
+
 	# let's drop the view if exists
-	frappe.db.sql("""DROP VIEW IF EXISTS `viewPaid Fine`""")
+	frappe.db.sql_ddl("""drop view if exists `viewpaid fine`""")
 	
 	# let's create the view
-	frappe.db.sql("""
-		CREATE VIEW `viewPaid Fine` AS SELECT 
+	frappe.db.sql_ddl("""
+		create view `viewPaid Fine` as select 
 			loan.name as loan,
 			loan.party as party,
 			charge.repayment_period as repayment,
-			(SELECT DATE(MAX(t.creation)) FROM `tabIncome Receipt Items` t WHERE t.voucher_name = charge.name) as fecha,
+			(select date(max(t.creation)) from `tabIncome Receipt Items` t where t.voucher_name = charge.name) as fecha,
 			charge.total_amount as paid_amount,
 			charge.total_amount as total_amount,
 			charge.loan_charges_type as type, 
 			charge.status as status
-		FROM 
-			`tabLoan Charges` charge
-		JOIN 
-			`tabLoan` loan 
-		ON 
+		from 
+			`tabLoan Charges` as charge
+		join 
+			`tabLoan` as loan 
+		on 
 			loan.name = charge.loan
-		""")
+	""")
