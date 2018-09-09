@@ -79,40 +79,42 @@ frappe.ui.form.on('Customer', {
 
 frappe.ui.form.on("Customer Job", {
 	"company": (frm, cdt, cdn) => {
-		let row = locals[cdt][cdn]; 
+		let row = frappe.get_doc(cdt, cdn); 
 		frappe.model.set_value(cdt, cdn, "company", row.company.trim().toUpperCase());
 
 	},
 	"position": (frm, cdt, cdn) => {
-		let row = locals[cdt][cdn]; 
+		let row = frappe.get_doc(cdt, cdn); 
 		frappe.model.set_value(cdt, cdn, "position", row.position.trim().toUpperCase());
 
 	},
 	"company_phone": (frm, cdt, cdn) => {
-		let row = locals[cdt][cdn]; 
-		let mask_phone = "(000) 000-0000";
-		$("input[data-fieldname=company_phone]").unmask();
-		$("input[data-fieldname=company_phone]").mask(mask_phone);
+		let row = frappe.get_doc(cdt, cdn),
+			mask_phone = "(000) 000-0000";
 
+		$("input[data-fieldname=company_phone]")
+			.unmask()
+			.mask(mask_phone);
 	}
 });
 
 frappe.ui.form.on("Customer Reference", {
 	"full_name": (frm, cdt, cdn) => {
-		let row = locals[cdt][cdn]; 
+		let row = frappe.get_doc(cdt, cdn); 
 		frappe.model.set_value(cdt, cdn, "full_name", row.full_name.trim().toUpperCase());
 
 	},
 	"address": (frm, cdt, cdn) => {
-		let row = locals[cdt][cdn]; 
+		let row = frappe.get_doc(cdt, cdn); 
 		frappe.model.set_value(cdt, cdn, "address", row.address.trim().toUpperCase());
 
 	},
 	"phone": (frm, cdt, cdn) => {
-		let row = locals[cdt][cdn]; 
-		let mask_phone = "(000) 000-0000";
-		$("input[data-fieldname=phone]").unmask();
-		$("input[data-fieldname=phone]").mask(mask_phone);
+		let row = frappe.get_doc(cdt, cdn),
+			mask_phone = "(000) 000-0000";
 
+		$("input[data-fieldname=phone]")
+			.unmask()
+			.mask(mask_phone);
 	}
 });
