@@ -20,8 +20,7 @@ def validate(doc, event):
 		GROUP BY `tabLoan`.name""", (doc.customer_name, references),
 	as_dict=True)
 	
-	if result: 
-		return
+	if not result: return
 	
 	frappe.throw(_("""This customer requires at least {customer_references} 
 		references according to loan {name}""").format(**result[0]))
