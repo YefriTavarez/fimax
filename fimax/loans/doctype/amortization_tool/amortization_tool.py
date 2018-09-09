@@ -51,15 +51,15 @@ class AmortizationTool(Document):
 		self.make_repayment_schedule()
 
 	def make_print_schedule(self):
-		rows = self.generate_repayment_schedule()
+		rows = self.get_repayment_schedule()
 		
 		self.amortization_schedule = frappe.render_template("templates/repayment_schedule_print.html", {
 			"rows": rows
 		})
 
-	def generate_repayment_schedule(self):
-		if not self.approved_net_amount\
-			or not self.repayment_periods\
+	def get_repayment_schedule(self):
+		if not self.approved_net_amount \
+			or not self.repayment_periods \
 			or not self.interest_rate: return
 
 		soc = simple
@@ -72,7 +72,8 @@ class AmortizationTool(Document):
 
 		self.total_capital_amount = self.requested_net_amount
 		
-		rows = soc.get_as_array(self.total_capital_amount,	dec(self.interest_rate), self.repayment_periods)
+		rows = soc.get_as_array(self.total_capital_amount, 
+			dec(self.interest_rate), self.repayment_periods)
 
 		for row in rows:
 			repayment_date = frappe._dict({
@@ -93,7 +94,7 @@ class AmortizationTool(Document):
 
 
 	def make_repayment_schedule(self):
-		rows = self.generate_repayment_schedule()
+		rows = self.get_repayment_schedule()
 
 		self.amortization_schedule = frappe.render_template("templates/repayment_schedule_form.html", {
 			"rows": rows
