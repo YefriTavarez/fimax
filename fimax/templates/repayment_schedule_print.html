@@ -1,24 +1,43 @@
-<div class="table-responsive">          
-   <table class="table">
-      <thead>
-         <tr>
-            <th>#</th>
-            <th>{{ _("Repayment Date") }}</th>
-            <th>{{ _("Repayment") }}</th>
-            <th>{{ _("Capital Amount") }}</th>
-            <th>{{ _("Interest Amount") }}</th>
-         </tr>
-      </thead>
-      <tbody>
-         {%- for row in rows -%}
-            <tr>
-               <td>{{ row.idx }}</td>
-               <td>{{ row.repayment_date }}</td>
-               <td>$ {{ frappe.format(row.repayment_amount) }}</td>
-               <td>$ {{ frappe.format(row.capital_amount) }}</td>
-               <td>$ {{ frappe.format(row.interest_amount) }}</td>
-            </tr>
-         {% endfor %}
-      </tbody>
-   </table>
+<style>
+	@media print {
+		.table-responsive {
+			width: 100% !important;
+		}
+		
+		.table-responsive > .table{
+			width: 100% !important;
+		}
+
+		.text-left {
+			text-align: left !important;
+		}
+
+		.text-right {
+			text-align: right !important;
+		}
+	}
+</style>
+<div class="table-responsive">
+	<table class="table">
+		<thead>
+			<tr>
+				<th><div class="text-right">#</div></th>
+				<th><div class="text-left">{{ _("Repayment Date") }}</div></th>
+				<th><div class="text-right">{{ _("Repayment") }}</div></th>
+				<th><div class="text-right">{{ _("Capital Amount") }}</div></th>
+				<th><div class="text-right">{{ _("Interest Amount") }}</div></th>
+			</tr>
+		</thead>
+		<tbody>
+			{%- for row in rows -%}
+			<tr>
+				<td><div class="text-right">{{ row.idx }}</div></td>
+				<td><div class="text-left">{{ row.repayment_date }}</div></td>
+				<td><div class="text-right">$ {{ frappe.format(row.repayment_amount) }}</div></td>
+				<td><div class="text-right">$ {{ frappe.format(row.capital_amount) }}</div></td>
+				<td><div class="text-right">$ {{ frappe.format(row.interest_amount) }}</div></td>
+			</tr>
+			{%- endfor -%}
+		</tbody>
+	</table>
 </div>
