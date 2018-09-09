@@ -95,7 +95,7 @@ notification_config = "fimax.notifications.get_notification_config"
 
 doc_events = {
 	"Customer": {
-		# "validate": "fimax.hook.customer.validate",
+		"validate": "fimax.hook.customer.validate",
 	}
 }
 

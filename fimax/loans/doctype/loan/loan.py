@@ -29,6 +29,7 @@ class Loan(Document):
 		self.validate_company()
 		self.validate_currency()
 		self.validate_party_account()
+		self.validate_customer_references()
 		self.validate_exchange_rate()
 
 	def before_insert(self):
@@ -89,6 +90,13 @@ class Loan(Document):
 
 			return create_loan_from_appl(loan_appl)
 
+	def validate_customer_references(self):
+		req_references = frappe.get_value("Custom Loan", self.loan_type, "customer_references")
+
+		if self.party_type == "Customer" and \
+			len(frappe.get_list("Customer Reference", {"parent": self.party})) < req_references:
+			frappe.throw(__("This loan type requires at least %d customer references")%req_references )
+	
 	def set_missing_values(self):
 		# simple or compound variable
 		soc = simple
@@ -152,7 +160,8 @@ class Loan(Document):
 		if not self.mode_of_payment:
 			self.mode_of_payment = default_mode_of_payment
 			
-		self.disbursement_account = frappe.get_value("Company", self.company, "default_bank_account")
+		if not self.disbursement_account:
+			self.disbursement_account = frappe.get_value("Company", self.company, "default_bank_account")
 		
 	def get_correct_date(self, repayment_date):
 		last_day_of_the_month = frappe.utils.get_last_day(repayment_date)
