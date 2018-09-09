@@ -10,7 +10,8 @@ frappe.ui.form.on('Loan', {
 	"refresh": (frm) => {
 		let event_list = ["set_status_indicators", "add_custom_buttons"];
 		$.map(event_list, (event) => frm.trigger(event));
-		if(frm.is_new()){
+
+		if (frm.is_new()) {
 			frm.trigger("set_defaults");
 		}
 	},
@@ -73,14 +74,16 @@ frappe.ui.form.on('Loan', {
 		}
 	},
 	"set_defaults": (frm) => {
-
-		frappe.db.get_value("Company Defaults", frm.doc.company,
-			["default_mode_of_payment", "disbursement_account"], 
-			({default_mode_of_payment, disbursement_account})=>{
-				frm.set_value("mode_of_payment", default_mode_of_payment ? default_mode_of_payment : "");
-				frm.set_value("disbursement_account", disbursement_account ? disbursement_account : "");
-			}
-		);
+		const doctype = "Company Defaults",
+			filters = frm.doc.company,
+			fieldname = ["default_mode_of_payment", "disbursement_account"], 
+			callback = ({ default_mode_of_payment, disbursement_account }) => {
+				$.each({
+					"mode_of_payment": default_mode_of_payment
+					"disbursement_account": disbursement_account 
+				}, (key, value) => frm.set_value(key, value || ""));
+			};
+		frappe.db.get_value(doctype=doctype, filters=filters, fieldname=fieldname, callback=callback);
 	},
 	"set_status_indicators": (frm) => {
 		let grid = frm.get_field('loan_schedule').grid;
@@ -189,7 +192,7 @@ frappe.ui.form.on('Loan', {
 	"party": (frm) => {
 		if (frm.doc.party) {
 			frm.call("set_accounts")
-				.then(() => frm.refresh());
+				.then(response => frm.refresh());
 		}
 	},
 	"currency": (frm) => {
