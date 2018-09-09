@@ -10,6 +10,9 @@ frappe.ui.form.on('Loan', {
 	"refresh": (frm) => {
 		let event_list = ["set_status_indicators", "add_custom_buttons"];
 		$.map(event_list, (event) => frm.trigger(event));
+		if(frm.is_new()){
+			frm.trigger("set_defaults");
+		}
 	},
 	"onload": (frm) => {
 		let event_list = [
@@ -68,6 +71,16 @@ frappe.ui.form.on('Loan', {
 
 			frm.page.set_inner_btn_group_as_primary(__("Make"));
 		}
+	},
+	"set_defaults": (frm) => {
+
+		frappe.db.get_value("Company Defaults", frm.doc.company,
+			["default_mode_of_payment", "disbursement_account"], 
+			({default_mode_of_payment, disbursement_account})=>{
+				frm.set_value("mode_of_payment", default_mode_of_payment ? default_mode_of_payment : "");
+				frm.set_value("disbursement_account", disbursement_account ? disbursement_account : "");
+			}
+		);
 	},
 	"set_status_indicators": (frm) => {
 		let grid = frm.get_field('loan_schedule').grid;
