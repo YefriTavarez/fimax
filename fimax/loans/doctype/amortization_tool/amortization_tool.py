@@ -53,9 +53,11 @@ class AmortizationTool(Document):
 	def make_print_schedule(self):
 		rows = self.get_repayment_schedule()
 		
-		self.amortization_schedule = frappe.render_template("templates/repayment_schedule_print.html", {
-			"rows": rows
-		})
+		self.amortization_schedule = frappe.render_template(
+			"templates/repayment_schedule_print.html", {
+				"rows": rows
+			}
+		)
 
 	def get_repayment_schedule(self):
 		if not self.approved_net_amount \
@@ -92,10 +94,11 @@ class AmortizationTool(Document):
 
 		return rows
 
-
 	def make_repayment_schedule(self):
 		rows = self.get_repayment_schedule()
 
-		self.amortization_schedule = frappe.render_template("templates/repayment_schedule_form.html", {
-			"rows": rows
-		})
+		self.amortization_schedule = frappe.render_template(
+			"templates/repayment_schedule_form.html", {
+				"rows": rows
+			}
+		)
