@@ -24,11 +24,11 @@ class Loan(Document):
 	def validate(self):
 		loan_schedule_ids = [row.name.split()[0] 
 			for row in self.loan_schedule]
-		self.set_missing_values()
+
 		if __("New") in loan_schedule_ids:
 			self.set_missing_values()
 
-		# self.update_repayment_schedule_dates()
+		self.update_dates()
 		self.validate_company()
 		self.validate_currency()
 		self.validate_party_account()
@@ -126,9 +126,22 @@ class Loan(Document):
 		for row in soc.get_as_array(self.total_capital_amount,
 			dec(self.interest_rate), self.repayment_periods):
 
-			# repayment_date = frappe.utils.add_months(self.posting_date, row.idx)
+			self.append("loan_schedule", row.update({
+				"status": "Pending",
+				"repayment_date": repayment_date,
+				"outstanding_amount": row.repayment_amount,
+				"paid_amount": 0.000
+			}))
 
-			repayment_date = frappe._dict({
+		self.set_accounts()
+		self.set_company_currency()
+		self.tryto_get_exchange_rate()
+		
+		self.update_dates()
+
+	def update_dates(self):
+		for row in self.loan_schedule:
+			row.repayment_date = frappe._dict({
 				"Daily": daily,
 				"Weekly": weekly,
 				"BiWeekly": biweekly,
@@ -138,16 +151,6 @@ class Loan(Document):
 				"Yearly": yearly
 			}).get(self.repayment_frequency)(self.disbursement_date, row.idx)
 
-			self.append("loan_schedule", row.update({
-				"status": "Pending",
-				"repayment_date": frappe.format_value(repayment_date, df={"fieldtype": "Date"}),
-				"outstanding_amount": row.repayment_amount,
-				"paid_amount": 0.000
-			}))
-
-		self.set_accounts()
-		self.set_company_currency()
-		self.tryto_get_exchange_rate()
 
 	def set_accounts(self):
 		self.set_party_account()
@@ -291,29 +294,35 @@ class Loan(Document):
 		# run this to make sure default loan charges type are set
 		add_default_loan_charges_type()
 
-		for idx, row in enumerate(self.loan_schedule):
+		for idx, loan_repayment in enumerate(self.loan_schedule):
 			self.publish_realtime(idx + 1, records)
 			
-			args_list = [("Capital", row.capital_amount)]
-			args_list += [("Interest", row.interest_amount)]
+			args_list = [("Capital", loan_repayment.capital_amount)]
+			args_list += [("Interest", loan_repayment.interest_amount)]
 
 			if not frappe.db.get_single_value("Control Panel", "detail_repayment_amount"):
-				args_list = [("Repayment Amount", row.repayment_amount)]
+				args_list = [("Repayment Amount", loan_repayment.repayment_amount)]
 
-			for args in args_list:
-				lc = row.get_new_loan_charge(*args)
-				lc.currency = self.currency
+			for loan_charges_type, amount in args_list:
+				loan_charges = loan_repayment.get_new_loan_charge(loan_charges_type, amount)
+				loan_charges.currency = self.currency
 
-				lc.update_status()
-				lc.submit()
+				# tell the loan_charges not to create the General Ledger Entries
+				loan_charges.flags.dont_update_gl_entries = True
+
+				# update status to make sure it has the right one
+				loan_charges.update_status()
+
+				# finally create it and submit it
+				loan_charges.submit()
 
 	def rollback_from_loan_charges(self):
 		records = len(self.loan_schedule) or 1
 			
-		for idx, row in enumerate(self.loan_schedule):
+		for idx, loan_repayment in enumerate(self.loan_schedule):
 			self.publish_realtime(idx + 1, records)
 
-			[self.cancel_and_delete_loan_charge(row, loan_charges_type) 
+			[self.cancel_and_delete_loan_charge(loan_repayment, loan_charges_type) 
 				for loan_charges_type in ('Capital', 'Interest', 'Repayment Amount')]
 
 	def cancel_and_delete_loan_charge(self, child, loan_charges_type):
