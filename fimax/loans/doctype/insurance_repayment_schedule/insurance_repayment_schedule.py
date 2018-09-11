@@ -10,7 +10,6 @@ from frappe.utils import flt, cint, cstr, nowdate
 from frappe import _
 
 class InsuranceRepaymentSchedule(Document):
-	
 	def rename(self):
 		new_name = "{0}-NO-{1}".format(self.parent, self.idx)
 		frappe.rename_doc(self.doctype, self.name, new_name, force=True)
