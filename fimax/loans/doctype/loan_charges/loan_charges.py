@@ -25,6 +25,13 @@ class LoanCharges(Document):
 	def on_submit(self):
 		self.update_outstanding_amount()
 
+		if not self.flags.dont_update_gl_entries:
+			self.make_gl_entries(cancel=False)
+			
+	def before_cancel(self):
+		if not self.flags.dont_update_gl_entries:
+			self.make_gl_entries(cancel=True)
+
 	def update_references(self, cancel=False):
 		# list of reference types that don't need to update the outstanding and paid amount
 		skipped_list = ["Insurance Card", "GPS Installation"]
@@ -124,45 +131,15 @@ class LoanCharges(Document):
 		if flt(self.paid_amount, 2) == flt(self.total_amount, 2) or not flt(self.outstanding_amount, 0):
 			self.status = "Paid"
 
-	def get_double_matched_entry(self, amount, against):
-		from erpnext.accounts.utils import get_company_default
-
-		base_gl_entry = {
-			"posting_date": self.posting_date,
-			"voucher_type": self.doctype,
-			"voucher_no": self.name,
-			"cost_center": get_company_default(self.company, "cost_center"),
-		}
-
-		debit_gl_entry = frappe._dict(base_gl_entry).update({
-			"party_type": self.party_type,
-			"party": self.party,
-			"account": self.party_account,
-			"account_currency": frappe.get_value("Account", self.party_account, "account_currency"),
-			"against": against,
-			"debit": flt(amount) * flt(self.exchange_rate),
-			"debit_in_account_currency": flt(amount),
-		})
-
-		credit_gl_entry = frappe._dict(base_gl_entry).update({
-			"account": against,
-			"account_currency": frappe.get_value("Account", against, "account_currency"),
-			"against": self.party,
-			"credit":  flt(amount) * flt(self.exchange_rate),
-			"credit_in_account_currency": flt(amount),
-		})
-		
-		return [debit_gl_entry, credit_gl_entry]
-
 	def make_gl_entries(self, cancel=False, adv_adj=False):
 		from erpnext.accounts.general_ledger import make_gl_entries
+		from erpnext.accounts.utils import get_company_default
 
-		# amount that was disbursed from the bank account
-		lent_amount = self.get_lent_amount()
+		loan_doc = frappe.get_doc(self.meta.get_field("loan").options, self.loan)
 
-		gl_map = self.get_double_matched_entry(lent_amount, self.disbursement_account)
-		gl_map += self.get_double_matched_entry(self.legal_expenses_amount, self.income_account)
-		gl_map += self.get_double_matched_entry(self.total_interest_amount, self.income_account)
+		income_account = get_company_default(loan_doc.company, "default_income_account")
+
+		gl_map = loan_doc.get_double_matched_entry(self.total_amount, income_account)
 
 		make_gl_entries(gl_map, cancel=cancel, adv_adj=adv_adj, merge_entries=False)
 	
