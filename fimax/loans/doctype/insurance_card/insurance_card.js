@@ -53,9 +53,10 @@ frappe.ui.form.on('Insurance Card', {
 			"posting_date": frappe.datetime.now_date(),
 			"user_remarks": __("Initial Payment for Insurance: {0}", [frm.docname]),
 		}, () => {
-			setTimeout(function() {
-				cur_frm.save();
-			}, 1500)
+			frappe.run_serially([
+				() => frappe.timeout(1.5),
+				() => cur_frm.save(),
+			]);
 		});
 	},
 	"start_date": (frm) => {
