@@ -25,12 +25,10 @@ class LoanCharges(Document):
 	def on_submit(self):
 		self.update_outstanding_amount()
 
-		print("self.flags.dont_update_gl_entries {}".format(not self.flags.dont_update_gl_entries))
 		if not self.flags.dont_update_gl_entries:
 			self.make_gl_entries(cancel=False)
 			
 	def before_cancel(self):
-		print("self.flags.dont_update_gl_entries {}".format(not self.flags.dont_update_gl_entries))
 		if not self.flags.dont_update_gl_entries:
 			self.make_gl_entries(cancel=True)
 
@@ -110,12 +108,9 @@ class LoanCharges(Document):
 			frappe.throw(__("Missing amount!"))
 
 		if flt(self.paid_amount, 2) > flt(self.total_amount, 2):
-			print(self.total_amount)
-			print(self.paid_amount)
 			frappe.throw(__("Paid Amount cannot be greater than Total amount!"))
 
 		if flt(self.outstanding_amount, 2) < 0.000:
-			print(self.outstanding_amount)
 			frappe.throw(__("Outstanding Amount cannot be less than zero!"))
 
 	def update_status(self):
@@ -156,7 +151,7 @@ class LoanCharges(Document):
 
 def on_doctype_update():
 	if frappe.flags.in_install == "fimax": return
-	
+
 	# let's drop the view if exists
 	frappe.db.sql_ddl("""drop view if exists `viewPaid Fine`""")
 	
