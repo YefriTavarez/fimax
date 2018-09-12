@@ -128,7 +128,7 @@ class Loan(Document):
 
 			self.append("loan_schedule", row.update({
 				"status": "Pending",
-				"repayment_date": repayment_date,
+				# "repayment_date": repayment_date,
 				"outstanding_amount": row.repayment_amount,
 				"paid_amount": 0.000
 			}))
@@ -341,13 +341,17 @@ class Loan(Document):
 
 		frappe.db.commit()
 
-	def get_double_matched_entry(self, amount, against):
+	def get_double_matched_entry(self, amount, against, voucher_type=None, voucher_no=None):
 		from erpnext.accounts.utils import get_company_default
 
+		if not voucher_type and not voucher_no:
+			voucher_type = self.doctype
+			voucher_no = self.name
+			
 		base_gl_entry = {
 			"posting_date": self.posting_date,
-			"voucher_type": self.doctype,
-			"voucher_no": self.name,
+			"voucher_type": voucher_type,
+			"voucher_no": voucher_no,
 			"cost_center": get_company_default(self.company, "cost_center"),
 			"company": self.company
 		}

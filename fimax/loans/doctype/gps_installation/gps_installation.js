@@ -63,9 +63,8 @@ frappe.ui.form.on('GPS Installation', {
 		frm.set_value("end_date", frappe.datetime.add_months(frm.doc.start_date, 12));
 	},
 	"total_amount":(frm)=>{
-		events = ["calculate_outstanding_amount", "make_repayment_schedule"];
-		$.map(events, (event) => frm.trigger(event));
-
+		$.map(["calculate_outstanding_amount", "make_repayment_schedule"],
+			event => frm.trigger(event));
 	},
 	"initial_payment_amount": (frm) => {
 		if (frm.doc.initial_payment_amount < 0.00) {
@@ -86,7 +85,7 @@ frappe.ui.form.on('GPS Installation', {
 			frm.set_value("initial_payment_amount", 0.00);
 		}
 			
-		let outstanding_amount = frm.doc.total_amount - frm.doc.initial_payment_amount;
+		let outstanding_amount = flt(frm.doc.total_amount) - flt(frm.doc.initial_payment_amount);
 		frm.set_value("outstanding_amount", outstanding_amount);
 	},
 	"repayment_periods": (frm) => {
@@ -106,16 +105,15 @@ frappe.ui.form.on('GPS Installation', {
 	"make_repayment_schedule": (frm) => {
 		if (frm.doc.total_amount <= 0.00 || frm.doc.is_paid_upfront) { return ; }
 
-		let monthly_repayment_amount = cint(frm.doc.outstanding_amount / frm.doc.repayment_periods);
-		let outstanding_amount = frm.doc.outstanding_amount;
-		let allocated_amount = 0.00;
-		let row_idx = 1;
+		let monthly_repayment_amount = cint(frm.doc.outstanding_amount / frm.doc.repayment_periods),
+			outstanding_amount = frm.doc.outstanding_amount,
+			allocated_amount = 0.00,
+			row_idx = 1;
 
 		frm.doc.gps_repayment_schedule = [];
-		let row;
 
 		while (outstanding_amount >= monthly_repayment_amount) {
-			row = frm.add_child("gps_repayment_schedule", {
+			var row = frm.add_child("gps_repayment_schedule", {
 				"repayment_date": frappe.datetime.add_months(frm.doc.start_date, row_idx),
 				"paid_amount": 0.00,
 				"repayment_amount": monthly_repayment_amount,
@@ -136,27 +134,26 @@ frappe.ui.form.on('GPS Installation', {
 		frm.refresh_fields();
 	},
 	"set_status_indicators": (frm) => {
-		let grid = frm.get_field('gps_repayment_schedule').grid;
+		let grid = frm.get_field('gps_repayment_schedule').grid,
+			query_selector = "div[data-fieldname=status] .static-area.ellipsis";
 
 		grid.wrapper.find("div.rows .grid-row").each((idx, vhtml) => {
-			let doc = frm.doc.gps_repayment_schedule[idx];
-
-			let html = $(vhtml);
-
-			let indicator = {
-				"Pending": "indicator orange",
-				"Overdue": "indicator red",
-				"Partially": "indicator yellow",
-				"Paid": "indicator green",
-			}[doc.status];
+			let doc = frm.doc.gps_repayment_schedule[idx],
+				html = $(vhtml),
+				indicator = {
+					"Pending": "indicator orange",
+					"Overdue": "indicator red",
+					"Partially": "indicator yellow",
+					"Paid": "indicator green",
+				}[doc.status];
 
 			// let's remove any previous set class
 			$.map(["orange", "red", "yellow", "green"], (color) => {
-				html.find("div[data-fieldname=status] .static-area.ellipsis")
+				html.find(query_selector)
 					.removeClass(__("indicator {0}", [color]));
 			});
 
-			html.find("div[data-fieldname=status] .static-area.ellipsis").addClass(indicator);
+			html.find(query_selector).addClass(indicator);
 		});
 	},
 	"sync_with_loan_charges": (frm) => {

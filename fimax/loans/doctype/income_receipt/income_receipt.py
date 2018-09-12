@@ -171,16 +171,21 @@ class IncomeReceipt(Document):
 
 	def update_loan_charges(self, cancel=False):
 		from frappe.utils import has_common
+		
 
 		for row in self.income_receipt_items:
 			loan_charge = frappe.get_doc(row.voucher_type, row.voucher_name)
 
+			base_allocated_amount = flt(row.allocated_amount) * flt(self.exchange_rate or 1.000)
+			exchange_rate = get_exchange_rate(self.loan_currency, self.currency) or 1.000
+			amount = flt(base_allocated_amount / exchange_rate, 2)
+
 			if not cancel:
-				loan_charge.paid_amount += row.base_allocated_amount
-				loan_charge.outstanding_amount -= row.base_allocated_amount
+				loan_charge.paid_amount += amount
+				loan_charge.outstanding_amount -= amount
 			else:
-				loan_charge.paid_amount -= row.base_allocated_amount
-				loan_charge.outstanding_amount += row.base_allocated_amount
+				loan_charge.paid_amount -= amount
+				loan_charge.outstanding_amount += amount
 
 			loan_charge.update_references(cancel=cancel)
 			loan_charge.update_status()

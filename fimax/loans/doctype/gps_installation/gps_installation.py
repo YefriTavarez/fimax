@@ -55,7 +55,7 @@ class GPSInstallation(Document):
 
 	def set_default_values(self):
 		self.repayment_periods = frappe.db.get_single_value("Control Panel",
-			"repayment_periods")
+			"gps_repayment_periods")
 	
 	def commit_to_loan_charges(self):
 		from fimax.install import add_default_loan_charges_type
@@ -72,6 +72,11 @@ class GPSInstallation(Document):
 			loan_charges.currency = self.currency
 
 			loan_charges.update_status()
+			
+			# insert the record
+			loan_charges.insert()
+
+			# finally submit
 			loan_charges.submit()
 
 	def rollback_from_loan_charges(self):
