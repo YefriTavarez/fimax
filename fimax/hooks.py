@@ -128,8 +128,8 @@ scheduler_events = {
 # Overriding Whitelisted Methods
 # ------------------------------
 
-override_whitelisted_methods = {
-	"frappe.desk.notifications.get_notifications": "fimax.notifications.get_notifications"
-}
+# override_whitelisted_methods = {
+# 	"frappe.desk.notifications.get_notifications": "fimax.notifications.get_notifications"
+# }
 
 boot_session = "fimax.boot.get_boot_info"

@@ -112,3 +112,11 @@ def add_rows_to_income_receipt_table(doc, selections, args):
 
 	return doc.as_dict()
 
+@frappe.whitelist(allow_guest=True)
+def get_last_loan():
+
+	headers = ["Access-Control-Allow-Origin: *"]
+	frappe.response.headers = headers
+
+	return frappe.get_last_doc("Loan")\
+		.as_dict()

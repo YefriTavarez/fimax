@@ -10,7 +10,7 @@ def all():
 def daily():
 	update_status_to_loan_charges()
 	create_loan_charges_fines()
-	
+
 def hourly():
 	pass
 
@@ -23,7 +23,7 @@ def monthly():
 def update_status_to_loan_charges():
 	"""Update status for each Loan Charge based on the current date and the paid amount"""
 	for doc in get_valid_loan_charges():
-		if not frappe.db.exists(doc.doctype, 
+		if not frappe.db.exists(doc.doctype,
 			doc.name): return
 
 		# it exists, so then let's get it
@@ -39,7 +39,7 @@ def update_status_to_loan_charges():
 def create_loan_charges_fines():
 	for company, in frappe.get_list("Company", as_list=True):
 		create_loan_charges_fines_for_(company)
-			
+
 def create_loan_charges_fines_for_(company):
 	if not frappe.db.exists("Company Defaults", {
 		"company": company
@@ -50,7 +50,7 @@ def create_loan_charges_fines_for_(company):
 	}).as_dict()
 
 	today = nowdate()
-	
+
 	due_date = today
 
 	if company_defaults.grace_days:
@@ -67,17 +67,17 @@ def create_loan_charges_fines_for_(company):
 		"repayment_date": ["<=", due_date]
 	}, as_list=True):
 
-		reference_type, reference_name = frappe.get_value(doctype, name, 
+		reference_type, reference_name = frappe.get_value(doctype, name,
 			["reference_type", "reference_name"])
 
-		total_amount, outstanding_amount = frappe.get_value(doctype, name, 
+		total_amount, outstanding_amount = frappe.get_value(doctype, name,
 			["total_amount", "outstanding_amount"])
-		
+
 		loan_repayment = frappe.get_doc(reference_type, reference_name)
 
 		time_to_run = None
-		
-		if loan_repayment.last_run:
+
+		if loan_repayment.get("last_run"):
 			time_to_run = add_months(loan_repayment.last_run, 1)
 
 		if time_to_run and not cstr(time_to_run) <= nowdate():
@@ -86,29 +86,33 @@ def create_loan_charges_fines_for_(company):
 		amount = late_payment_fee_rate * total_amount if late_payment_fee_on_total_amount \
 			else outstanding_amount
 
+		if not hasattr(loan_repayment,
+			"get_new_loan_charge"):
+			continue
+
 		loan_charges = loan_repayment.get_new_loan_charge("Late Payment Fee", amount)
 
 		if not amount: continue
-		
+
 		loan_repayment.last_run = nowdate()
 
 		loan_repayment.db_update()
 
 		if loan_repayment.parenttype == "Loan":
 			update_loan_record(
-				frappe.get_doc(loan_repayment.parenttype, 
+				frappe.get_doc(loan_repayment.parenttype,
 					loan_repayment.parent))
 
 		loan_charges.submit()
 
 def get_valid_loan_charges():
-	return frappe.db.sql("""SELECT 
-			loan_charges.name AS name, 
+	return frappe.db.sql("""SELECT
+			loan_charges.name AS name,
 			'Loan Charges' AS doctype
 		FROM
 			`tabLoan Charges` AS loan_charges
 		INNER JOIN
-			`tabLoan Charges Type` AS loan_charges_type 
+			`tabLoan Charges Type` AS loan_charges_type
 			ON loan_charges.loan_charges_type = loan_charges_type.name
 		WHERE loan_charges_type.generates_fine > 0
 			AND TIMESTAMPDIFF(MONTH, loan_charges.modified, CURRENT_TIMESTAMP) > 0
@@ -119,12 +123,12 @@ def get_valid_loan_charges():
 def update_loan_record(doc):
 	tbody, doc = [], get_loan_record(doc)
 
-	doc.details = frappe.render_template("templates/loan_record_details.html", { 
+	doc.details = frappe.render_template("templates/loan_record_details.html", {
 		"rows": frappe.get_doc(doc.meta.get_field("loan").options, doc.name).get("loan_schedule")
 	})
 
   	doc.save()
-	
+
 def get_loan_record(doc):
 	import fimax.utils
 

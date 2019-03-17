@@ -27,7 +27,7 @@ class LoanCharges(Document):
 
 		if not self.flags.dont_update_gl_entries:
 			self.make_gl_entries(cancel=False)
-			
+
 	def before_cancel(self):
 		if not self.flags.dont_update_gl_entries:
 			self.make_gl_entries(cancel=True)
@@ -37,8 +37,11 @@ class LoanCharges(Document):
 		skipped_list = ["Insurance Card", "GPS Installation"]
 
 		if self.reference_type in skipped_list: return
-		
+
 		reference = frappe.get_doc(self.reference_type, self.reference_name)
+
+		print(self.reference_type)
+		print(self.reference_name)
 
 		if not cancel: pass
 
@@ -50,7 +53,7 @@ class LoanCharges(Document):
 
 		if hasattr(reference, "update_status"):
 			reference.update_status()
-			
+
 		reference.submit()
 
 	def set_missing_values(self):
@@ -79,7 +82,7 @@ class LoanCharges(Document):
 	def update_outstanding_amount(self):
 		if not self.docstatus == 1.000:
 			frappe.throw(__("Please submit this Loan Charge before updating the outstanding amount!"))
-			
+
 		outstanding_amount = flt(self.total_amount) - flt(self.paid_amount)
 
 		if outstanding_amount < 0.000:
@@ -97,7 +100,7 @@ class LoanCharges(Document):
 		if not self.reference_name:
 			frappe.throw(__("Missing Repayment Name!"))
 
-		docstatus = frappe.db.get_value(self.reference_type, 
+		docstatus = frappe.db.get_value(self.reference_type,
 			self.reference_name, "docstatus")
 
 		if DocStatus(docstatus) is not DocStatus.SUBMITTED:
@@ -139,11 +142,11 @@ class LoanCharges(Document):
 
 		income_account = get_company_default(loan_doc.company, "default_income_account")
 
-		gl_map = loan_doc.get_double_matched_entry(self.total_amount, income_account, 
+		gl_map = loan_doc.get_double_matched_entry(self.total_amount, income_account,
 			voucher_type=self.doctype, voucher_no=self.name)
 
 		make_gl_entries(gl_map, cancel=cancel, adv_adj=adv_adj, merge_entries=False)
-	
+
 	def is_elegible_for_deletion(self):
 		if self.outstanding_amount == 0 \
 			or self.paid_amount > 0: return False
@@ -154,22 +157,22 @@ def on_doctype_update():
 
 	# let's drop the view if exists
 	frappe.db.sql_ddl("""drop view if exists `viewPaid Fine`""")
-	
+
 	# let's create the view
 	frappe.db.sql_ddl("""
-		create view `viewPaid Fine` as select 
+		create view `viewPaid Fine` as select
 			loan.name as loan,
 			loan.party as party,
 			charge.repayment_period as repayment,
 			(select date(max(t.creation)) from `tabIncome Receipt Items` t where t.voucher_name = charge.name) as fecha,
 			charge.total_amount as paid_amount,
 			charge.total_amount as total_amount,
-			charge.loan_charges_type as type, 
+			charge.loan_charges_type as type,
 			charge.status as status
-		from 
+		from
 			`tabLoan Charges` as charge
-		join 
-			`tabLoan` as loan 
-		on 
+		join
+			`tabLoan` as loan
+		on
 			loan.name = charge.loan
 	""")
