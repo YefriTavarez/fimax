@@ -34,14 +34,14 @@ frappe.ui.form.on('Amortization Tool', {
 					fimax.utils.frequency_in_years(frm.doc.repayment_frequency);
 
 				frm.doc["interest_rate"] = repayment_interest_rate;
-				
-				//let's update the label of repayment_frequency's field 
+
+				//let's update the label of repayment_frequency's field
 				frm.trigger("update_interest_rate_label");
 				frm.refresh_fields();
 			});
 	},
 	"show_menu": (frm) => {
-		frm.page.show_menu();	
+		frm.page.show_menu();
 	},
 	"add_custom_buttons": (frm) => {
 		frm.add_custom_button(__("Clear"), () => frm.trigger("clear_form"));
@@ -68,7 +68,7 @@ frappe.ui.form.on('Amortization Tool', {
 			() => frm.trigger("update_interest_rate"),
 			() => frm.trigger("update_interest_rate_label"),
 		]);
-	}, 
+	},
 	"repayment_periods": (frm) => {
 		frappe.run_serially([
 			() => frm.trigger("validate_repayment_periods"),
@@ -81,9 +81,7 @@ frappe.ui.form.on('Amortization Tool', {
 		}
 	},
 	"legal_expenses_rate": (frm) => {
-		if (frm.doc.legal_expenses_rate) {
-			frm.trigger("calculate_loan_amount");
-		}
+		frm.trigger("calculate_loan_amount");
 	},
 	"validate": (frm) => {
 		$.map([
@@ -99,8 +97,8 @@ frappe.ui.form.on('Amortization Tool', {
 		}
 	},
 	"validate_legal_expenses_rate": (frm) => {
-		if (!frm.doc.legal_expenses_rate) {
-			frappe.throw(__("Missing Legal Expenses Rate"));
+		if (frm.doc.legal_expenses_rate < .000) {
+			frappe.throw(__("Invalid Legal Expenses Rate"));
 		}
 	},
 	"validate_requested_gross_amount": (frm) => {
@@ -131,7 +129,7 @@ frappe.ui.form.on('Amortization Tool', {
 						fimax.utils.frequency_in_years(frm.doc.repayment_frequency);
 
 					frm.set_value("interest_rate", repayment_interest_rate);
-				} 
+				}
 			});
 	},
 	"update_interest_rate_label": (frm) => {
@@ -196,14 +194,14 @@ frappe.ui.form.on('Amortization Tool', {
 			]);
 		} else {
 			frappe.msgprint(__("Invalid value for Requested Gross Amount!"));
-			
+
 			$.map(["legal_expenses_amount", "approved_net_amount"], fieldname => {
 				frm.doc[fieldname] = 0.000;
 			});
 		}
 	},
 	"calculate_legal_expenses_amount": (frm) => {
-		frm.doc.legal_expenses_amount = flt(frm.doc.approved_gross_amount) 
+		frm.doc.legal_expenses_amount = flt(frm.doc.approved_gross_amount)
 			* fimax.utils.from_percent_to_decimal(frm.doc.legal_expenses_rate);
 
 		refresh_field("legal_expenses_amount");
@@ -211,7 +209,7 @@ frappe.ui.form.on('Amortization Tool', {
 	"calculate_requested_net_amount": (frm) => {
 		if (frm.doc.docstatus) { return ; }
 
-		frm.doc.requested_net_amount = flt(frm.doc.requested_gross_amount) 
+		frm.doc.requested_net_amount = flt(frm.doc.requested_gross_amount)
 			* flt(fimax.utils.from_percent_to_decimal(frm.doc.legal_expenses_rate) + 1);
 
 		refresh_field("requested_net_amount");

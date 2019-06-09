@@ -120,3 +120,16 @@ def get_last_loan():
 
 	return frappe.get_last_doc("Loan")\
 		.as_dict()
+
+@frappe.whitelist(allow_guest=True)
+def get_customers(filters):
+	filters = frappe._dict(json.loads(filters))
+
+	return frappe.db.sql("""SELECT customer_name, gender, tax_id
+		FROM `tabCustomer`
+		WHERE 1 = 1
+		%(conditions)s
+		ORDER BY customer_name""" % {
+			"conditions": get_conditions(filters)
+		}, as_dict=True, debug=True)
+

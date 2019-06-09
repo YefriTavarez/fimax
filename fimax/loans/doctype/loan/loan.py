@@ -389,7 +389,9 @@ class Loan(Document):
 
 		gl_map = self.get_double_matched_entry(lent_amount, self.disbursement_account)
 		# check to see for the posibility to use another account for legal_expenses income
-		gl_map += self.get_double_matched_entry(self.legal_expenses_amount, self.income_account)
+		if self.legal_expenses_rate:
+			gl_map += self.get_double_matched_entry(self.legal_expenses_amount, self.income_account)
+			
 		gl_map += self.get_double_matched_entry(self.total_interest_amount, self.income_account)
 
 		make_gl_entries(gl_map, cancel=cancel, adv_adj=adv_adj, merge_entries=False)

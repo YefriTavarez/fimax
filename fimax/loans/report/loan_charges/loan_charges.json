@@ -1,0 +1,33 @@
+{
+ "add_total_row": 1, 
+ "apply_user_permissions": 1, 
+ "creation": "2018-06-20 12:48:29.064449", 
+ "disabled": 0, 
+ "docstatus": 0, 
+ "doctype": "Report", 
+ "idx": 0, 
+ "is_standard": "Yes", 
+ "json": "{\"add_total_row\": 0, \"sort_by\": \"Loan Charges.loan\", \"add_totals_row\": 0, \"sort_order\": \"asc\", \"sort_by_next\": \"Loan Charges.repayment_period\", \"filters\": [], \"sort_order_next\": \"asc\", \"columns\": [[\"name\", \"Loan Charges\"], [\"status\", \"Loan Charges\"], [\"loan\", \"Loan Charges\"], [\"repayment_date\", \"Loan Charges\"], [\"repayment_period\", \"Loan Charges\"], [\"loan_charges_type\", \"Loan Charges\"], [\"outstanding_amount\", \"Loan Charges\"], [\"total_amount\", \"Loan Charges\"], [\"paid_amount\", \"Loan Charges\"]]}", 
+ "modified": "2019-05-08 09:55:19.805577", 
+ "modified_by": "Administrator", 
+ "module": "Loans", 
+ "name": "Loan Charges", 
+ "owner": "Administrator", 
+ "ref_doctype": "Loan Charges", 
+ "report_name": "Loan Charges", 
+ "report_type": "Script Report", 
+ "roles": [
+  {
+   "role": "System Manager"
+  }, 
+  {
+   "role": "Loan Manager"
+  }, 
+  {
+   "role": "Loan Approver"
+  }, 
+  {
+   "role": "Loan User"
+  }
+ ]
+}

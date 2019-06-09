@@ -207,8 +207,8 @@ frappe.ui.form.on('Loan Application', {
 					fimax.utils.frequency_in_years(frm.doc.repayment_frequency);
 
 				frm.doc["interest_rate"] = repayment_interest_rate;
-				
-				// let's update the label of repayment_frequency's field 
+
+				// let's update the label of repayment_frequency's field
 				frm.trigger("update_interest_rate_label");
 				frm.refresh_fields();
 			});
@@ -231,7 +231,7 @@ frappe.ui.form.on('Loan Application', {
 			() => frm.trigger("update_interest_rate"),
 			() => frm.trigger("update_interest_rate_label"),
 		]);
-	}, 
+	},
 	"repayment_periods": (frm) => {
 		frappe.run_serially([
 			() => frm.trigger("validate_repayment_periods"),
@@ -239,7 +239,7 @@ frappe.ui.form.on('Loan Application', {
 		]);
 	},
 	"legal_expenses_rate": (frm) => {
-		if (frm.doc.legal_expenses_rate) {
+		if (frm.doc.legal_expenses_rate || true) {
 			frm.trigger("calculate_loan_amount");
 		}
 	},
@@ -257,8 +257,8 @@ frappe.ui.form.on('Loan Application', {
 		}
 	},
 	"validate_legal_expenses_rate": (frm) => {
-		if (!frm.doc.legal_expenses_rate) {
-			frappe.throw(__("Missing Legal Expenses Rate"));
+		if (frm.doc.legal_expenses_rate < .000) {
+			frappe.throw(__("Invalid Legal Expenses Rate"));
 		}
 	},
 	"validate_requested_gross_amount": (frm) => {
@@ -364,7 +364,7 @@ frappe.ui.form.on('Loan Application', {
 						fimax.utils.frequency_in_years(frm.doc.repayment_frequency);
 
 					frm.set_value("interest_rate", repayment_interest_rate);
-				} 
+				}
 			});
 	},
 	"update_interest_rate_label": (frm) => {
@@ -400,7 +400,8 @@ frappe.ui.form.on('Loan Application', {
 	"show_hide_fields_based_on_role": (frm) => {
 		if (frm.doc.docstatus == 1) {
 			frm.toggle_enable("approved_gross_amount",
-				frappe.user.has_role(["Loan Approver", "Loan Manager"]) && !["Approved", "Rejected"].includes(frm.doc.status));
+				frappe.user.has_role(["Loan Approver", "Loan Manager"])
+					&& !["Approved", "Rejected"].includes(frm.doc.status));
 		}
 
 		$.map([
@@ -445,9 +446,9 @@ frappe.ui.form.on('Loan Application', {
 		});
 	},
 	"calculate_loan_amount": (frm) => {
-		let can_proceed = frm.doc.requested_gross_amount && frm.doc.legal_expenses_rate;
+		let { doc } = frm;
 
-		if (can_proceed) {
+		if (doc.requested_gross_amount) {
 			frappe.run_serially([
 				() => frm.trigger("calculate_legal_expenses_amount"),
 				() => frappe.timeout(0.5),
@@ -456,19 +457,19 @@ frappe.ui.form.on('Loan Application', {
 				() => frm.trigger("calculate_approved_net_amount"),
 				() => frappe.timeout(0.5),
 				() => {
-					if (frm.doc.repayment_periods) {
+					if (doc.repayment_periods) {
 						frm.trigger("update_repayment_amount")
 					}
 				}
 			]);
 		} else {
-			frm.doc.legal_expenses_amount = 0.000;
-			frm.doc.approved_net_amount = 0.000;
+			doc.legal_expenses_amount = 0.000;
+			doc.approved_net_amount = 0.000;
 		}
 
 	},
 	"calculate_legal_expenses_amount": (frm) => {
-		frm.doc.legal_expenses_amount = flt(frm.doc.approved_gross_amount) 
+		frm.doc.legal_expenses_amount = flt(frm.doc.approved_gross_amount)
 			* fimax.utils.from_percent_to_decimal(frm.doc.legal_expenses_rate);
 
 		refresh_field("legal_expenses_amount");
@@ -476,7 +477,7 @@ frappe.ui.form.on('Loan Application', {
 	"calculate_requested_net_amount": (frm) => {
 		if (frm.doc.docstatus) { return ; }
 
-		frm.doc.requested_net_amount = flt(frm.doc.requested_gross_amount) 
+		frm.doc.requested_net_amount = flt(frm.doc.requested_gross_amount)
 			* flt(fimax.utils.from_percent_to_decimal(frm.doc.legal_expenses_rate) + 1);
 
 		refresh_field("requested_net_amount");
