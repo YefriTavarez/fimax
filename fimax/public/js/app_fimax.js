@@ -11,12 +11,12 @@ $(frappe).ready((event) => {
 
 $(frappe).ready((event) => {
 	$.extend(frappe.app, {
-		refresh_notifications: function() {
+		refresh_notifications: function () {
 			var me = this;
 			if (frappe.session_alive) {
 				return frappe.call({
 					method: "frappe.desk.notifications.get_notifications",
-					args: {	"user": frappe.session.user },
+					args: { "user": frappe.session.user },
 					callback: function callback(r) {
 						if (r.message) {
 							$.extend(frappe.boot.notification_info, r.message);
@@ -37,7 +37,7 @@ $(frappe).ready((event) => {
 			}
 		},
 
-		update_notification_count_in_modules: function() {
+		update_notification_count_in_modules: function () {
 			$.each(frappe.boot.notification_info.open_count_doctype, function (doctype, count) {
 				if (count) {
 					$('.open-notification.global[data-doctype="' + doctype + '"]').removeClass("hide").html(count);
@@ -79,10 +79,10 @@ $.extend(fimax.utils, {
 			"selections": selections.join(","),
 			"args": args
 		};
-		
+
 		frappe.call(opts).done((response) => {
 			let doc = response.message;
-		
+
 			if (doc) {
 				frappe.run_serially([
 					() => frappe.model.sync(doc),
@@ -94,6 +94,7 @@ $.extend(fimax.utils, {
 	},
 });
 
+frappe.provide("_f.Frm.prototype");
 _f.Frm.prototype._save = function (save_action, callback, btn, on_error, resolve) {
 	var _this2 = this;
 
@@ -149,12 +150,12 @@ _f.Frm.prototype._save = function (save_action, callback, btn, on_error, resolve
 	}
 };
 
-_f.Frm.prototype.set_indicator_formatter = function(fieldname, get_color, get_text) {
+_f.Frm.prototype.set_indicator_formatter = function (fieldname, get_color, get_text) {
 	var doctype;
 	if (frappe.meta.docfield_map[this.doctype][fieldname]) {
 		doctype = this.doctype;
 	} else {
-		frappe.meta.get_table_fields(this.doctype).every(function(df) {
+		frappe.meta.get_table_fields(this.doctype).every(function (df) {
 			if (frappe.meta.docfield_map[df.options][fieldname]) {
 				doctype = df.options;
 				return false;
@@ -165,7 +166,7 @@ _f.Frm.prototype.set_indicator_formatter = function(fieldname, get_color, get_te
 	}
 
 	// frappe.meta.docfield_map[doctype][fieldname].formatter = function(value, df, options, doc) {
-	frappe.meta.get_docfield(doctype, fieldname, this.doc.name).formatter = function(value, df, options, doc) {
+	frappe.meta.get_docfield(doctype, fieldname, this.doc.name).formatter = function (value, df, options, doc) {
 		if (value) {
 			return repl('<a class="indicator %(color)s" href="#Form/%(doctype)s/%(name)s">%(label)s</a>', {
 				color: get_color(doc || {}),
@@ -179,7 +180,7 @@ _f.Frm.prototype.set_indicator_formatter = function(fieldname, get_color, get_te
 	};
 }
 
-frappe.db.get_value = function(doctype, filters, fieldname, _callback, parent=undefined) {
+frappe.db.get_value = function (doctype, filters, fieldname, _callback, parent = undefined) {
 	return frappe.call({
 		method: "frappe.client.get_value",
 		args: {

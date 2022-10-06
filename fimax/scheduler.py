@@ -11,8 +11,9 @@ def all():
 
 
 def daily():
-	update_status_to_loan_charges()
-	create_loan_charges_fines()
+	pass
+	# update_status_to_loan_charges()
+	# create_loan_charges_fines()
 
 
 def hourly():

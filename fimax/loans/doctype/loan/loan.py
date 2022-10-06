@@ -20,410 +20,435 @@ from frappe.utils import flt, cint, cstr
 from fimax.utils import daily, weekly, biweekly, monthly, quartely, half_yearly, yearly
 from frappe import _ as __
 
+
 class Loan(Document):
-	def validate(self):
-		loan_schedule_ids = [row.name.split()[0]
-			for row in self.loan_schedule]
+    def validate(self):
+        loan_schedule_ids = [row.name.split()[0]
+                             for row in self.loan_schedule]
 
-		if __("New") in loan_schedule_ids:
-			self.set_missing_values()
+        if __("New") in loan_schedule_ids:
+            self.set_missing_values()
 
-		self.update_dates()
-		self.validate_company()
-		self.validate_currency()
-		self.validate_party_account()
-		self.validate_customer_references()
-		self.validate_exchange_rate()
+        self.update_dates()
+        self.validate_company()
+        self.validate_currency()
+        self.validate_party_account()
+        self.validate_customer_references()
+        self.validate_exchange_rate()
 
-	def before_insert(self):
-		if not self.loan_application:
-			frappe.throw(__("Missing Loan Application!"))
+    def before_insert(self):
+        # if not self.loan_application:
+        # 	frappe.throw(__("Missing Loan Application!"))
 
-		self.validate_loan_application()
+        self.validate_loan_application()
 
-	def after_insert(self):
-		pass
+    def after_insert(self):
+        pass
 
-	def update_status(self, new_status=None):
-		if not new_status:
-			return
+    def update_status(self, new_status=None):
+        if not new_status:
+            return
 
-		options = self.meta.get_field("status").options
-		options_list = options.split("\n")
+        options = self.meta.get_field("status").options
+        options_list = options.split("\n")
 
-		self.status = new_status
+        self.status = new_status
 
-		self.validate_value("status", "in", options_list, raise_exception=True)
+        self.validate_value("status", "in", options_list, raise_exception=True)
 
-	def toggle_paused_status(self, paused=True):
-		self.update_status("Paused" if paused else "Disbursed")
+    def toggle_paused_status(self, paused=True):
+        self.update_status("Paused" if paused else "Disbursed")
 
-	def toggle_recovered_status(self, recovered=True):
-		self.update_status("Recovered" if recovered else "Disbursed")
+    def toggle_recovered_status(self, recovered=True):
+        self.update_status("Recovered" if recovered else "Disbursed")
 
-	def create_loan_record(self):
-		# let's create the a Loan Record for future follow up
-		fimax.utils.create_loan_record(self.as_dict())
+    def create_loan_record(self):
+        # let's create the a Loan Record for future follow up
+        fimax.utils.create_loan_record(self.as_dict())
 
-	def before_submit(self):
-		self.status = "Disbursed" # duplicated with line 71?
-		self.create_loan_record()
+    def before_submit(self):
+        self.status = "Disbursed"  # duplicated with line 71?
+        self.create_loan_record()
 
-	def on_submit(self):
-		self.make_gl_entries(cancel=False)
-		self.commit_to_loan_charges()
-		self.update_status(new_status="Disbursed")
+    def on_submit(self):
+        self.make_gl_entries(cancel=False)
+        self.commit_to_loan_charges()
+        self.update_status(new_status="Disbursed")
 
-	def before_cancel(self):
-		self.make_gl_entries(cancel=True)
-		self.rollback_from_loan_charges()
-		self.update_status(new_status="Cancelled")
+    def before_cancel(self):
+        self.make_gl_entries(cancel=True)
+        self.rollback_from_loan_charges()
+        self.update_status(new_status="Cancelled")
 
-	def on_cancel(self):
-		pass
+    def on_cancel(self):
+        pass
 
-	def on_trash(self):
-		record = frappe.db.exists("Loan Record", self.name)
+    def on_trash(self):
+        record = frappe.db.exists("Loan Record", self.name)
 
-		if record:
-			record = frappe.get_doc("Loan Record", self.name)
-			delete_doc(record)
+        if record:
+            record = frappe.get_doc("Loan Record", self.name)
+            delete_doc(record)
 
-	def make_loan(self):
-		if self.loan_application:
-			loan_appl = frappe.get_doc(self.meta.get_field("loan_application").options,
-				self.loan_application)
+    def make_loan(self):
+        if self.loan_application:
+            loan_appl = frappe.get_doc(self.meta.get_field("loan_application").options,
+                                       self.loan_application)
 
-			self.evaluate_loan_application(loan_appl)
+            self.evaluate_loan_application(loan_appl)
 
-			return create_loan_from_appl(loan_appl)
+            return create_loan_from_appl(loan_appl)
 
-	def validate_customer_references(self):
-		req_references = frappe.get_value("Custom Loan", self.loan_type, "customer_references")
+    def validate_customer_references(self):
+        req_references = frappe.get_value(
+            "Custom Loan", self.loan_type, "customer_references")
 
-		if self.party_type == "Customer" and \
-			len(frappe.get_list("Customer Reference", {"parent": self.party})) < req_references:
-			frappe.throw(__("This loan type requires at least %d customer references")%req_references )
+        if self.party_type == "Customer" and \
+                len(frappe.get_list("Customer Reference", {"parent": self.party})) < req_references:
+            frappe.throw(
+                __("This loan type requires at least %d customer references") % req_references)
 
-	def set_missing_values(self):
-		# simple or compound variable
-		soc = simple
+    def set_missing_values(self):
+        # simple or compound variable
+        soc = simple
 
-		if self.interest_type == "Compound":
-			soc = compound
+        if self.interest_type == "Compound":
+            soc = compound
 
-		self.total_capital_amount = self.loan_amount
+        self.total_capital_amount = self.loan_amount
 
-		self.repayment_amount = soc.get_repayment_amount(self.total_capital_amount,
-			dec(self.interest_rate), self.repayment_periods)
+        self.repayment_amount = soc.get_repayment_amount(self.total_capital_amount,
+                                                         dec(self.interest_rate), self.repayment_periods)
 
-		self.total_interest_amount = soc.get_total_interest_amount(self.total_capital_amount,
-			dec(self.interest_rate), self.repayment_periods)
+        self.total_interest_amount = soc.get_total_interest_amount(self.total_capital_amount,
+                                                                   dec(self.interest_rate), self.repayment_periods)
 
-		self.total_payable_amount = soc.get_total_payable_amount(self.total_capital_amount,
-			dec(self.interest_rate), self.repayment_periods)
+        self.total_payable_amount = soc.get_total_payable_amount(self.total_capital_amount,
+                                                                 dec(self.interest_rate), self.repayment_periods)
+
+        # empty the table to avoid duplicated rows
+        self.set("loan_schedule", [])
+
+        for row in soc.get_as_array(self.total_capital_amount,
+                                    dec(self.interest_rate), self.repayment_periods):
+
+            self.append("loan_schedule", row.update({
+                "status": "Pending",
+                # "repayment_date": repayment_date,
+                "outstanding_amount": row.repayment_amount,
+                "paid_amount": 0.000
+            }))
+
+        self.set_accounts()
+        self.set_company_currency()
+        self.tryto_get_exchange_rate()
+
+        self.update_dates()
+
+    def update_dates(self):
+        for row in self.loan_schedule:
+            row.repayment_date = frappe._dict({
+                "Daily": daily,
+                "Weekly": weekly,
+                "BiWeekly": biweekly,
+                "Monthly": monthly,
+                "Quartely": quartely,
+                "Half-Yearly": half_yearly,
+                "Yearly": yearly
+            }).get(self.repayment_frequency)(self.disbursement_date, row.idx)
+
+    @frappe.whitelist()
+    def set_accounts(self):
+        self.set_party_account()
+        income_account = frappe.get_value(
+            "Company", self.company, "default_income_account")
+
+        default_mode_of_payment = frappe.db.get_single_value(
+            "Control Panel", "default_mode_of_payments")
+
+        if not default_mode_of_payment:
+            frappe.msgprint(
+                __("Please set a default mode of payment in the Control Panel"))
+
+        if not self.income_account:
+            self.income_account = income_account
+
+        if not self.mode_of_payment and default_mode_of_payment:
+            self.mode_of_payment = default_mode_of_payment
+
+        if not self.disbursement_account:
+            self.disbursement_account = frappe.get_value(
+                "Company", self.company, "default_bank_account")
+
+    def get_correct_date(self, repayment_date):
+        last_day_of_the_month = frappe.utils.get_last_day(repayment_date)
+        first_day_of_the_month = frappe.utils.get_first_day(repayment_date)
+
+        if cint(self.repayment_day_of_the_month) > last_day_of_the_month.day:
+            return last_day_of_the_month.replace(last_day_of_the_month.year,
+                                                 last_day_of_the_month.month, last_day_of_the_month.day)
+        else:
+            return frappe.utils.add_days(first_day_of_the_month,
+                                         cint(self.repayment_day_of_the_month) - 1)
 
-		# empty the table to avoid duplicated rows
-		self.set("loan_schedule", [])
+    def set_party_account(self):
+        from erpnext.accounts.party import get_party_account
+
+        if self.party_account:
+            return
+
+        if self.party_type in ("Customer", "Supplier"):
+            self.party_account = get_party_account(
+                self.party_type, self.party, self.company)
+        else:
+            default_receivable = frappe.get_value(
+                "Company", self.company, "default_receivable_account")
+
+            first_receivable = frappe.get_value("Account", {
+                "account_type": "Receivable",
+                "company": self.company,
+                "account_currency": self.currency
+            })
 
-		for row in soc.get_as_array(self.total_capital_amount,
-			dec(self.interest_rate), self.repayment_periods):
+            self.party_account = default_receivable or first_receivable
 
-			self.append("loan_schedule", row.update({
-				"status": "Pending",
-				# "repayment_date": repayment_date,
-				"outstanding_amount": row.repayment_amount,
-				"paid_amount": 0.000
-			}))
+    def set_company_currency(self):
+        default_currency = frappe.get_value(
+            "Company", self.company, "default_currency")
+        self.company_currency = default_currency
 
-		self.set_accounts()
-		self.set_company_currency()
-		self.tryto_get_exchange_rate()
+    def tryto_get_exchange_rate(self):
+        if not self.exchange_rate == 1.000:
+            return
 
-		self.update_dates()
+        # the idea is to get the filters in the two possible combinations
+        # ex.
+        # 1st => { u'from_currency': u'USD', u'to_currency': u'INR' }
+        # 2nd => { u'from_currency': u'INR', u'to_currency': u'USD' }
 
-	def update_dates(self):
-		for row in self.loan_schedule:
-			row.repayment_date = frappe._dict({
-				"Daily": daily,
-				"Weekly": weekly,
-				"BiWeekly": biweekly,
-				"Monthly": monthly,
-				"Quartely": quartely,
-				"Half-Yearly": half_yearly,
-				"Yearly": yearly
-			}).get(self.repayment_frequency)(self.disbursement_date, row.idx)
+        field_list = ["from_currency", "to_currency"]
+        currency_list = [self.currency, self.company_currency]
 
+        purchase_bank_rate = frappe.get_value("Currency Exchange",
+                                              dict(zip(field_list, currency_list)), "exchange_rate", order_by="date DESC")
 
-	def set_accounts(self):
-		self.set_party_account()
-		income_account = frappe.get_value("Company", self.company, "default_income_account")
+        # reverse the second list to get the second combination
+        currency_list.reverse()
 
-		default_mode_of_payment = frappe.db.get_single_value("Control Panel", "default_mode_of_payments")
+        sales_bank_rate = frappe.get_value("Currency Exchange",
+                                           dict(zip(field_list, currency_list)), "exchange_rate", order_by="date DESC")
 
-		if not self.income_account:
-			self.income_account = income_account
+        self.exchange_rate = purchase_bank_rate or sales_bank_rate or 1.000
 
-		if not self.mode_of_payment:
-			self.mode_of_payment = default_mode_of_payment
+    def update_repayment_schedule_dates(self):
+        for row in self.loan_schedule:
+            row.repayment_date = self.get_correct_date(row.repayment_date)
 
-		if not self.mode_of_payment:
-			self.mode_of_payment = default_mode_of_payment
+    def validate_currency(self):
+        if not self.currency:
+            frappe.throw(__("Currency for Loan is mandatory!"))
 
-		if not self.disbursement_account:
-			self.disbursement_account = frappe.get_value("Company", self.company, "default_bank_account")
+    def validate_company(self):
+        if not self.company:
+            frappe.throw(__("Company for Loan is mandatory!"))
 
-	def get_correct_date(self, repayment_date):
-		last_day_of_the_month = frappe.utils.get_last_day(repayment_date)
-		first_day_of_the_month = frappe.utils.get_first_day(repayment_date)
+    def validate_party_account(self):
+        if not self.party_account:
+            frappe.throw(__("Party Account for Loan is mandatory!"))
 
-		if cint(self.repayment_day_of_the_month) > last_day_of_the_month.day:
-			return last_day_of_the_month.replace(last_day_of_the_month.year,
-				last_day_of_the_month.month, last_day_of_the_month.day)
-		else:
-			return frappe.utils.add_days(first_day_of_the_month,
-				cint(self.repayment_day_of_the_month) - 1)
+        company, account_type, currency = frappe.get_value("Account",
+                                                           self.party_account, ["company", "account_type", "account_currency"])
 
-	def set_party_account(self):
-		from erpnext.accounts.party import get_party_account
+        if not company == self.company:
+            frappe.throw(
+                __("Selected party account does not belong to Loan's Company!"))
 
-		if self.party_account: return
+        if not account_type == "Receivable":
+            frappe.throw(__("Selected party account is not Receivable!"))
 
-		if self.party_type in ("Customer", "Supplier"):
-			self.party_account = get_party_account(self.party_type, self.party, self.company)
-		else:
-			default_receivable = frappe.get_value("Company", self.company, "default_receivable_account")
+        if not currency == self.currency:
+            frappe.throw(
+                __("Customer's currency and Loan's currency must be the same, you may want to create a new customer with the desired currency if necessary!"))
 
-			first_receivable = frappe.get_value("Account", {
-				"account_type": "Receivable",
-				"company": self.company,
-				"account_currency": self.currency
-			})
+    def validate_exchange_rate(self):
+        if not self.exchange_rate:
+            frappe.throw(__("Unexpected exchange rate"))
 
-			self.party_account =  default_receivable or first_receivable
+    def validate_loan_application(self):
+        if self.loan_application:
+            loan_appl = frappe.get_doc(self.meta.get_field("loan_application").options,
+                                       self.loan_application)
 
-	def set_company_currency(self):
-		default_currency = frappe.get_value("Company", self.company, "default_currency")
-		self.company_currency = default_currency
+            self.evaluate_loan_application(loan_appl)
 
-	def tryto_get_exchange_rate(self):
-		if not self.exchange_rate == 1.000:	return
+    def evaluate_loan_application(self, loan_appl):
+        if loan_appl.docstatus == 0:
+            frappe.throw(__("Submit this Loan Application first!"))
 
-		# the idea is to get the filters in the two possible combinations
-		# ex.
-		# 1st => { u'from_currency': u'USD', u'to_currency': u'INR' }
-		# 2nd => { u'from_currency': u'INR', u'to_currency': u'USD' }
+        elif loan_appl.docstatus == 2:
+            frappe.throw(
+                __("The selected Loan Application is already cancelled!"))
 
-		field_list = ["from_currency", "to_currency"]
-		currency_list = [self.currency, self.company_currency]
+        if frappe.db.exists("Loan", {
+            "loan_application": loan_appl.name,
+            "docstatus": ["!=", "2"]
+        }):
+            frappe.throw(
+                __("The selected Loan Application already has a Loan document attached to it!"))
 
-		purchase_bank_rate = frappe.get_value("Currency Exchange",
-			dict(zip(field_list, currency_list)), "exchange_rate", order_by="date DESC")
+    def get_base_amount_for(self, fieldname):
+        if not self.meta.get_field(fieldname).fieldtype in ('Currency', 'Float'):
+            frappe.throw(__("Field Type for {fieldname} is not aplicable to be returned\
+                as Base Amount".format(fieldname=fieldname)))
 
-		# reverse the second list to get the second combination
-		currency_list.reverse()
+        return self.get(fieldname) * self.exchange_rate
 
-		sales_bank_rate = frappe.get_value("Currency Exchange",
-			dict(zip(field_list, currency_list)), "exchange_rate", order_by="date DESC")
+    def get_lent_amount(self):
+        return flt(self.loan_amount) - flt(self.legal_expenses_amount)
 
-		self.exchange_rate = purchase_bank_rate or sales_bank_rate or 1.000
+    def commit_to_loan_charges(self):
+        from fimax.install import add_default_loan_charges_type
 
-	def update_repayment_schedule_dates(self):
-		for row in self.loan_schedule:
-			row.repayment_date = self.get_correct_date(row.repayment_date)
+        records = len(self.loan_schedule) or 1
 
-	def validate_currency(self):
-		if not self.currency:
-			frappe.throw(__("Currency for Loan is mandatory!"))
+        # run this to make sure default loan charges type are set
+        add_default_loan_charges_type()
 
-	def validate_company(self):
-		if not self.company:
-			frappe.throw(__("Company for Loan is mandatory!"))
+        for idx, loan_repayment in enumerate(self.loan_schedule):
+            self.publish_realtime(idx + 1, records)
 
-	def validate_party_account(self):
-		if not self.party_account:
-			frappe.throw(__("Party Account for Loan is mandatory!"))
+            args_list = [("Capital", loan_repayment.capital_amount)]
+            args_list += [("Interest", loan_repayment.interest_amount)]
 
-		company, account_type, currency = frappe.get_value("Account",
-			self.party_account, ["company", "account_type", "account_currency"])
+            if not frappe.db.get_single_value("Control Panel", "detail_repayment_amount"):
+                args_list = [
+                    ("Repayment Amount", loan_repayment.repayment_amount)]
 
-		if not company == self.company:
-			frappe.throw(__("Selected party account does not belong to Loan's Company!"))
+            for loan_charges_type, amount in args_list:
+                loan_charges = loan_repayment.get_new_loan_charge(
+                    loan_charges_type, amount)
+                loan_charges.currency = self.currency
 
-		if not account_type == "Receivable":
-			frappe.throw(__("Selected party account is not Receivable!"))
+                # tell the loan_charges not to create the General Ledger Entries
+                loan_charges.flags.dont_update_gl_entries = True
 
-		if not currency == self.currency:
-			frappe.throw(__("Customer's currency and Loan's currency must be the same, you may want to create a new customer with the desired currency if necessary!"))
+                # update status to make sure it has the right one
+                loan_charges.update_status()
 
-	def validate_exchange_rate(self):
-		if not self.exchange_rate:
-			frappe.throw(__("Unexpected exchange rate"))
+                # finally create it and submit it
+                loan_charges.submit()
 
-	def validate_loan_application(self):
-		if self.loan_application:
-			loan_appl = frappe.get_doc(self.meta.get_field("loan_application").options,
-				self.loan_application)
+    def rollback_from_loan_charges(self):
+        records = len(self.loan_schedule) or 1
 
-			self.evaluate_loan_application(loan_appl)
+        for idx, loan_repayment in enumerate(self.loan_schedule):
+            self.publish_realtime(idx + 1, records)
 
-	def evaluate_loan_application(self, loan_appl):
-		if loan_appl.docstatus == 0:
-			frappe.throw(__("Submit this Loan Application first!"))
+            [self.cancel_and_delete_loan_charge(loan_repayment, loan_charges_type)
+                for loan_charges_type in ('Capital', 'Interest', 'Repayment Amount')]
 
-		elif loan_appl.docstatus == 2:
-			frappe.throw(__("The selected Loan Application is already cancelled!"))
+    def cancel_and_delete_loan_charge(self, child, loan_charges_type):
 
-		if frappe.db.exists("Loan", {
-			"loan_application": loan_appl.name ,
-			"docstatus": ["!=", "2"]
-		}):
-			frappe.throw(__("The selected Loan Application already has a Loan document attached to it!"))
+        loan_charge = child.get_loan_charge(loan_charges_type)
 
-	def get_base_amount_for(self, fieldname):
-		if not self.meta.get_field(fieldname).fieldtype in ('Currency', 'Float'):
-			frappe.throw(__("Field Type for {fieldname} is not aplicable to be returned\
-				as Base Amount".format(fieldname=fieldname)))
-
-		return self.get(fieldname) * self.exchange_rate
-	def get_lent_amount(self):
-		return flt(self.loan_amount) - flt(self.legal_expenses_amount)
-
-	def commit_to_loan_charges(self):
-		from fimax.install import add_default_loan_charges_type
-
-		records = len(self.loan_schedule) or 1
-
-		# run this to make sure default loan charges type are set
-		add_default_loan_charges_type()
-
-		for idx, loan_repayment in enumerate(self.loan_schedule):
-			self.publish_realtime(idx + 1, records)
-
-			args_list = [("Capital", loan_repayment.capital_amount)]
-			args_list += [("Interest", loan_repayment.interest_amount)]
-
-			if not frappe.db.get_single_value("Control Panel", "detail_repayment_amount"):
-				args_list = [("Repayment Amount", loan_repayment.repayment_amount)]
-
-			for loan_charges_type, amount in args_list:
-				loan_charges = loan_repayment.get_new_loan_charge(loan_charges_type, amount)
-				loan_charges.currency = self.currency
-
-				# tell the loan_charges not to create the General Ledger Entries
-				loan_charges.flags.dont_update_gl_entries = True
-
-				# update status to make sure it has the right one
-				loan_charges.update_status()
-
-				# finally create it and submit it
-				loan_charges.submit()
-
-	def rollback_from_loan_charges(self):
-		records = len(self.loan_schedule) or 1
-
-		for idx, loan_repayment in enumerate(self.loan_schedule):
-			self.publish_realtime(idx + 1, records)
-
-			[self.cancel_and_delete_loan_charge(loan_repayment, loan_charges_type)
-				for loan_charges_type in ('Capital', 'Interest', 'Repayment Amount')]
-
-	def cancel_and_delete_loan_charge(self, child, loan_charges_type):
-
-		loan_charge = child.get_loan_charge(loan_charges_type)
-
-		if not loan_charge or not loan_charge.name: return
-
-		doc = frappe.get_doc("Loan Charges", loan_charge.name)
-
-		if not doc.is_elegible_for_deletion():
-			frappe.throw(__("Could not cancel this Loan because the loan charge <i>{1}</i>:<b>{0}</b> is not pending anymore!"
-				.format(doc.name, doc.loan_charges_type)))
-
-		delete_doc(doc)
-
-		frappe.db.commit()
-
-	def get_double_matched_entry(self, amount, against, voucher_type=None, voucher_no=None):
-		from erpnext.accounts.utils import get_company_default
-
-		if not voucher_type and not voucher_no:
-			voucher_type = self.doctype
-			voucher_no = self.name
-
-		base_gl_entry = {
-			"posting_date": self.posting_date,
-			"voucher_type": voucher_type,
-			"voucher_no": voucher_no,
-			"cost_center": get_company_default(self.company, "cost_center"),
-			"company": self.company
-		}
-
-		# use frappe._dict to make a copy of the dict and don't modify the original
-		debit_gl_entry = frappe._dict(base_gl_entry).update({
-			"party_type": self.party_type,
-			"party": self.party,
-			"account": self.party_account,
-			"account_currency": frappe.get_value("Account", self.party_account, "account_currency"),
-			"against": against,
-			"debit": flt(amount) * flt(self.exchange_rate),
-			"debit_in_account_currency": flt(amount),
-		})
-
-		# use frappe._dict to make a copy of the dict and don't modify the original
-		credit_gl_entry = frappe._dict(base_gl_entry).update({
-			"account": against,
-			"account_currency": frappe.get_value("Account", against, "account_currency"),
-			"against": self.party,
-			"credit":  flt(amount) * flt(self.exchange_rate),
-			"credit_in_account_currency": flt(amount),
-		})
-
-		return [debit_gl_entry, credit_gl_entry]
-
-	def make_gl_entries(self, cancel=False, adv_adj=False):
-		from erpnext.accounts.general_ledger import make_gl_entries
-
-		# amount that was disbursed from the bank account
-		lent_amount = self.get_lent_amount()
-
-		gl_map = self.get_double_matched_entry(lent_amount, self.disbursement_account)
-		# check to see for the posibility to use another account for legal_expenses income
-		gl_map += self.get_double_matched_entry(self.legal_expenses_amount, self.income_account)
-		gl_map += self.get_double_matched_entry(self.total_interest_amount, self.income_account)
-
-		make_gl_entries(gl_map, cancel=cancel, adv_adj=adv_adj, merge_entries=False)
-
-	def sync_this_with_loan_charges(self):
-		records = len(self.loan_schedule) or 1
-
-		for idx, row in enumerate(self.loan_schedule):
-			self.publish_realtime(idx + 1, records)
-
-			paid_amount, last_status = frappe.db.get_value("Loan Charges", filters={
-				"docstatus": 1,
-				"status": ["!=", "Closed"],
-				"reference_type": row.doctype,
-				"reference_name": row.name,
-			}, fieldname=[
-				"SUM(paid_amount)",
-				"status"], order_by="name ASC")
-
-			row.paid_amount = flt(paid_amount)
-			row.outstanding_amount = flt(row.repayment_amount - row.paid_amount)
-			row.status = last_status or row.status
-			row.submit()
-
-		self.update_index_for_loan_schedule()
-
-	def update_index_for_loan_schedule(self):
-		index = 1
-		for each in sorted(self.loan_schedule, key=lambda d: d.repayment_date):
-		    each.idx = index
-		    index += 1
-		    each.db_update()
-
-	def publish_realtime(self, current, total):
-		frappe.publish_realtime("real_progress", {
-			"progress": flt(current) / flt(total) * 100,
-		}, user=frappe.session.user)
+        if not loan_charge or not loan_charge.name:
+            return
+
+        doc = frappe.get_doc("Loan Charges", loan_charge.name)
+
+        if not doc.is_elegible_for_deletion():
+            frappe.throw(__("Could not cancel this Loan because the loan charge <i>{1}</i>:<b>{0}</b> is not pending anymore!"
+                            .format(doc.name, doc.loan_charges_type)))
+
+        delete_doc(doc)
+
+        frappe.db.commit()
+
+    def get_double_matched_entry(self, amount, against, voucher_type=None, voucher_no=None):
+        from erpnext.accounts.utils import get_company_default
+
+        if not voucher_type and not voucher_no:
+            voucher_type = self.doctype
+            voucher_no = self.name
+
+        base_gl_entry = {
+            "posting_date": self.posting_date,
+            "voucher_type": voucher_type,
+            "voucher_no": voucher_no,
+            "cost_center": get_company_default(self.company, "cost_center"),
+            "company": self.company
+        }
+
+        # use frappe._dict to make a copy of the dict and don't modify the original
+        debit_gl_entry = frappe._dict(base_gl_entry).update({
+            "party_type": self.party_type,
+            "party": self.party,
+            "account": self.party_account,
+            "account_currency": frappe.get_value("Account", self.party_account, "account_currency"),
+            "against": against,
+            "debit": flt(amount) * flt(self.exchange_rate),
+            "debit_in_account_currency": flt(amount),
+        })
+
+        # use frappe._dict to make a copy of the dict and don't modify the original
+        credit_gl_entry = frappe._dict(base_gl_entry).update({
+            "account": against,
+            "account_currency": frappe.get_value("Account", against, "account_currency"),
+            "against": self.party,
+            "credit":  flt(amount) * flt(self.exchange_rate),
+            "credit_in_account_currency": flt(amount),
+        })
+
+        return [debit_gl_entry, credit_gl_entry]
+
+    def make_gl_entries(self, cancel=False, adv_adj=False):
+        from erpnext.accounts.general_ledger import make_gl_entries
+
+        # amount that was disbursed from the bank account
+        lent_amount = self.get_lent_amount()
+
+        gl_map = self.get_double_matched_entry(
+            lent_amount, self.disbursement_account)
+        # check to see for the posibility to use another account for legal_expenses income
+        gl_map += self.get_double_matched_entry(
+            self.legal_expenses_amount, self.income_account)
+        gl_map += self.get_double_matched_entry(
+            self.total_interest_amount, self.income_account)
+
+        make_gl_entries(gl_map, cancel=cancel,
+                        adv_adj=adv_adj, merge_entries=False)
+
+    def sync_this_with_loan_charges(self):
+        records = len(self.loan_schedule) or 1
+
+        for idx, row in enumerate(self.loan_schedule):
+            self.publish_realtime(idx + 1, records)
+
+            paid_amount, last_status = frappe.db.get_value("Loan Charges", filters={
+                "docstatus": 1,
+                "status": ["!=", "Closed"],
+                "reference_type": row.doctype,
+                "reference_name": row.name,
+            }, fieldname=[
+                "SUM(paid_amount)",
+                "status"], order_by="name ASC")
+
+            row.paid_amount = flt(paid_amount)
+            row.outstanding_amount = flt(
+                row.repayment_amount - row.paid_amount)
+            row.status = last_status or row.status
+            row.submit()
+
+        self.update_index_for_loan_schedule()
+
+    def update_index_for_loan_schedule(self):
+        index = 1
+        for each in sorted(self.loan_schedule, key=lambda d: d.repayment_date):
+            each.idx = index
+            index += 1
+            each.db_update()
+
+    def publish_realtime(self, current, total):
+        frappe.publish_realtime("real_progress", {
+            "progress": flt(current) / flt(total) * 100,
+        }, user=frappe.session.user)

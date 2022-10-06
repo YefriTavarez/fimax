@@ -17,15 +17,15 @@ frappe.ui.form.on('Loan', {
 	},
 	"onload": (frm) => {
 		let event_list = [
-			"toggle_mandatory_fields", 
-			"work_on_exchange_rate", 
-			"work_on_dynamic_labels", 
+			"toggle_mandatory_fields",
+			"work_on_exchange_rate",
+			"work_on_dynamic_labels",
 		];
 
 		$.map(event_list, (event) => frm.trigger(event));
 	},
 	"onload_post_render": (frm) => {
-		frappe.realtime.on("real_progress", function(data) {
+		frappe.realtime.on("real_progress", function (data) {
 			frappe.show_progress(__("Wait"), flt(data.progress));
 
 			if (cstr(data.progress) == "100") {
@@ -38,7 +38,7 @@ frappe.ui.form.on('Loan', {
 	},
 	"validate": (frm) => {
 		let event_list = [
-			"validate_exchange_rate", 
+			"validate_exchange_rate",
 		];
 
 		$.map(event_list, (event) => frm.trigger(event));
@@ -50,10 +50,10 @@ frappe.ui.form.on('Loan', {
 	},
 	"set_queries": (frm) => {
 		let event_list = [
-			"set_loan_application_query", 
+			"set_loan_application_query",
 			"set_party_account_query",
-			"set_income_account_query", 
-			"set_disbursement_account_query", 
+			"set_income_account_query",
+			"set_disbursement_account_query",
 		];
 
 		$.map(event_list, (event) => frm.trigger(event));
@@ -76,11 +76,11 @@ frappe.ui.form.on('Loan', {
 	"set_defaults": (frm) => {
 		const doctype = "Company Defaults",
 			filters = frm.doc.company,
-			fieldname = ["default_mode_of_payment", "disbursement_account"], 
+			fieldname = ["default_mode_of_payment", "disbursement_account"],
 			callback = ({ default_mode_of_payment, disbursement_account }) => {
 				$.each({
 					"mode_of_payment": default_mode_of_payment,
-					"disbursement_account": disbursement_account 
+					"disbursement_account": disbursement_account
 				}, (key, value) => frm.set_value(key, value || ""));
 			};
 		frappe.db.get_value(doctype, filters, fieldname, callback);
@@ -176,17 +176,17 @@ frappe.ui.form.on('Loan', {
 				let asset_type = data && data["asset_type"];
 
 				$.map(["toggle_reqd", "toggle_enable"], (func) => {
-					frm[func](["asset_type", "asset"], !! asset_type);
+					frm[func](["asset_type", "asset"], !!asset_type);
 				});
-				
+
 				if (asset_type) {
 					frm.doc.asset_type = asset_type;
 				} else {
 					frm.doc.asset_type = frm.doc.asset = undefined;
 				}
-				
+
 				frm.refresh_fields();
-					
+
 			}).fail((exec) => frappe.msgprint(__("There was a problem while loading the party default currency!")));
 	},
 	"party": (frm) => {
@@ -206,7 +206,7 @@ frappe.ui.form.on('Loan', {
 				if (doc) {
 					frappe.model.sync(doc) && fimax.utils.view_doc(doc);
 				}
-			}); 
+			});
 		}
 	},
 	"repayment_day_of_the_month": (frm) => {
@@ -266,7 +266,7 @@ frappe.ui.form.on('Loan', {
 				fimax.utils.view_doc(doc);
 			}
 		}).fail((exec) => frappe.msgprint(__("There was an error while creating the Insurance Card")));
-	},	
+	},
 	"make_gps_installation": (frm) => {
 		let opts = {
 			"method": "fimax.api.create_gps_installation_from_loan"
@@ -305,20 +305,36 @@ frappe.ui.form.on('Loan', {
 		}
 	},
 	"mode_of_payment": (frm) => {
-		frappe.db.get_value("Mode of Payment Account", {
-			"parent": frm.doc.mode_of_payment,
-			"company": frm.doc.company
-		}, ["default_account"]).then((response) => {
-			let data = response.message;
+		const { doc } = frm;
 
-			if (! (data && data["default_account"])) {
-				frappe.msgprint(repl(`Please set default Cash or Bank account in Mode of Payment 
-					<a href="/desk#Form/Mode of Payment/%(mode_of_payment)s">%(mode_of_payment)s</a>
-					for company %(company)s`, frm.doc));
+		if (!doc.mode_of_payment) {
+			return "Ignore if no mode of payment";
+		}
+
+		frappe.db.get_value("Mode of Payment Account", {
+			"parent": doc.mode_of_payment,
+			"company": doc.company
+		}, ["default_account"], (response) => {
+			let data = response.message;
+			const message_str = `Please set default Cash or Bank account in
+				Mode of Payment 
+				<a
+					target="_blank"
+					href="/app/mode-of-payment/%(mode_of_payment)s"
+				>
+					%(mode_of_payment)s
+				</a> for company %(company)s`;
+
+			if (data && !data.default_account) {
+				frappe.msgprint(
+					repl(
+						message_str, doc
+					)
+				);
 
 				frm.set_value("mode_of_payment", undefined);
 			}
-		}, "Mode of Payment");
+		}, "Mode of Payment")
 	},
 	"work_on_exchange_rate": (frm) => {
 		if (frm.doc.currency == frm.doc.company_currency) {

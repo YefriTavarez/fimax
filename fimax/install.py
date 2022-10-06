@@ -106,6 +106,7 @@ def update_erpnext_icons():
 	frappe.db.commit()
 
 def check_setup_wizard_is_completed():
+	return True
 	if not frappe.db.get_default('desktop:home_page') == 'desktop':
 		print()
 		print("Fimax cannot be installed on a fresh site where the setup wizard is not completed")

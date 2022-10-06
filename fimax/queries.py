@@ -2,8 +2,11 @@ import frappe
 
 from erpnext.controllers.queries import get_match_cond
 
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
 def loan_linked_application_query(doctype, txt, searchfield, start, page_len, filters):
-	return frappe.db.sql("""select name, party_type, party_name, company from `tabLoan Application`
+    return frappe.db.sql("""select name, party_type, party_name, company from `tabLoan Application`
 		where docstatus < 2
 			and status = 'Approved'
 			and name in (select tabLoan.loan_application 
@@ -24,18 +27,20 @@ def loan_linked_application_query(doctype, txt, searchfield, start, page_len, fi
 			if(locate(%(_txt)s, company), locate(%(_txt)s, company), 99999),
 			name, party_name
 		limit %(start)s, %(page_len)s""".format(**{
-			'key': searchfield,
-			'mcond': get_match_cond(doctype)
-		}), {
-			'txt': "%%%s%%" % txt,
-			'_txt': txt.replace("%", ""),
-			'start': start,
-			'page_len': page_len
-		})
+        'key': searchfield,
+        'mcond': get_match_cond(doctype)
+    }), {
+        'txt': "%%%s%%" % txt,
+        '_txt': txt.replace("%", ""),
+        'start': start,
+        'page_len': page_len
+    })
 
 
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
 def loan_unlinked_application_query(doctype, txt, searchfield, start, page_len, filters):
-	return frappe.db.sql("""select name, party_type, party_name, company from `tabLoan Application`
+    return frappe.db.sql("""select name, party_type, party_name, company from `tabLoan Application`
 		where docstatus < 2
 			and status = 'Approved'
 			and name not in (select tabLoan.loan_application 
@@ -56,18 +61,20 @@ def loan_unlinked_application_query(doctype, txt, searchfield, start, page_len, 
 			if(locate(%(_txt)s, company), locate(%(_txt)s, company), 99999),
 			name, party_name
 		limit %(start)s, %(page_len)s""".format(**{
-			'key': searchfield,
-			'mcond': get_match_cond(doctype)
-		}), {
-			'txt': "%%%s%%" % txt,
-			'_txt': txt.replace("%", ""),
-			'start': start,
-			'page_len': page_len
-		})
+        'key': searchfield,
+        'mcond': get_match_cond(doctype)
+    }), {
+        'txt': "%%%s%%" % txt,
+        '_txt': txt.replace("%", ""),
+        'start': start,
+        'page_len': page_len
+    })
 
 
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
 def get_loans(doctype, txt, searchfield, start, page_len, filters):
-	return frappe.db.sql("""SELECT 
+    return frappe.db.sql("""SELECT 
 			`tabLoan`.name, 
 			`tabLoan`.party_type,
 			`tabLoan`.party, 
@@ -84,12 +91,12 @@ def get_loans(doctype, txt, searchfield, start, page_len, filters):
 			if(locate(%(_txt)s, `tabLoan`.party_name), locate(%(_txt)s, `tabLoan`.party_name), 99999),
 			`tabLoan`.name, `tabLoan`.party
 		LIMIT %(start)s, %(page_len)s""".format(**{
-			'key': "`tab{0}`.{1}".format(doctype, searchfield),
-			'mcond':get_match_cond(doctype)
-		}), {
-			'txt': "%%%s%%" % txt,
-			'_txt': txt.replace("%", ""),
-			'start': start,
-			'page_len': page_len,
-			'asset_type': filters.get("asset_type")
-		})
+        'key': "`tab{0}`.{1}".format(doctype, searchfield),
+        'mcond': get_match_cond(doctype)
+    }), {
+        'txt': "%%%s%%" % txt,
+        '_txt': txt.replace("%", ""),
+        'start': start,
+        'page_len': page_len,
+        'asset_type': filters.get("asset_type")
+    })

@@ -91,7 +91,7 @@ def add_reqd_custom_fields_in_customer():
 			'default': '1',
 			'depends_on': None,
 			'description': None,
-			'docstatus': 0L,
+			'docstatus': 0,
 			'doctype': 'Custom Field',
 			'dt': 'Customer',
 			'fieldname': 'tax_id_type',
