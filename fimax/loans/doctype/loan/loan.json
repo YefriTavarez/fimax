@@ -230,9 +230,9 @@
    "default": "0",
    "fieldname": "interest_rate",
    "fieldtype": "Percent",
+   "hidden": 1,
    "label": "Interest Rate",
    "precision": "2",
-   "read_only": 1,
    "reqd": 1
   },
   {
@@ -397,7 +397,7 @@
  "is_submittable": 1,
  "links": [],
  "max_attachments": 10,
- "modified": "2022-10-12 23:22:44.647147",
+ "modified": "2022-10-13 08:41:31.600046",
  "modified_by": "Administrator",
  "module": "Loans",
  "name": "Loan",

@@ -21,6 +21,7 @@ class LoanApplication(Document):
         self.set_approved_amounts()
         self.validate_approved_amounts()
         self.validate_customer_references()
+        self.calculate_legal_expenses_amount()
         self.set_repayment_amount()
 
     def on_update_after_submit(self):
@@ -46,6 +47,10 @@ class LoanApplication(Document):
 
     def on_trash(self):
         pass
+
+    def calculate_legal_expenses_amount(self):
+        self.legal_expenses_amount = flt(self.approved_gross_amount) \
+            * dec(self.legal_expenses_rate)
 
     def make_loan(self):
         return create_loan_from_appl(self)
