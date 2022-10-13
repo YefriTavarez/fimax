@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2022, Yefri Tavarez and contributors
+# For license information, please see license.txt
+
+from __future__ import unicode_literals
+
 import frappe
 
 from erpnext.controllers.queries import get_match_cond

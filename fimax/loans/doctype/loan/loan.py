@@ -4,24 +4,23 @@
 
 from __future__ import unicode_literals
 
-import frappe
 import fimax.utils
-
-from frappe.model.document import Document
-
-from fimax.api import rate_to_decimal as dec
+import frappe
+from fimax import compound, simple
 from fimax.api import create_loan_from_appl
-
-from fimax import simple
-from fimax import compound
-from fimax.utils import delete_doc
-
-from frappe.utils import flt, cint, cstr
-from fimax.utils import daily, weekly, biweekly, monthly, quartely, half_yearly, yearly
+from fimax.api import rate_to_decimal as dec
+from fimax.utils import (biweekly, daily, delete_doc, half_yearly, monthly,
+                         quartely, weekly, yearly)
 from frappe import _ as __
+from frappe import db
+from frappe.model.document import Document
+from frappe.utils import cint, cstr, flt, today
+
+current_loan_schedule = None
 
 
 class Loan(Document):
+    @frappe.whitelist()
     def validate(self):
         loan_schedule_ids = [row.name.split()[0]
                              for row in self.loan_schedule]
@@ -39,11 +38,22 @@ class Loan(Document):
     def before_insert(self):
         # if not self.loan_application:
         # 	frappe.throw(__("Missing Loan Application!"))
+        global current_loan_schedule
+
+        current_loan_schedule = self.loan_schedule
+
+        for row in self.loan_schedule:
+            row.name = None
+
+        self.loan_schedule = list()
 
         self.validate_loan_application()
 
     def after_insert(self):
-        pass
+        self.update_status(new_status="Open")
+        for row in current_loan_schedule:
+            d = self.append("loan_schedule", row.as_dict())
+            d.insert()
 
     def update_status(self, new_status=None):
         if not new_status:
@@ -74,22 +84,34 @@ class Loan(Document):
         self.make_gl_entries(cancel=False)
         self.commit_to_loan_charges()
         self.update_status(new_status="Disbursed")
+        self.create_payment_entry_if_needed()
 
     def before_cancel(self):
         self.make_gl_entries(cancel=True)
         self.rollback_from_loan_charges()
         self.update_status(new_status="Cancelled")
 
+        frappe.db.sql(f"""
+			Delete from `tabGL Entry`
+			where voucher_type = "Loan"
+			and voucher_no = "{self.name}"
+		""")
+
     def on_cancel(self):
         pass
 
     def on_trash(self):
-        record = frappe.db.exists("Loan Record", self.name)
+        record = db.exists("Loan Record", self.name)
 
         if record:
             record = frappe.get_doc("Loan Record", self.name)
             delete_doc(record)
 
+    @frappe.whitelist()
+    def cancel_loan(self):
+        self.cancel()
+
+    @frappe.whitelist()
     def make_loan(self):
         if self.loan_application:
             loan_appl = frappe.get_doc(self.meta.get_field("loan_application").options,
@@ -98,6 +120,62 @@ class Loan(Document):
             self.evaluate_loan_application(loan_appl)
 
             return create_loan_from_appl(loan_appl)
+
+    def create_payment_entry_if_needed(self):
+        if not self.sales_invoice:
+            return "We don't have a Sales Invoice to create a Payment Entry"
+
+        from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+        payment = get_payment_entry(dt="Sales Invoice", dn=self.sales_invoice)
+
+        payment.mode_of_payment = self.get_mode_of_payment_for_pe()
+
+        if not payment.mode_of_payment:
+            known_mops = self.get_known_mops(as_set=True)
+            frappe.throw(
+                __("Please create a Mode of Payment with one of the following names: {0}")
+                .format(frappe.utils.comma_or(known_mops))
+            )
+
+        payment.reference_no = self.name
+        payment.reference_date = today()
+
+        payment.submit()
+
+        frappe.msgprint(
+            __("Payment Entry {0} created successfully")
+            .format(f"<a href=\"/app/payment-entry/{payment.name}\">{payment.name}</a>")
+        )
+
+    def get_mode_of_payment_for_pe(self):
+        args = {
+            "known_mops": self.get_known_mops(),
+        }
+
+        results = db.sql("""
+            Select
+                name
+            From
+                `tabMode of Payment`
+            Where
+                name in %(known_mops)s
+            """, args, as_list=True
+                         )
+
+        return results[0][0] if results else None
+
+    def get_known_mops(self, as_set=False):
+        known_mops = [
+            "Loan",
+            __("Loan"),
+            "Loan Payment",
+            __("Loan Payment"),
+        ]
+
+        if as_set:
+            return set(known_mops)
+
+        return known_mops
 
     def validate_customer_references(self):
         req_references = frappe.get_value(
@@ -108,6 +186,7 @@ class Loan(Document):
             frappe.throw(
                 __("This loan type requires at least %d customer references") % req_references)
 
+    @ frappe.whitelist()
     def set_missing_values(self):
         # simple or compound variable
         soc = simple
@@ -157,13 +236,13 @@ class Loan(Document):
                 "Yearly": yearly
             }).get(self.repayment_frequency)(self.disbursement_date, row.idx)
 
-    @frappe.whitelist()
+    @ frappe.whitelist()
     def set_accounts(self):
         self.set_party_account()
         income_account = frappe.get_value(
             "Company", self.company, "default_income_account")
 
-        default_mode_of_payment = frappe.db.get_single_value(
+        default_mode_of_payment = db.get_single_value(
             "Control Panel", "default_mode_of_payments")
 
         if not default_mode_of_payment:
@@ -240,6 +319,7 @@ class Loan(Document):
 
         self.exchange_rate = purchase_bank_rate or sales_bank_rate or 1.000
 
+    @ frappe.whitelist()
     def update_repayment_schedule_dates(self):
         for row in self.loan_schedule:
             row.repayment_date = self.get_correct_date(row.repayment_date)
@@ -289,12 +369,14 @@ class Loan(Document):
             frappe.throw(
                 __("The selected Loan Application is already cancelled!"))
 
-        if frappe.db.exists("Loan", {
+        if db.exists("Loan", {
             "loan_application": loan_appl.name,
             "docstatus": ["!=", "2"]
         }):
             frappe.throw(
-                __("The selected Loan Application already has a Loan document attached to it!"))
+                __("Loan Application: {0} already attached to another Loan")
+                .format(self.loan_application)
+            )
 
     def get_base_amount_for(self, fieldname):
         if not self.meta.get_field(fieldname).fieldtype in ('Currency', 'Float'):
@@ -318,9 +400,11 @@ class Loan(Document):
             self.publish_realtime(idx + 1, records)
 
             args_list = [("Capital", loan_repayment.capital_amount)]
-            args_list += [("Interest", loan_repayment.interest_amount)]
 
-            if not frappe.db.get_single_value("Control Panel", "detail_repayment_amount"):
+            if loan_repayment.interest_amount:
+                args_list += [("Interest", loan_repayment.interest_amount)]
+
+            if not db.get_single_value("Control Panel", "detail_repayment_amount"):
                 args_list = [
                     ("Repayment Amount", loan_repayment.repayment_amount)]
 
@@ -362,7 +446,7 @@ class Loan(Document):
 
         delete_doc(doc)
 
-        frappe.db.commit()
+        db.commit()
 
     def get_double_matched_entry(self, amount, against, voucher_type=None, voucher_no=None):
         from erpnext.accounts.utils import get_company_default
@@ -407,24 +491,31 @@ class Loan(Document):
         # amount that was disbursed from the bank account
         lent_amount = self.get_lent_amount()
 
-        gl_map = self.get_double_matched_entry(
-            lent_amount, self.disbursement_account)
+        gl_map = list()
+        if lent_amount:
+            gl_map += self.get_double_matched_entry(
+                lent_amount, self.disbursement_account)
+
         # check to see for the posibility to use another account for legal_expenses income
-        gl_map += self.get_double_matched_entry(
-            self.legal_expenses_amount, self.income_account)
-        gl_map += self.get_double_matched_entry(
-            self.total_interest_amount, self.income_account)
+        if flt(self.legal_expenses_amount) > 0:
+            gl_map += self.get_double_matched_entry(
+                self.legal_expenses_amount, self.income_account)
+
+        if flt(self.total_interest_amount) > 0:
+            gl_map += self.get_double_matched_entry(
+                self.total_interest_amount, self.income_account)
 
         make_gl_entries(gl_map, cancel=cancel,
                         adv_adj=adv_adj, merge_entries=False)
 
+    @ frappe.whitelist()
     def sync_this_with_loan_charges(self):
         records = len(self.loan_schedule) or 1
 
         for idx, row in enumerate(self.loan_schedule):
             self.publish_realtime(idx + 1, records)
 
-            paid_amount, last_status = frappe.db.get_value("Loan Charges", filters={
+            paid_amount, last_status = db.get_value("Loan Charges", filters={
                 "docstatus": 1,
                 "status": ["!=", "Closed"],
                 "reference_type": row.doctype,

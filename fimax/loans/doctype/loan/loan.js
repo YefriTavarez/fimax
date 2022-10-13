@@ -5,11 +5,11 @@ frappe.provide("fimax.loan");
 frappe.ui.form.on('Loan', {
 	"setup": (frm) => {
 		let event_list = ["set_queries"];
-		$.map(event_list, (event) => frm.trigger(event));
+		jQuery.map(event_list, (event) => frm.trigger(event));
 	},
 	"refresh": (frm) => {
 		let event_list = ["set_status_indicators", "add_custom_buttons"];
-		$.map(event_list, (event) => frm.trigger(event));
+		jQuery.map(event_list, (event) => frm.trigger(event));
 
 		if (frm.is_new()) {
 			frm.trigger("set_defaults");
@@ -22,7 +22,7 @@ frappe.ui.form.on('Loan', {
 			"work_on_dynamic_labels",
 		];
 
-		$.map(event_list, (event) => frm.trigger(event));
+		jQuery.map(event_list, (event) => frm.trigger(event));
 	},
 	"onload_post_render": (frm) => {
 		frappe.realtime.on("real_progress", function (data) {
@@ -41,7 +41,7 @@ frappe.ui.form.on('Loan', {
 			"validate_exchange_rate",
 		];
 
-		$.map(event_list, (event) => frm.trigger(event));
+		jQuery.map(event_list, (event) => frm.trigger(event));
 	},
 	"validate_exchange_rate": (frm) => {
 		if (frm.doc.currency != frm.doc.company_currency && frm.doc.exchange_rate == 1.000) {
@@ -56,52 +56,75 @@ frappe.ui.form.on('Loan', {
 			"set_disbursement_account_query",
 		];
 
-		$.map(event_list, (event) => frm.trigger(event));
+		jQuery.map(event_list, (event) => frm.trigger(event));
 	},
 	"add_custom_buttons": (frm) => {
+		const { doc, page } = frm;
+
 		if (frm.is_new()) {
 			let button_list = ["add_new_vehicle_button",
 				"add_new_property_button"];
-			$.map(button_list, (event) => frm.trigger(event));
+			jQuery.map(button_list, (event) => frm.trigger(event));
 
 			frm.page.set_inner_btn_group_as_primary(__("New"));
 		} else {
 			let button_list = ["add_new_insurance_card_button",
 				"add_new_gps_installation_button", "add_view_income_recepit_button"];
-			$.map(button_list, (event) => frm.trigger(event));
+			jQuery.map(button_list, (event) => frm.trigger(event));
 
 			frm.page.set_inner_btn_group_as_primary(__("Make"));
 		}
+
+
+		if (doc.docstatus === 1 && frappe.boot.user.can_cancel.includes("Sales Invoice")) {
+			page.set_secondary_action(
+				__("Cancel"),
+				_ => {
+					frm.call("cancel_loan")
+						.then(() => {
+							frm.reload_doc();
+						});
+				}
+			)
+		}
 	},
 	"set_defaults": (frm) => {
+		const { doc } = frm;
 		const doctype = "Company Defaults",
-			filters = frm.doc.company,
+			filters = doc.company,
 			fieldname = ["default_mode_of_payment", "disbursement_account"],
 			callback = ({ default_mode_of_payment, disbursement_account }) => {
-				$.each({
+				jQuery.each({
 					"mode_of_payment": default_mode_of_payment,
 					"disbursement_account": disbursement_account
 				}, (key, value) => frm.set_value(key, value || ""));
 			};
+
 		frappe.db.get_value(doctype, filters, fieldname, callback);
+
+		if (frm.is_new()) {
+			doc.status = "Open";
+		}
 	},
 	"set_status_indicators": (frm) => {
+		const { doc } = frm;
+
 		let grid = frm.get_field('loan_schedule').grid;
 
 		grid.wrapper.find("div.rows .grid-row").each((idx, vhtml) => {
-			let doc = frm.doc.loan_schedule[idx];
+			const childoc = doc.loan_schedule[idx];
 
-			let html = $(vhtml);
+			const html = jQuery(vhtml);
 
-			let indicator = {
+			const indicator = {
 				"Pending": "indicator orange",
 				"Overdue": "indicator red",
 				"Partially": "indicator yellow",
 				"Paid": "indicator green",
-			}[doc.status];
+			}[childoc.status];
 
 			// let's remove any previous set class
-			$.map(["orange", "red", "yellow", "green"], (color) => {
+			jQuery.map(["orange", "red", "yellow", "green"], (color) => {
 				html.find("div[data-fieldname=status] .static-area.ellipsis")
 					.removeClass(__("indicator {0}", [color]));
 			});
@@ -153,7 +176,7 @@ frappe.ui.form.on('Loan', {
 		});
 	},
 	"set_dynamic_labels": (frm) => {
-		let currency_fields = $.grep(frm.meta.fields, field => {
+		let currency_fields = jQuery.grep(frm.meta.fields, field => {
 			if (field.fieldtype == "Currency") {
 				return true;
 			}
@@ -165,7 +188,7 @@ frappe.ui.form.on('Loan', {
 	},
 	"toggle_mandatory_fields": (frm) => {
 		let event_list = ["toggle_loan_type_mandatory_fields"];
-		$.map(event_list, (event) => frm.trigger(event));
+		jQuery.map(event_list, (event) => frm.trigger(event));
 	},
 	"toggle_loan_type_mandatory_fields": (frm) => {
 		if (!frm.doc.loan_type) { return 0; }
@@ -175,7 +198,7 @@ frappe.ui.form.on('Loan', {
 				let data = response.message;
 				let asset_type = data && data["asset_type"];
 
-				$.map(["toggle_reqd", "toggle_enable"], (func) => {
+				jQuery.map(["toggle_reqd", "toggle_enable"], (func) => {
 					frm[func](["asset_type", "asset"], !!asset_type);
 				});
 
@@ -316,14 +339,15 @@ frappe.ui.form.on('Loan', {
 			"company": doc.company
 		}, ["default_account"], (response) => {
 			let data = response.message;
-			const message_str = `Please set default Cash or Bank account in
-				Mode of Payment 
+			const message_str = `
+				Please set default Cash or Bank account in Mode of Payment 
 				<a
 					target="_blank"
 					href="/app/mode-of-payment/%(mode_of_payment)s"
 				>
 					%(mode_of_payment)s
-				</a> for company %(company)s`;
+				</a> for company %(company)s
+			`;
 
 			if (data && !data.default_account) {
 				frappe.msgprint(
@@ -334,10 +358,12 @@ frappe.ui.form.on('Loan', {
 
 				frm.set_value("mode_of_payment", undefined);
 			}
-		}, "Mode of Payment")
+		}, "Mode of Payment");
 	},
 	"work_on_exchange_rate": (frm) => {
-		if (frm.doc.currency == frm.doc.company_currency) {
+		const { doc } = frm;
+
+		if (doc.currency == doc.company_currency) {
 			frm.set_value("exchange_rate", 1);
 			frm.toggle_enable("exchange_rate", false);
 		} else {

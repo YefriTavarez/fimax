@@ -12,7 +12,11 @@ class DocStatus(Enum):
 def delete_doc(doc):
 	if DocStatus(doc.docstatus) is DocStatus.SUBMITTED:
 		doc.cancel()
-	doc.delete()
+
+	try:
+		doc.delete()
+	except:
+		pass
 
 def create_loan_record(doc):
 	"""Creates a Loan Record given the Loan doc"""

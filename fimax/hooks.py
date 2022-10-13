@@ -27,18 +27,19 @@ web_include_js = "/assets/fimax/js/web_fimax.js"
 
 # include js in doctype views
 doctype_js = {
-	"DocType" : "public/js/doctype.js",
-	"Customer" : [
-		"public/js/customer.js",
-		"public/js/jquery.mask.min.js",
-	],
-	"Supplier" : "public/js/supplier.js",
-	"Employee" : "public/js/employee.js",
-	"Company" : [
-		"public/js/company.js",
-		"public/js/jquery.mask.min.js",
-	],
-	"User" : "public/js/user.js",
+    "DocType": "public/js/doctype.js",
+    "Customer": [
+        "public/js/customer.js",
+        "public/js/jquery.mask.min.js",
+    ],
+    "Supplier": "public/js/supplier.js",
+    "Employee": "public/js/employee.js",
+    "Company": [
+        "public/js/company.js",
+        "public/js/jquery.mask.min.js",
+    ],
+    "User": "public/js/user.js",
+    "Sales Invoice": "public/js/sales_invoice.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -52,8 +53,8 @@ doctype_js = {
 
 # website user home page (by Role)
 role_home_page = {
-	"All": "desk",
-	"Guest": "login"
+    "All": "desk",
+    "Guest": "login"
 }
 
 # Website user home page (by function)
@@ -94,30 +95,30 @@ notification_config = "fimax.notifications.get_notification_config"
 # Hook on document methods and events
 
 doc_events = {
-	"Customer": {
-		"validate": "fimax.hook.customer.validate",
-	}
+    "Customer": {
+        "validate": "fimax.hook.customer.validate",
+    }
 }
 
 # Scheduled Tasks
 # ---------------
 
 scheduler_events = {
-	"all": [
-		"fimax.scheduler.all"
-	],
-	"daily": [
-		"fimax.scheduler.daily"
-	],
-	"hourly": [
-		"fimax.scheduler.hourly"
-	],
-	"weekly": [
-		"fimax.scheduler.weekly"
-	],
-	"monthly": [
-		"fimax.scheduler.monthly"
-	]
+    "all": [
+        "fimax.scheduler.all"
+    ],
+    "daily": [
+        "fimax.scheduler.daily"
+    ],
+    "hourly": [
+        "fimax.scheduler.hourly"
+    ],
+    "weekly": [
+        "fimax.scheduler.weekly"
+    ],
+    "monthly": [
+        "fimax.scheduler.monthly"
+    ]
 }
 
 # Testing
