@@ -30,6 +30,8 @@
   "approved_net_amount",
   "legal_expenses_amount",
   "legal_expenses_rate",
+  "gps_amount",
+  "insurance_amount",
   "section_break_18",
   "repayment_amount",
   "repayment_frequency",
@@ -129,7 +131,6 @@
    "fieldtype": "Data",
    "label": "Approver Name",
    "no_copy": 1,
-   "options": "approver.full_name",
    "read_only": 1
   },
   {
@@ -229,8 +230,7 @@
    "description": "%",
    "fieldname": "interest_rate",
    "fieldtype": "Percent",
-   "hidden": 1,
-   "label": "Interest Rate",
+   "label": "Comission Rate",
    "precision": "2"
   },
   {
@@ -293,13 +293,26 @@
    "fieldtype": "Link",
    "label": "Sales Invoice",
    "options": "Sales Invoice"
+  },
+  {
+   "default": "0",
+   "fieldname": "gps_amount",
+   "fieldtype": "Currency",
+   "label": "GPS Amount",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "insurance_amount",
+   "fieldtype": "Currency",
+   "label": "Insurance Amount"
   }
  ],
  "icon": "fa fa-check-square-o",
  "is_submittable": 1,
  "links": [],
  "max_attachments": 10,
- "modified": "2022-10-12 21:58:09.879472",
+ "modified": "2022-11-25 09:54:28.208559",
  "modified_by": "Administrator",
  "module": "Loans",
  "name": "Loan Application",

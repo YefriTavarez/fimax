@@ -328,6 +328,18 @@ frappe.ui.form.on('Loan Application', {
 			frm.trigger("calculate_loan_amount");
 		}
 	},
+	"gps_amount": (frm) => {
+		const { doc } = frm;
+		if (doc.gps_amount) {
+			frm.trigger("calculate_loan_amount");
+		}
+	},
+	"insurance_amount": (frm) => {
+		const { doc } = frm;
+		if (doc.insurance_amount) {
+			frm.trigger("calculate_loan_amount");
+		}
+	},
 	"validate": (frm) => {
 		const { doc } = frm;
 		jQuery.map([
@@ -593,14 +605,26 @@ frappe.ui.form.on('Loan Application', {
 		const { doc } = frm;
 		if (doc.docstatus) { return; }
 
-		doc.requested_net_amount = flt(doc.requested_gross_amount)
+		const requested_net_amount = flt(doc.requested_gross_amount)
 			* flt(fimax.utils.from_percent_to_decimal(doc.legal_expenses_rate) + 1);
+
+
+		doc.requested_net_amount = requested_net_amount
+			+ flt(doc.gps_amount)
+			+ flt(doc.insurance_amount)
+			;
 
 		refresh_field("requested_net_amount");
 	},
 	"calculate_approved_net_amount": (frm) => {
 		const { doc } = frm;
-		doc.approved_net_amount = flt(doc.legal_expenses_amount) + flt(doc.approved_gross_amount);
+		const approved_net_amount = flt(doc.legal_expenses_amount) + flt(doc.approved_gross_amount);
+
+		doc.approved_net_amount = approved_net_amount
+			+ flt(doc.gps_amount)
+			+ flt(doc.insurance_amount)
+			;
+
 		refresh_field("approved_net_amount");
 	},
 });

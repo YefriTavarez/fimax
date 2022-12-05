@@ -26,6 +26,15 @@ class IncomeReceipt(Document):
         self.make_gl_entries(cancel=True)
         self.update_loan_charges(cancel=True)
 
+        self.ignore_linked_doctypes = ("GL Entry",)
+
+    def on_trash(self):
+        frappe.db.sql(f"""
+            Delete from `tabGL Entry`
+            where voucher_type = "Income Receipt"
+            and voucher_no = "{self.name}"
+        """)
+
     def list_loan_charges(self, loan_charges_list=None, ignore_repayment_date=False):
         fields = [
             "name",
@@ -170,6 +179,8 @@ class IncomeReceipt(Document):
             "against": row.against_account,
             "credit": row.base_allocated_amount,
             "credit_in_account_currency": row.allocated_amount,
+            "against_voucher_type": "Loan",
+            "against_voucher": self.loan,
         })
 
         return [debit_gl_entry, credit_gl_entry]

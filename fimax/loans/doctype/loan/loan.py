@@ -186,7 +186,7 @@ class Loan(Document):
             frappe.throw(
                 __("This loan type requires at least %d customer references") % req_references)
 
-    @ frappe.whitelist()
+    @frappe.whitelist()
     def set_missing_values(self):
         # simple or compound variable
         soc = simple
@@ -236,7 +236,7 @@ class Loan(Document):
                 "Yearly": yearly
             }).get(self.repayment_frequency)(self.disbursement_date, row.idx)
 
-    @ frappe.whitelist()
+    @frappe.whitelist()
     def set_accounts(self):
         self.set_party_account()
         income_account = frappe.get_value(
@@ -319,7 +319,7 @@ class Loan(Document):
 
         self.exchange_rate = purchase_bank_rate or sales_bank_rate or 1.000
 
-    @ frappe.whitelist()
+    @frappe.whitelist()
     def update_repayment_schedule_dates(self):
         for row in self.loan_schedule:
             row.repayment_date = self.get_correct_date(row.repayment_date)
@@ -508,7 +508,7 @@ class Loan(Document):
         make_gl_entries(gl_map, cancel=cancel,
                         adv_adj=adv_adj, merge_entries=False)
 
-    @ frappe.whitelist()
+    @frappe.whitelist()
     def sync_this_with_loan_charges(self):
         records = len(self.loan_schedule) or 1
 

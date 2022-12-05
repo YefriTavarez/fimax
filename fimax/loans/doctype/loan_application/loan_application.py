@@ -143,6 +143,18 @@ def create_from_sales_invoice(sales_invoice):
     })
 
     appl.validate()
+
+    # small fix for the moment
+    appl.requested_net_amount = \
+        flt(appl.legal_expenses_amount) \
+        + flt(appl.requested_gross_amount)
+
+    appl.approved_net_amount = \
+        flt(appl.legal_expenses_amount) \
+        + flt(appl.approved_gross_amount)
+
+    appl.set_repayment_amount()
+
     return appl
 
 
