@@ -14,7 +14,7 @@ from fimax.utils import (biweekly, daily, delete_doc, half_yearly, monthly,
 from frappe import _ as __
 from frappe import db
 from frappe.model.document import Document
-from frappe.utils import cint, cstr, flt, today
+from frappe.utils import cint, cstr, flt, today, add_months
 
 current_loan_schedule = None
 
@@ -92,10 +92,10 @@ class Loan(Document):
         self.update_status(new_status="Cancelled")
 
         frappe.db.sql(f"""
-			Delete from `tabGL Entry`
-			where voucher_type = "Loan"
-			and voucher_no = "{self.name}"
-		""")
+            Delete from `tabGL Entry`
+            where voucher_type = "Loan"
+            and voucher_no = "{self.name}"
+        """)
 
     def on_cancel(self):
         pass
@@ -510,11 +510,46 @@ class Loan(Document):
 
     @frappe.whitelist()
     def sync_this_with_loan_charges(self):
+            
         records = len(self.loan_schedule) or 1
 
         for idx, row in enumerate(self.loan_schedule):
             self.publish_realtime(idx + 1, records)
-
+    
+            data = frappe.db.sql(f"""
+                SELECT
+                    SUM(charges.total_amount) AS total_amount,
+                    charges.loan_charges_type
+                FROM
+                    `tabLoan Charges` AS charges
+                WHERE
+                    charges.docstatus = 1 
+                    AND charges.status != "Closed" 
+                    AND charges.repayment_period = {row.idx}
+                    AND charges.loan = "{self.name}"
+                GROUP BY
+                    charges.loan_charges_type                     
+                """)
+            
+            if row.status in ("Pending", "Partially"):
+                for amount, charges_type in data: 
+                    if charges_type == "GPS":
+                        row.gps_amount = amount
+                    elif charges_type == "Insurance":
+                        row.insurance_amount = amount
+                    elif charges_type == "Late Payment Fee":
+                        row.fine_amount = amount
+                    elif charges_type == "Recovery Expenses":
+                        row.recovery_expenses = amount 
+                    elif charges_type == "Capital":
+                        row.capital_amount = amount       
+                    elif charges_type == "Interest":
+                        row.interest_amount = amount 
+                
+            row.repayment_amount = flt(row.gps_amount) + flt(row.insurance_amount) \
+                + flt(row.fine_amount) + flt(row.recovery_expenses) \
+                + flt(row.capital_amount) + flt(row.interest_amount)
+                      
             paid_amount, last_status = db.get_value("Loan Charges", filters={
                 "docstatus": 1,
                 "status": ["!=", "Closed"],
@@ -528,9 +563,10 @@ class Loan(Document):
             row.outstanding_amount = flt(
                 row.repayment_amount - row.paid_amount)
             row.status = last_status or row.status
-            row.submit()
+                    
+            row.db_update()  
 
-        self.update_index_for_loan_schedule()
+        # self.update_index_for_loan_schedule()
 
     def update_index_for_loan_schedule(self):
         index = 1
@@ -543,3 +579,66 @@ class Loan(Document):
         frappe.publish_realtime("real_progress", {
             "progress": flt(current) / flt(total) * 100,
         }, user=frappe.session.user)
+
+    @frappe.whitelist()
+    def relocate_repayment(self, idx, starting_date):
+        previous_row = None
+        for row in self.loan_schedule:
+            if row.status == "Paid" and row.repayment_date > today():
+                row.repayment_date = self.get_repayment_paydate(row.name)
+                
+            if int(idx) > row.idx:
+                previous_row = row
+                continue
+            
+            if row.status in ("Paid", "Overdue"):
+                frappe.throw(__("The repayment {0} is in status {1}").format(row.idx, row.status))
+            
+            if previous_row is not None and starting_date < previous_row.repayment_date:
+                frappe.throw(__("The starting date cannot be less than the last {0} repayment on {1}")
+                                .format(previous_row.status, previous_row.get_formatted("repayment_date")))
+                
+            row.repayment_date = starting_date
+            row.db_update()
+            
+            if int(idx) <= row.idx:
+                previous_row = None
+                
+            # finally
+            starting_date = add_months(starting_date, 1)
+            
+    def get_repayment_paydate(self, reference_name, as_string=True):
+        data = frappe.db.sql(f"""
+        SELECT
+            `tabIncome Receipt`.posting_date
+        FROM
+            `tabLoan`
+        INNER JOIN
+            `tabLoan Repayment Schedule`
+        ON
+            `tabLoan Repayment Schedule`.parent = `tabLoan`.name
+            AND `tabLoan Repayment Schedule`.parentfield = 'loan_schedule'
+            AND `tabLoan Repayment Schedule`.parenttype = 'Loan'
+        INNER JOIN
+            `tabIncome Receipt Items`
+        ON
+            `tabIncome Receipt Items`.reference_name = `tabLoan Repayment Schedule`.name
+            AND `tabIncome Receipt Items`.reference_type = 'Loan Repayment Schedule'
+        INNER JOIN
+            `tabIncome Receipt`
+        ON
+            `tabIncome Receipt Items`.parent = `tabIncome Receipt`.name
+            AND `tabIncome Receipt Items`.parentfield = 'income_receipt_items'
+            AND `tabIncome Receipt Items`.parenttype = 'Income Receipt'
+        WHERE
+            `tabLoan Repayment Schedule`.name = '{reference_name}'
+            AND `tabIncome Receipt`.docstatus = 1
+            AND `tabLoan`.docstatus = 1
+        ORDER BY
+            `tabIncome Receipt`.posting_date desc
+        LIMIT 1
+            """)
+        if as_string:
+            return cstr(data[0][0]) if data else None
+        
+        return data[0][0] if data else None

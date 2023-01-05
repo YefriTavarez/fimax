@@ -145,6 +145,7 @@ class GPSInstallation(Document):
 			"status": ["not in", ["Closed", "Paid"]]
 		}, ["idx"], order_by="idx") or 1
 
+	@frappe.whitelist()
 	def sync_this_with_loan_charges(self):
 		records = len(self.gps_repayment_schedule) or 1
 

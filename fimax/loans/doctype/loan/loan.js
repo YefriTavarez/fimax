@@ -72,20 +72,24 @@ frappe.ui.form.on('Loan', {
 				"add_new_gps_installation_button", "add_view_income_recepit_button"];
 			jQuery.map(button_list, (event) => frm.trigger(event));
 
-			frm.page.set_inner_btn_group_as_primary(__("Make"));
+			frm.page.set_inner_btn_group_as_primary(__("Hacer"));
 		}
 
 
-		if (doc.docstatus === 1 && frappe.boot.user.can_cancel.includes("Sales Invoice")) {
-			page.set_secondary_action(
-				__("Cancel"),
-				_ => {
-					frm.call("cancel_loan")
-						.then(() => {
-							frm.reload_doc();
-						});
-				}
-			)
+		if (doc.docstatus === 1) {
+			frm.trigger("add_relocate_repayments_btn");
+
+			if (frappe.boot.user.can_cancel.includes("Sales Invoice")) {
+				page.set_secondary_action(
+					__("Cancel"),
+					_ => {
+						frm.call("cancel_loan")
+							.then(() => {
+								frm.reload_doc();
+							});
+					}
+				)
+			}
 		}
 	},
 	"set_defaults": (frm) => {
@@ -243,10 +247,10 @@ frappe.ui.form.on('Loan', {
 		frm.add_custom_button(__("Vehicle"), () => frm.trigger("new_vehicle"), __("New"));
 	},
 	"add_new_gps_installation_button": (frm) => {
-		frm.add_custom_button(__("GPS Installation"), () => frm.trigger("make_gps_installation"), __("Make"));
+		frm.add_custom_button(__("GPS Installation"), () => frm.trigger("make_gps_installation"), __("Hacer"));
 	},
 	"add_new_insurance_card_button": (frm) => {
-		frm.add_custom_button(__("Insurance Card"), () => frm.trigger("make_insurance_card"), __("Make"));
+		frm.add_custom_button(__("Insurance Card"), () => frm.trigger("make_insurance_card"), __("Hacer"));
 	},
 	"add_new_property_button": (frm) => {
 		frm.add_custom_button(__("Property"), () => frm.trigger("new_property"), __("New"));
@@ -313,8 +317,10 @@ frappe.ui.form.on('Loan', {
 		});
 	},
 	"sync_with_loan_charges": (frm) => {
+		
 		frm.call("sync_this_with_loan_charges")
 			.then(() => frm.reload_doc());
+			
 	},
 	"remember_current_route": (frm) => {
 		fimax.loan.url = frappe.get_route();
@@ -372,6 +378,53 @@ frappe.ui.form.on('Loan', {
 	},
 	"work_on_dynamic_labels": (frm) => {
 		frm.trigger("set_dynamic_labels");
+	},
+
+	"add_relocate_repayments_btn": (frm) => {
+		const label = __('Relocate Repayment');
+		const action = () => frm.trigger("handle_relocate_repayments");
+
+		frm.add_custom_button(label, action);
+	},
+	handle_relocate_repayments(frm) {
+		const { doc } = frm;
+		const options = doc.loan_schedule
+			.filter(row => row.status === "Partially" || row.status === "Pending")
+			.map(row => row.idx)
+			;
+		
+
+		const fields = [
+			{
+				fieldtype: 'Select',
+				fieldname: 'repayment_period',
+				label: 'Repayment Period',
+				reqd: 1,
+				options: options,
+			},
+			{
+				fieldtype: 'Date',
+				fieldname: 'date',
+				reqd: 1,
+				label: 'Date',
+			},
+		];
+
+		// if (!options.length) {
+		// 	frappe.throw(
+		// 		__("There must be at least one repayment full paid to proceed")
+		// 	);
+		// }
+
+		const callback = ({ repayment_period: idx, date: starting_date }) => {
+			const method = "relocate_repayment";
+			frm.call(method, { idx, starting_date });
+		};
+
+		const title = __("Select the relocation date");
+		const primary_label = __("Relocate");
+
+		frappe.prompt(fields, callback, title, primary_label);
 	},
 });
 

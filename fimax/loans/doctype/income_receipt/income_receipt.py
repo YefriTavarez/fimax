@@ -9,8 +9,12 @@ from erpnext.accounts.utils import get_balance_on
 from erpnext.setup.utils import get_exchange_rate
 
 from frappe.utils import flt, cstr, cint, nowdate
-from frappe import _
+from frappe import _, _dict
+
 from fimax.utils import apply_changes_from_quick_income_receipt as apply_changes
+
+# hack! to be able to say frappe.as_dict
+frappe.as_dict = _dict
 
 
 class IncomeReceipt(Document):
@@ -36,6 +40,7 @@ class IncomeReceipt(Document):
         """)
 
     def list_loan_charges(self, loan_charges_list=None, ignore_repayment_date=False):
+        doctype = "Loan Charges"
         fields = [
             "name",
             "outstanding_amount",
@@ -49,20 +54,23 @@ class IncomeReceipt(Document):
         ]
 
         filters = {
-            'loan': ['=', self.loan],
-            'status': ['not in', 'Paid, Closed'],
+            "loan": ["=", self.loan],
+            "status": ["not in", "Paid, Closed"],
         }
 
         if not ignore_repayment_date:
             filters.update({
-                'repayment_date': ['<=', self.posting_date]
+                "repayment_date": ["<=", self.posting_date]
             })
+
         if loan_charges_list:
             filters = {
                 "name": ["in", loan_charges_list]
             }
 
-        return frappe.get_list("Loan Charges", filters=filters, fields=fields, order_by='repayment_period')
+        order_by = "repayment_period"
+
+        return frappe.get_list(doctype, filters=filters, fields=fields, order_by=order_by)
 
     @frappe.whitelist()
     def apply_changes(self, insurance_amount=.000, gps_amount=.000, capital_amount=.000, interest_amount=.000,
@@ -105,7 +113,7 @@ class IncomeReceipt(Document):
         against_exchange_rate = get_exchange_rate(
             self.income_account_currency, self.currency)
 
-        return frappe._dict({
+        return frappe.as_dict({
             "account": loan_doc.party_account,
             "repayment_period": charge_doc.repayment_period,
             "repayment_date": charge_doc.repayment_date,
@@ -118,7 +126,7 @@ class IncomeReceipt(Document):
             "outstanding_amount": charge_doc.outstanding_amount,
             "base_outstanding_amount": charge_doc.outstanding_amount * party_exchange_rate,
             "allocated_amount": charge_doc.outstanding_amount * party_exchange_rate / against_exchange_rate,
-            "base_allocated_amount": charge_doc.outstanding_amount * party_exchange_rate / against_exchange_rate * against_exchange_rate,
+            "base_allocated_amount": (charge_doc.outstanding_amount * (party_exchange_rate / against_exchange_rate)) * against_exchange_rate,
             "total_amount": charge_doc.total_amount,
             "base_total_amount": charge_doc.total_amount * party_exchange_rate,
             "against_exchange_rate": against_exchange_rate,
@@ -134,7 +142,8 @@ class IncomeReceipt(Document):
             [row.base_total_amount for row in self.income_receipt_items])
         self.total_outstanding = sum(
             [row.base_outstanding_amount for row in self.income_receipt_items])
-        self.total_paid = self.total_outstanding
+        self.total_paid = sum(
+            [row.base_allocated_amount for row in self.income_receipt_items])
 
         self.difference_amount = 0.000
 
@@ -161,8 +170,8 @@ class IncomeReceipt(Document):
             "company": self.company
         }
 
-        # use frappe._dict to make a copy of the dict and don't modify the original
-        debit_gl_entry = frappe._dict(base_gl_entry).update({
+        # use frappe.as_dict to make a copy of the dict and don't modify the original
+        debit_gl_entry = frappe.as_dict(base_gl_entry).update({
             "account": row.against_account,
             "account_currency": row.against_account_currency,
             "against": self.party,
@@ -170,8 +179,8 @@ class IncomeReceipt(Document):
             "debit_in_account_currency": row.allocated_amount,
         })
 
-        # use frappe._dict to make a copy of the dict and don't modify the original
-        credit_gl_entry = frappe._dict(base_gl_entry).update({
+        # use frappe.as_dict to make a copy of the dict and don't modify the original
+        credit_gl_entry = frappe.as_dict(base_gl_entry).update({
             "party_type": self.party_type,
             "party": self.party,
             "account": row.account,
@@ -240,7 +249,7 @@ class IncomeReceipt(Document):
 
         if not flt(self.write_off_amount) == total_discount:
             frappe.throw(
-                _("Total Discount should be equals to Write off Amount!"))
+                _("Total Discount should not be equals to Write off Amount!"))
 
     def validate_write_off_account(self):
         if not self.write_off_amount:

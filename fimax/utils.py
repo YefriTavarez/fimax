@@ -99,6 +99,8 @@ def apply_changes_from_quick_income_receipt(doc, insurance_amount=.000, gps_amou
 
 			if charge.loan_charges_type == "Recovery Expenses" and recovery_amount:
 				recovery_amount = get_new_amount(charge, loan_charge, recovery_amount)
+    
+			loan_charge.base_allocated_amount = flt(loan_charge.allocated_amount) * flt(doc.exchange_rate)
 
 			# skip for duplicates
 			if not loan_charge.get("voucher_name") in [d.get("voucher_name") 

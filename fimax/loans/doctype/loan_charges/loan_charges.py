@@ -99,6 +99,7 @@ class LoanCharges(Document):
 
         self.outstanding_amount = flt(outstanding_amount, 2)
 
+    @frappe.whitelist()
     def validate_reference_name(self):
         if not self.loan:
             frappe.throw(__("Missing Loan!"))

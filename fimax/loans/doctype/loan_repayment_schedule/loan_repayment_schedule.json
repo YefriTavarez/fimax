@@ -19,6 +19,7 @@
   "fine_amount",
   "column_break_14",
   "insurance_amount",
+  "gps_amount",
   "recovery_expenses",
   "balance_amounts",
   "interest_accumulated",
@@ -206,12 +207,17 @@
    "options": "Loan Repayment Schedule",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "gps_amount",
+   "fieldtype": "Currency",
+   "label": "GPS Amount"
   }
  ],
  "is_submittable": 1,
  "istable": 1,
  "links": [],
- "modified": "2022-11-24 11:51:29.028706",
+ "modified": "2022-12-22 10:18:43.850584",
  "modified_by": "Administrator",
  "module": "Loans",
  "name": "Loan Repayment Schedule",

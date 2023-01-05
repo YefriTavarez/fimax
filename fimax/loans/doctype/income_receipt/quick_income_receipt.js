@@ -35,12 +35,22 @@ $.extend(fimax.quick_entry, {
 				"onchange": event => fimax.quick_entry.capital_amount(frm, event)
 			},
 			{
+				"fieldtype": "Check",
+				"fieldname": "advance_to_capital",
+				"label": __("Advance to Capital"),
+				"onchange": event => {
+					const hide = cur_dialog.get_value("advance_to_capital");
+					cur_dialog.set_value("interest_amount", 0.00);
+					cur_dialog.set_df_property("interest_amount", "hidden", hide);
+				}
+			},
+			{
 				"fieldtype": "Currency",
 				"fieldname": "interest_amount",
 				"label": __("Interest Amount"),
 				"default": "0.000",
 				"precision": 2,
-				"reqd": true,
+				"mandatory_depends_on": "eval:!doc.advance_to_capital",
 				"hidden": !frappe.boot.conf.detail_repayment_amount,
 				"onchange": event => fimax.quick_entry.interest_amount(frm, event)
 			},

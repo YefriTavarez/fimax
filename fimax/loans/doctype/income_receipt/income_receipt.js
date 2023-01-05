@@ -123,21 +123,28 @@ frappe.ui.form.on('Income Receipt', {
 		}
 	},
 	"write_off_amount": frm => {
-		let income_receipt_items = frm.doc.income_receipt_items;
-		let records = income_receipt_items.length;
+		const income_receipt_items = frm.doc.income_receipt_items;
 
-		if (!records) { return; }
+		// if (!records) { return; }
 
-		let row_discount = cint(frm.doc.write_off_amount / records);
-		let remaining = frm.doc.write_off_amount - flt(row_discount * records);
+		// let row_discount = flt(frm.doc.write_off_amount / records);
+		let remaining = frm.doc.write_off_amount;
 
-		let idx = 0;
-		jQuery.each(income_receipt_items, (key, value) => {
-			idx = key;
-			value.discount = row_discount;
+		// let idx = 0;
+		jQuery.map(income_receipt_items, (row) => {
+			if (remaining > row.allocated_amount) {
+				row.discount = row.allocated_amount;
+			} else {
+				row.discount = remaining;
+			}
+
+			if (remaining > 0) {
+				remaining -= row.discount;
+			}
 		});
 
-		frm.doc.income_receipt_items[idx].discount += remaining;
+		frm.doc.difference_amount = remaining;
+		// frm.doc.income_receipt_items[idx].discount += remaining;
 		frm.refresh_fields();
 	},
 	"clear_all_fields": frm => {
@@ -182,7 +189,7 @@ frappe.ui.form.on('Income Receipt', {
 			primary_label = __("Apply Changes"),
 
 			callback = (args) => {
-				frm.call(method = "apply_changes", args = args)
+				frm.call("apply_changes", args)
 					.then(response => {
 						frm.refresh();
 						frm.trigger("add_quick_entry_button");
@@ -346,7 +353,8 @@ frappe.ui.form.on('Income Receipt', {
 			row.against_account_currency = frm.doc.income_account_currency;
 			row.against_exchange_rate = frm.doc.exchange_rate;
 			row.allocated_amount = row.base_outstanding_amount / row.against_exchange_rate;
-			row.base_allocated_amount = row.base_outstanding_amount;
+			// row.base_allocated_amount = row.base_outstanding_amount;
+			row.base_allocated_amount = row.allocated_amount;
 			// row.party_exchange_rate = frm.doc.exchange_rate;
 		});
 
