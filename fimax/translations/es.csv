@@ -1,5 +1,7 @@
 "","If checked the system will break into two the Repayment Amount and will create two Loan Charges for each row in the Loan. One for the Capital and the other for the Interest amount","Si está marcado el sistema separará en dos los pagarés y creara dos Loan Charges para cada pagaré del préstamo. Uno para el monto del Capital y otro para el monto del Interés."
 "","Detail Repayment Amount","Detallar Pagaré"
+"","Use Dark Theme","Use el tema oscuro"
+"","Basic Info","Info Basica"
 "DocType: Address","County","Condado"
 "","Allow the user to change the status of a document after being Approved / Denied","Permitir al usuario cambiar el estado del documento despues de Aprobado / Denegado"
 "","Insurance Defaults","Ajustes del Seguro"

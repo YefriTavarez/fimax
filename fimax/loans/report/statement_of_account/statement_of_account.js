@@ -5,26 +5,36 @@
 frappe.query_reports["Statement of Account"] = {
 	"filters": [
 		{
-			'fieldname':'from_date',
-			'label':__('From Date'),
-			'fieldtype': 'Date',
-			'default': frappe.datetime.year_start()
+			'fieldname': 'filter_dates_on',
+			'label': __('Filtrar fechas en'),
+			'fieldtype': 'Select',
+			'options': [
+				{ 'value': 'Loan', 'label': __('Fecha basadas en Prestamo') },
+				{ 'value': 'Loan Repayment Schedule', 'label': __('Fecha basadas en Cuotas') },
+			],
+			'default': "Loan"
 		},
 		{
-			'fieldname':'to_date',
-			'label':__('To Date'),
+			'fieldname': 'from_date',
+			'label': __('From Date'),
 			'fieldtype': 'Date',
-			'default': frappe.datetime.year_end()
+			// 'default': frappe.datetime.month_start()
 		},
 		{
-			'fieldname':'customer_name',
-			'label':__('Customer'),
+			'fieldname': 'to_date',
+			'label': __('To Date'),
+			'fieldtype': 'Date',
+			'default': frappe.datetime.month_end()
+		},
+		{
+			'fieldname': 'customer_name',
+			'label': __('Customer'),
 			'fieldtype': 'Link',
 			'options': 'Customer'
 		},
 		{
-			'fieldname':'loan',
-			'label':__('Loan'),
+			'fieldname': 'loan',
+			'label': __('Loan'),
 			'fieldtype': 'Link',
 			'options': 'Loan'
 		},
@@ -36,11 +46,11 @@ frappe.query_reports["Statement of Account"] = {
 		// 	// 'default': 'Recovered',
 		// },
 		{
-			'fieldname':'status',
-			'label':__('Status'),
+			'fieldname': 'status',
+			'label': __('Status'),
 			'fieldtype': 'Select',
 			'options': ['', 'Paid', 'Partially', 'Pending', 'Overdue'],
-			'default': 'Overdue',
+			// 'default': 'Overdue',
 		},
 		// {
 		// 	'fieldname':'city',

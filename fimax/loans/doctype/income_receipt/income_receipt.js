@@ -140,6 +140,8 @@ frappe.ui.form.on('Income Receipt', {
 
 			if (remaining > 0) {
 				remaining -= row.discount;
+			} else {
+				row.discount = 0;
 			}
 		});
 
@@ -428,14 +430,16 @@ frappe.ui.form.on('Income Receipt', {
 		let total_paid = 0.000;
 		let grand_total = 0.000;
 		let total_outstanding = 0.000;
+		let total_paid_with_discount = 0.000;
 
 		jQuery.map(frm.doc.income_receipt_items, (row) => {
+			total_paid_with_discount += flt(row.base_allocated_amount) - flt(row.discount);
 			total_paid += flt(row.base_allocated_amount);
 			grand_total += flt(row.base_total_amount);
 			total_outstanding += flt(row.base_outstanding_amount);
 		});
 
-		frm.set_value("total_paid", total_paid);
+		frm.set_value("total_paid", total_paid_with_discount);
 		frm.set_value("grand_total", grand_total);
 		frm.set_value("total_outstanding", total_outstanding);
 		frm.set_value("difference_amount", grand_total - total_paid);

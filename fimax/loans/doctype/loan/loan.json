@@ -397,7 +397,7 @@
  "is_submittable": 1,
  "links": [],
  "max_attachments": 10,
- "modified": "2022-10-28 09:33:14.331665",
+ "modified": "2023-04-13 10:25:12.570019",
  "modified_by": "Administrator",
  "module": "Loans",
  "name": "Loan",
@@ -456,6 +456,7 @@
    "if_owner": 1,
    "print": 1,
    "read": 1,
+   "report": 1,
    "role": "Loan User",
    "share": 1,
    "submit": 1,
@@ -475,6 +476,7 @@
   },
   {
    "read": 1,
+   "report": 1,
    "role": "All"
   }
  ],

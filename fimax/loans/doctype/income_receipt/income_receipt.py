@@ -74,9 +74,9 @@ class IncomeReceipt(Document):
 
     @frappe.whitelist()
     def apply_changes(self, insurance_amount=.000, gps_amount=.000, capital_amount=.000, interest_amount=.000,
-                      repayment_amount=.000, recovery_amount=.000, fine_amount=.000, total_amount=.000):
+                      repayment_amount=.000, recovery_amount=.000, fine_amount=.000, total_amount=.000, advance_to_capital=False):
         apply_changes(self, insurance_amount, gps_amount, capital_amount, interest_amount,
-                      repayment_amount, recovery_amount, fine_amount, total_amount)
+                      repayment_amount, recovery_amount, fine_amount, total_amount, advance_to_capital)
 
     @frappe.whitelist()
     def grab_loan_charges(self, new_table=False, loan_charges_list=None):
@@ -140,10 +140,12 @@ class IncomeReceipt(Document):
     def calculate_totals(self):
         self.grand_total = sum(
             [row.base_total_amount for row in self.income_receipt_items])
+
         self.total_outstanding = sum(
             [row.base_outstanding_amount for row in self.income_receipt_items])
+
         self.total_paid = sum(
-            [row.base_allocated_amount for row in self.income_receipt_items])
+            [row.base_allocated_amount - flt(row.discount) for row in self.income_receipt_items])
 
         self.difference_amount = 0.000
 
@@ -249,7 +251,7 @@ class IncomeReceipt(Document):
 
         if not flt(self.write_off_amount) == total_discount:
             frappe.throw(
-                _("Total Discount should not be equals to Write off Amount!"))
+                _("Total Discount should be equals to Write off Amount!"))
 
     def validate_write_off_account(self):
         if not self.write_off_amount:

@@ -72,7 +72,7 @@ frappe.ui.form.on('Loan', {
 				"add_new_gps_installation_button", "add_view_income_recepit_button"];
 			jQuery.map(button_list, (event) => frm.trigger(event));
 
-			frm.page.set_inner_btn_group_as_primary(__("Hacer"));
+			frm.page.set_inner_btn_group_as_primary(__("Make"));
 		}
 
 
@@ -247,10 +247,10 @@ frappe.ui.form.on('Loan', {
 		frm.add_custom_button(__("Vehicle"), () => frm.trigger("new_vehicle"), __("New"));
 	},
 	"add_new_gps_installation_button": (frm) => {
-		frm.add_custom_button(__("GPS Installation"), () => frm.trigger("make_gps_installation"), __("Hacer"));
+		frm.add_custom_button(__("GPS Installation"), () => frm.trigger("make_gps_installation"), __("Make"));
 	},
 	"add_new_insurance_card_button": (frm) => {
-		frm.add_custom_button(__("Insurance Card"), () => frm.trigger("make_insurance_card"), __("Hacer"));
+		frm.add_custom_button(__("Insurance Card"), () => frm.trigger("make_insurance_card"), __("Make"));
 	},
 	"add_new_property_button": (frm) => {
 		frm.add_custom_button(__("Property"), () => frm.trigger("new_property"), __("New"));

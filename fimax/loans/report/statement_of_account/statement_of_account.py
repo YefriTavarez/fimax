@@ -11,36 +11,44 @@ def execute(filters=None):
 
 def get_columns():
     return [
+        _('Loan:Link/Loan:130'),
         _('Customer:Link/Customer:200'),
-        _('Customer Type:Data:150'),
         _('Phone:Data:150'),
+        _('Fecha de Cuota:Date:150'),
+        _(' # Cuota:Data:70'),
+        _('Pagare:Currency:150'),
+        _('Monto Pagado:Currency:150'),
+        _('Monto Pendiente:Currency:150'),
+        _('Estado Cuota:Data:150'),
+
         _('Address:Data:200'),
         _('City:Data:100'),
-        _('Loan:Link/Loan:150'),
         _('Posting Date:Date:120'),
-        _('Status:Data:150'),
-        _('Total Payable Amount:Currency:150'),
+        _('Total del Prestamo:Currency:150'),
         _('Insurance Amount:Currency:150'),
         _('GPS Amount:Currency:150'),
-        _('Repayment Period:Int:150'),
-        _('Repayment Date:Date:150'),
-        _('Repayment Amount:Currency:150'),
-        _('Outstanding Amount:Currency:150'),
         _('Capital:Currency:150'),
-        _('Interest:Currency:150'),
-        _('Fine Amount:Currency:150'),
-        _('R. Status:Data:150'),
+        _('Comision:Currency:150'),
+        # _('Fine Amount:Currency:150'),
+        _('Estado Prestamo:Data:150'),
     ]
 
 
 def get_data(filters):
+    # conditions = ["`tabLoan Repayment Schedule`.status != 'Paid'"]
     conditions = []
 
     if filters.get('from_date'):
-        conditions.append(f"`tabLoan`.posting_date >= '{filters.from_date}'")
+        condition = f"`tabLoan Repayment Schedule`.repayment_date >= '{filters.from_date}'"
+        if filters.get("filter_dates_on") == "Loan":
+            condition = f"`tabLoan`.posting_date >= '{filters.from_date}'"
+        conditions.append(condition)
 
     if filters.get('to_date'):
-        conditions.append(f"`tabLoan`.posting_date <= '{filters.to_date}'")
+        condition = f"`tabLoan Repayment Schedule`.repayment_date <= '{filters.to_date}'"
+        if filters.get("filter_dates_on") == "Loan":
+            condition = f"`tabLoan`.posting_date <= '{filters.to_date}'"
+        conditions.append(condition)
 
     if filters.get('customer_name'):
         conditions.append(f"`tabCustomer`.name = '{filters.customer_name}'")
@@ -49,33 +57,29 @@ def get_data(filters):
         conditions.append(f"`tabLoan`.name = '{filters.loan}'")
 
     if filters.get('status'):
-        conditions.append(f"`tabLoan Repayment Schedule`.status = '{filters.status}'")
-
-    # if filters.get('status'):
-    #     conditions.append(f"`tabLoan`.status = '{filters.status}'")
-
-    # if filters.get('city'):
-    #     conditions.append(f"`tabAddress`.city LIKE '{filters.city}%'")
+        conditions.append(
+            f"`tabLoan Repayment Schedule`.status = '{filters.status}'")
 
     conditions = " and ".join(conditions or ['1=1'])
 
     data = frappe.db.sql("""
     SELECT
-      `tabCustomer`.name,
-      `tabCustomer`.customer_type,
-      `tabAddress`.phone,
-      `tabAddress`.address_line1,
-      `tabAddress`.city,
-      `tabLoan`.name,
-      `tabLoan`.posting_date,
-      `tabLoan`.status AS loan_status,
-      `tabLoan`.total_payable_amount,
-      `tabLoan Application`.insurance_amount,
-      `tabLoan Application`.gps_amount,
-      `tabLoan Charges`.repayment_period,
-      `tabLoan Repayment Schedule`.repayment_date,
-      `tabLoan Repayment Schedule`.repayment_amount,
-      `tabLoan Repayment Schedule`.outstanding_amount,
+      `tabLoan`.name,                                                       #0
+      `tabCustomer`.name,                                                   #1
+      `tabAddress`.phone,                                                   #2
+      `tabLoan Repayment Schedule`.repayment_date,                          #3
+      `tabLoan Charges`.repayment_period,                                   #4
+      `tabLoan Repayment Schedule`.repayment_amount,                        #5
+      `tabLoan Repayment Schedule`.paid_amount,                             #6
+      `tabLoan Repayment Schedule`.outstanding_amount,                      #7
+      `tabLoan Repayment Schedule`.status,                                  #8
+
+      `tabAddress`.address_line1,                                           #9
+      `tabAddress`.city,                                                   #10
+      `tabLoan`.posting_date,                                              #11
+      `tabLoan`.total_payable_amount,                                      #12
+      `tabLoan Application`.insurance_amount,                              #13
+      `tabLoan Application`.gps_amount,                                    #14
       SUM(
           IF(
               `tabLoan Charges`.loan_charges_type = 'Capital',
@@ -83,7 +87,7 @@ def get_data(filters):
               0
           )
           
-      ) AS 'Capital',
+      ) AS 'Capital',                                                      #15
       SUM(
           IF(
               `tabLoan Charges`.loan_charges_type = 'Interest',
@@ -91,15 +95,8 @@ def get_data(filters):
               0
           )
           
-      ) AS 'Interest',
-      SUM(
-          IF(
-              `tabLoan Charges`.loan_charges_type = 'Late Payment Fee',
-              `tabLoan Charges`.outstanding_amount,
-                0
-            )
-      ) AS 'Fine Amount',
-      `tabLoan Repayment Schedule`.status
+      ) AS 'Comision',                                                     #16
+      `tabLoan`.status AS loan_status                                      #17
     FROM 
         `tabCustomer`
     INNER JOIN 
@@ -146,16 +143,36 @@ def get_data(filters):
         `tabLoan Repayment Schedule`.name
     ORDER BY
         `tabLoan`.name,
-        `tabLoan Charges`.repayment_period;
+        `tabLoan Repayment Schedule`.repayment_date
+        
     """.format(conditions=conditions), as_list=True)
 
+    # clear repeated data for loans
     previous_loan = None
 
     for row in data:
-        loan = row[5]
+        # don't touch this as this is the loan_id
+        # which is used to organize the data
+        loan = row[0]
+
+        # translate the status (the two of them)
+        row[8] = _(row[8])  # repayment status
+        row[17] = _(row[17])  # loan status
+
+        # clear the first three columns
+        # - loan_id, customer and customer phone
         if loan == previous_loan:
-            for idx in range(0, 11):
+            for idx in range(0, 3):
                 row[idx] = None
+
+            # clear total_payable_amount
+            row[9] = None  # address
+            row[10] = None  # city
+            row[11] = None  # posting_date
+            row[12] = None  # total_payable_amount
+            row[13] = None  # insurance_amount
+            row[14] = None  # gps_amount
+            row[17] = None  # loan_status
 
         previous_loan = loan
 

@@ -17,8 +17,8 @@ def all():
 
 
 def daily():
-	pass
-	# update_status_to_loan_charges()
+	update_status_to_loan_charges()
+	frappe.db.commit()
 	# create_loan_charges_fines()
 
 
@@ -134,22 +134,18 @@ def create_loan_charges_fines_for_(company):
 
 
 def get_valid_loan_charges():
+	# And loan_charges_type.generates_fine > 0
 	return db.sql("""
 		Select
 			loan_charges.name As name,
 			'Loan Charges' As doctype
 		From
 			`tabLoan Charges` As loan_charges
-		Inner Join
-			`tabLoan Charges Type` As loan_charges_type
-			On
-				loan_charges.loan_charges_type = loan_charges_type.name
 		Where
 			TimestampDiff(Month, loan_charges.modified, Current_Timestamp) > 0
-			And loan_charges_type.generates_fine > 0
 			And loan_charges.repayment_date < CURDATE()
-			And loan_charges.status NOT IN ('Paid', 'Paused', 'Closed')""",
-	  as_dict=True)
+			And loan_charges.status NOT IN ('Paid', 'Paused', 'Closed')
+	""", as_dict=True)
 
 
 def update_loan_record(doc):
