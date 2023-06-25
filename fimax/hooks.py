@@ -90,6 +90,31 @@ notification_config = "fimax.notifications.get_notification_config"
 # 	"Event": "frappe.desk.doctype.event.event.has_permission",
 # }
 
+# Fixtures
+# ---------------
+fixtures = [
+    {
+        "dt": "Print Format",
+        "filters": [
+            [
+                "name",
+                "in",
+                [
+                    "Recibo de Ingreso",
+                    "Factura de Venta",
+                    "Tabla de Amortizacion",
+                    "Venta Codicional Compañias",
+                    "Venta Condicional Individual",
+                    "Pagare Notarial 2",
+                    "Pagare Notarial",
+                    "Entrada de Pago",
+                    "Venta Codicional",
+                ]
+            ]
+        ]
+    },
+]
+
 # Document Events
 # ---------------
 # Hook on document methods and events

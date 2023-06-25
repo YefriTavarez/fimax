@@ -249,7 +249,7 @@ class IncomeReceipt(Document):
         total_discount = sum(
             [row.discount for row in self.income_receipt_items])
 
-        if not flt(self.write_off_amount) == total_discount:
+        if not flt(self.write_off_amount, 2) == flt(total_discount, 2):
             frappe.throw(
                 _("Total Discount should be equals to Write off Amount!"))
 
