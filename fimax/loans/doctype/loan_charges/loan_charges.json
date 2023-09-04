@@ -23,7 +23,8 @@
   "paid_amount",
   "outstanding_amount",
   "column_break_13",
-  "total_amount"
+  "total_amount",
+  "discount_amount"
  ],
  "fields": [
   {
@@ -142,11 +143,18 @@
    "fieldtype": "Currency",
    "label": "Total Amount",
    "reqd": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0.00",
+   "fieldname": "discount_amount",
+   "fieldtype": "Currency",
+   "label": "Discount Amount"
   }
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2022-12-21 13:17:53.690886",
+ "modified": "2023-06-28 18:01:16.249578",
  "modified_by": "Administrator",
  "module": "Loans",
  "name": "Loan Charges",

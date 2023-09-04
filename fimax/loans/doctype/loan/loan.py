@@ -521,6 +521,7 @@ class Loan(Document):
             data = frappe.db.sql(f"""
                 SELECT
                     SUM(charges.total_amount) AS total_amount,
+                    SUM(charges.paid_amount) AS paid_amount,
                     charges.loan_charges_type
                 FROM
                     `tabLoan Charges` AS charges
@@ -529,12 +530,14 @@ class Loan(Document):
                     AND charges.status != "Closed" 
                     AND charges.repayment_period = {row.idx}
                     AND charges.loan = "{self.name}"
+                    AND charges.reference_type != 'Insurance Card'
                 GROUP BY
                     charges.loan_charges_type                     
                 """)
 
-            if row.status in ("Pending", "Partially"):
-                for amount, charges_type in data:
+            if row.status in ("Pending", "Partially", "Paid"):
+                row.paid_amount = .00
+                for amount,paid, charges_type in data:
                     if charges_type == "GPS":
                         row.gps_amount = amount
                     elif charges_type == "Insurance":
@@ -547,23 +550,25 @@ class Loan(Document):
                         row.capital_amount = amount
                     elif charges_type == "Interest":
                         row.interest_amount = amount
+                    row.paid_amount += paid
 
             row.repayment_amount = flt(row.gps_amount) + flt(row.insurance_amount) \
                 + flt(row.fine_amount) + flt(row.recovery_expenses) \
                 + flt(row.capital_amount) + flt(row.interest_amount)
 
-            paid_amount, last_status = db.get_value("Loan Charges", filters={
-                "docstatus": 1,
-                "status": ["!=", "Closed"],
-                "reference_type": row.doctype,
-                "reference_name": row.name,
-            }, fieldname=[
-                "SUM(paid_amount)",
-                "status"], order_by="name Asc")
+            row.outstanding_amount = flt(row.repayment_amount - row.paid_amount)
+            # paid_amount, last_status = db.get_value("Loan Charges", filters={
+            #     "docstatus": 1,
+            #     "status": ["!=", "Closed"],
+            #     "reference_type": row.doctype,
+            #     "reference_name": row.name,
+            # }, fieldname=[
+            #     "SUM(paid_amount)",
+            #     "status"], order_by="name Asc")
 
-            row.paid_amount = flt(paid_amount)
-            row.outstanding_amount = flt(
-                row.repayment_amount - row.paid_amount)
+            # row.paid_amount = flt(paid_amount)
+            # row.outstanding_amount = flt(
+            #     row.repayment_amount - row.paid_amount)
             # row.status = last_status or row.status
             row.status = get_repayment_status(
                 frappe.get_all(

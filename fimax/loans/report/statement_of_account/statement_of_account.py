@@ -70,28 +70,46 @@ def get_data(filters):
       `tabLoan Repayment Schedule`.repayment_date,                          #3
       `tabLoan Charges`.repayment_period,                                   #4
       `tabLoan Repayment Schedule`.repayment_amount,                        #5
-      `tabLoan Repayment Schedule`.paid_amount,                             #6
-      `tabLoan Repayment Schedule`.outstanding_amount,                      #7
+        SUM(
+            IF(
+              (`tabLoan Charges`.loan_charges_type = 'Insurance' AND `tabLoan Charges`.reference_type = 'Insurance Card'),
+              0,
+              `tabLoan Charges`.paid_amount
+          )
+        ) AS 'paid_amount',                                                 #6
+        SUM(
+            IF(
+              (`tabLoan Charges`.loan_charges_type = 'Insurance' AND `tabLoan Charges`.reference_type = 'Insurance Card'),
+              0,
+              `tabLoan Charges`.outstanding_amount
+          )
+        ) AS 'outstanding_amount' ,                                         #7     
       `tabLoan Repayment Schedule`.status,                                  #8
-
       `tabAddress`.address_line1,                                           #9
       `tabAddress`.city,                                                   #10
       `tabLoan`.posting_date,                                              #11
-      `tabLoan`.total_payable_amount,                                      #12
-      `tabLoan Application`.insurance_amount,                              #13
-      `tabLoan Application`.gps_amount,                                    #14
+
+      SUM(  `tabLoan Charges`.total_amount ) + (`tabLoan Application`.gps_amount/`tabLoan`.repayment_periods)  AS 'total_payable_amount',    
       SUM(
           IF(
-              `tabLoan Charges`.loan_charges_type = 'Capital',
-              `tabLoan Charges`.outstanding_amount,
+              `tabLoan Charges`.loan_charges_type = 'Insurance',
+              `tabLoan Charges`.total_amount,
               0
           )
           
+      ) + (`tabLoan Application`.insurance_amount/`tabLoan`.repayment_periods) AS 'Insurance',           #13
+      (`tabLoan Application`.gps_amount/`tabLoan`.repayment_periods) as gps_amount,                                    #14
+      SUM(
+          IF(
+              `tabLoan Charges`.loan_charges_type = 'Capital',
+              `tabLoan Charges`.total_amount,
+              0
+          )
       ) AS 'Capital',                                                      #15
       SUM(
           IF(
               `tabLoan Charges`.loan_charges_type = 'Interest',
-              `tabLoan Charges`.outstanding_amount,
+              `tabLoan Charges`.total_amount,
               0
           )
           
@@ -99,21 +117,7 @@ def get_data(filters):
       `tabLoan`.status AS loan_status                                      #17
     FROM 
         `tabCustomer`
-    INNER JOIN 
-        `tabDynamic Link`
-    ON
-        `tabCustomer`.name = `tabDynamic Link`.link_name
-        AND
-        `tabDynamic Link`.link_doctype = 'Customer'
-        AND
-        `tabDynamic Link`.parenttype = 'Address'
-        AND
-        `tabDynamic Link`.parentfield = 'links'
-        
-    INNER JOIN 
-        `tabAddress`
-    ON
-        `tabAddress`.name = `tabDynamic Link`.parent
+
     INNER JOIN
         `tabLoan`
     ON
@@ -135,17 +139,35 @@ def get_data(filters):
     INNER JOIN
         `tabLoan Repayment Schedule`
     ON
-        `tabLoan Repayment Schedule`.name = `tabLoan Charges`.reference_name
+        `tabLoan Repayment Schedule`.idx = `tabLoan Charges`.repayment_period
+    AND
+        `tabLoan Repayment Schedule`.parent = `tabLoan Charges`.loan
+    LEFT JOIN 
+        `tabDynamic Link`
+    ON
+        `tabCustomer`.name = `tabDynamic Link`.link_name
+        AND
+        `tabDynamic Link`.link_doctype = 'Customer'
+        AND
+        `tabDynamic Link`.parenttype = 'Address'
+        AND
+        `tabDynamic Link`.parentfield = 'links'
+        
+    LEFT JOIN 
+        `tabAddress`
+    ON
+        `tabAddress`.name = `tabDynamic Link`.parent
     WHERE
         {conditions}
     GROUP BY
         `tabLoan`.name,
-        `tabLoan Repayment Schedule`.name
+        `tabLoan Charges`.repayment_period
     ORDER BY
         `tabLoan`.name,
+        `tabLoan Charges`.repayment_period,
         `tabLoan Repayment Schedule`.repayment_date
         
-    """.format(conditions=conditions), as_list=True)
+    """.format(conditions=conditions), as_list=True, debug=False)
 
     # clear repeated data for loans
     previous_loan = None
@@ -169,9 +191,9 @@ def get_data(filters):
             row[9] = None  # address
             row[10] = None  # city
             row[11] = None  # posting_date
-            row[12] = None  # total_payable_amount
-            row[13] = None  # insurance_amount
-            row[14] = None  # gps_amount
+            # row[12] = None  # total_payable_amount
+            #row[13] = None  # insurance_amount
+            # row[14] = None  # gps_amount
             row[17] = None  # loan_status
 
         previous_loan = loan

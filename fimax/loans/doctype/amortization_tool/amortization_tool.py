@@ -18,8 +18,10 @@ class AmortizationTool(Document):
 	def before_print(self):
 		self.make_print_schedule()
 
+	@frappe.whitelist()
 	def validate(self):
 		self.set_repayment_amount()
+		return self
 	
 	def validate_required_fields_for_repayment_amount(self):
 		if not self.approved_net_amount:

@@ -259,7 +259,7 @@
  "is_submittable": 1,
  "links": [],
  "max_attachments": 10,
- "modified": "2023-01-05 11:26:27.286536",
+ "modified": "2023-09-01 11:02:20.024037",
  "modified_by": "Administrator",
  "module": "Loans",
  "name": "Income Receipt",
@@ -311,5 +311,6 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
+ "title_field": "party",
  "track_changes": 1
 }

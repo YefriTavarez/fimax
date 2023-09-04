@@ -76,6 +76,8 @@ def get_loan(doctype, docname):
                                                doc.income_account, "account_currency")
 
     doc.set_onload("income_account_currency", income_account_currency)
+    # We dom't want to auto fill MOP
+    doc.mode_of_payment = ""
 
     return doc.as_dict()
 

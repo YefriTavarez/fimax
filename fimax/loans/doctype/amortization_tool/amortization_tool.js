@@ -51,10 +51,7 @@ frappe.ui.form.on('Amortization Tool', {
 		}
 	},
 	"requested_gross_amount": (frm) => {
-		if (frappe.session.user == frm.doc.owner) {
-			frm.trigger("update_approved_gross_amount");
-		}
-
+		frm.trigger("update_approved_gross_amount");
 		frm.trigger("calculate_loan_amount");
 	},
 	"approved_gross_amount": (frm) => {
@@ -203,17 +200,13 @@ frappe.ui.form.on('Amortization Tool', {
 		}
 	},
 	"calculate_legal_expenses_amount": (frm) => {
-		frm.doc.legal_expenses_amount = flt(frm.doc.approved_gross_amount) 
-			* fimax.utils.from_percent_to_decimal(frm.doc.legal_expenses_rate);
-
-		refresh_field("legal_expenses_amount");
+		frm.set_value("legal_expenses_amount", flt(frm.doc.approved_gross_amount) * fimax.utils.from_percent_to_decimal(frm.doc.legal_expenses_rate));
 	},
 	"calculate_requested_net_amount": (frm) => {
 		if (frm.doc.docstatus) { return ; }
-
 		frm.doc.requested_net_amount = flt(frm.doc.requested_gross_amount) 
-			* flt(fimax.utils.from_percent_to_decimal(frm.doc.legal_expenses_rate) + 1);
-
+		* flt(fimax.utils.from_percent_to_decimal(frm.doc.legal_expenses_rate) + 1);
+		
 		refresh_field("requested_net_amount");
 	},
 	"calculate_approved_net_amount": (frm) => {

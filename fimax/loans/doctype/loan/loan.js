@@ -61,6 +61,13 @@ frappe.ui.form.on('Loan', {
 	"add_custom_buttons": (frm) => {
 		const { doc, page } = frm;
 
+		let view_statement =  () => {
+			frappe.set_route('query-report', 'Statement of Account', {
+				loan: frm.docname,
+
+			});
+		}
+		frm.add_custom_button(__("Statement of Account"), view_statement, __("View"))
 		if (frm.is_new()) {
 			let button_list = ["add_new_vehicle_button",
 				"add_new_property_button"];
@@ -202,9 +209,9 @@ frappe.ui.form.on('Loan', {
 				let data = response.message;
 				let asset_type = data && data["asset_type"];
 
-				jQuery.map(["toggle_reqd", "toggle_enable"], (func) => {
-					frm[func](["asset_type", "asset"], !!asset_type);
-				});
+				// jQuery.map(["toggle_reqd", "toggle_enable"], (func) => {
+				// 	frm[func](["asset_type", "asset"], !!asset_type);
+				// });
 
 				if (asset_type) {
 					frm.doc.asset_type = asset_type;
@@ -317,10 +324,10 @@ frappe.ui.form.on('Loan', {
 		});
 	},
 	"sync_with_loan_charges": (frm) => {
-		
+
 		frm.call("sync_this_with_loan_charges")
 			.then(() => frm.reload_doc());
-			
+
 	},
 	"remember_current_route": (frm) => {
 		fimax.loan.url = frappe.get_route();
@@ -392,7 +399,7 @@ frappe.ui.form.on('Loan', {
 			.filter(row => row.status === "Partially" || row.status === "Pending")
 			.map(row => row.idx)
 			;
-		
+
 
 		const fields = [
 			{

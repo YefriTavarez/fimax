@@ -10,10 +10,11 @@ from frappe.utils import flt, cint, cstr, nowdate
 from frappe import _ as __
 class InsuranceCard(Document):
 	def validate(self):
+		self.validate_party_name()	
 		loan_repayment_periods = frappe.get_value("Loan", 
 			self.loan, "repayment_periods")
 
-		self.validate_value("repayment_periods", "<=", cint(loan_repayment_periods))	
+		self.validate_value("repayment_periods", "<=", cint(loan_repayment_periods))
 
 	def on_submit(self):
 		self.commit_to_loan_charges()
@@ -163,3 +164,24 @@ class InsuranceCard(Document):
 		frappe.publish_realtime("real_progress", {
 			"progress": flt(current) / flt(total) * 100, 
 		}, user=frappe.session.user)
+	
+	def validate_party_name(self):
+		if self.party_name:
+			return 
+		
+		doc_map = {
+			"Customer": "customer_name",
+			"Supplier": "supplier_name",
+
+		}
+		try:
+			self.party_name = frappe.get_value(
+				self.party_type,
+				self.party,
+				doc_map[self.party_type]
+			)
+		except Exception as e:
+			frappe.msgprint(f"""
+				There was an error trying to get the party name 
+				for the {self.party_type} {self.party}"""
+			)

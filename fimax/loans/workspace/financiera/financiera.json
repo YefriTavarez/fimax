@@ -33,7 +33,7 @@
    "type": "Link"
   }
  ],
- "modified": "2022-12-16 11:22:34.424940",
+ "modified": "2023-09-01 12:04:03.204279",
  "modified_by": "Administrator",
  "module": "Loans",
  "name": "Financiera",
@@ -43,14 +43,20 @@
  "shortcuts": [
   {
    "doc_view": "List",
-   "label": "Loan",
-   "link_to": "Loan",
+   "label": "Amortization Tool",
+   "link_to": "Amortization Tool",
    "type": "DocType"
   },
   {
    "doc_view": "List",
    "label": "Loan Application",
    "link_to": "Loan Application",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "List",
+   "label": "Loan",
+   "link_to": "Loan",
    "type": "DocType"
   },
   {

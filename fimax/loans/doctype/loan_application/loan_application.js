@@ -324,9 +324,7 @@ frappe.ui.form.on('Loan Application', {
 	},
 	"legal_expenses_rate": (frm) => {
 		const { doc } = frm;
-		if (doc.legal_expenses_rate) {
-			frm.trigger("calculate_loan_amount");
-		}
+		frm.trigger("calculate_loan_amount");
 	},
 	"gps_amount": (frm) => {
 		const { doc } = frm;
@@ -572,7 +570,7 @@ frappe.ui.form.on('Loan Application', {
 	},
 	"calculate_loan_amount": (frm) => {
 		const { doc } = frm;
-		let can_proceed = doc.requested_gross_amount && doc.legal_expenses_rate;
+		let can_proceed = doc.requested_gross_amount;
 
 		if (can_proceed) {
 			frappe.run_serially([

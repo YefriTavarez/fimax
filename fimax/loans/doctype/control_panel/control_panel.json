@@ -106,8 +106,7 @@
    "fieldname": "default_mode_of_payments",
    "fieldtype": "Link",
    "label": "Default Mode of Payment",
-   "options": "Mode of Payment",
-   "reqd": 1
+   "options": "Mode of Payment"
   },
   {
    "fieldname": "column_break_4",
@@ -116,7 +115,7 @@
  ],
  "issingle": 1,
  "links": [],
- "modified": "2022-09-30 14:34:54.895992",
+ "modified": "2023-09-01 11:14:14.330144",
  "modified_by": "Administrator",
  "module": "Loans",
  "name": "Control Panel",
