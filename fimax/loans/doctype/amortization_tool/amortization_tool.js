@@ -54,6 +54,10 @@ frappe.ui.form.on('Amortization Tool', {
 		frm.trigger("update_approved_gross_amount");
 		frm.trigger("calculate_loan_amount");
 	},
+	"gps_amount": (frm) => {
+		frm.trigger("update_approved_gross_amount");
+		frm.trigger("calculate_loan_amount");
+	},
 	"approved_gross_amount": (frm) => {
 		frappe.run_serially([
 			() => frm.trigger("validate_approved_gross_amount"),
@@ -210,7 +214,8 @@ frappe.ui.form.on('Amortization Tool', {
 		refresh_field("requested_net_amount");
 	},
 	"calculate_approved_net_amount": (frm) => {
-		frm.doc.approved_net_amount = flt(frm.doc.legal_expenses_amount) + flt(frm.doc.approved_gross_amount);
+		const { doc } = frm;
+		doc.approved_net_amount = flt(doc.legal_expenses_amount) + flt(doc.approved_gross_amount) + flt(doc.gps_amount);
 		refresh_field("approved_net_amount");
 	},
 	"clear_form": (frm) => {

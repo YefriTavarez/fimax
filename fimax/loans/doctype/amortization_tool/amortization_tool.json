@@ -7,13 +7,14 @@
  "engine": "InnoDB",
  "field_order": [
   "loan_type",
+  "repayment_periods",
   "interest_type",
   "repayment_frequency",
   "disbursement_date",
-  "requested_net_amount",
   "column_break_4",
+  "gps_amount",
   "requested_gross_amount",
-  "repayment_periods",
+  "requested_net_amount",
   "legal_expenses_rate",
   "interest_rate",
   "section_break_9",
@@ -27,7 +28,6 @@
  ],
  "fields": [
   {
-   "default": "PRESTAMO VEHICULAR",
    "fieldname": "loan_type",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -67,9 +67,9 @@
   {
    "fieldname": "requested_net_amount",
    "fieldtype": "Currency",
-   "hidden": 1,
-   "label": "Amount",
-   "precision": "2"
+   "label": "Requested Net Amount",
+   "precision": "2",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_4",
@@ -87,7 +87,7 @@
   {
    "fieldname": "repayment_periods",
    "fieldtype": "Int",
-   "label": "Cuotas",
+   "label": "Repayment Periods",
    "print_hide": 1,
    "reqd": 1
   },
@@ -160,6 +160,12 @@
    "fieldtype": "Text",
    "label": " ",
    "read_only": 1
+  },
+  {
+   "default": "0.00",
+   "fieldname": "gps_amount",
+   "fieldtype": "Currency",
+   "label": "GPS Amount"
   }
  ],
  "hide_toolbar": 1,
@@ -167,7 +173,7 @@
  "issingle": 1,
  "links": [],
  "max_attachments": 10,
- "modified": "2023-09-01 11:28:52.865249",
+ "modified": "2023-09-04 16:11:43.959832",
  "modified_by": "Administrator",
  "module": "Loans",
  "name": "Amortization Tool",

@@ -63,8 +63,8 @@ class AmortizationTool(Document):
 
 	def get_repayment_schedule(self):
 		if not self.approved_net_amount \
-			or not self.repayment_periods \
-			or not self.interest_rate: return
+		or not self.repayment_periods \
+		or not self.interest_rate: return
 
 		soc = simple
 		
@@ -91,7 +91,8 @@ class AmortizationTool(Document):
 			}).get(self.repayment_frequency)(self.disbursement_date, row.idx)
 
 			row.update({
-				"repayment_date": frappe.format_value(repayment_date, df={"fieldtype": "Date"})
+				"repayment_date": frappe.format_value(repayment_date, df={"fieldtype": "Date"}),
+				"gps_amount": self.gps_amount / self.repayment_periods 
 			})
 
 		return rows
