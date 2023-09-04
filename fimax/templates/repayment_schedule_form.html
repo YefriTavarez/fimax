@@ -9,7 +9,7 @@
 							<div class="field-area" style="display: none;"></div>
 							<div class="static-area ellipsis">{{ _("Repayment Date") }}</div>
 						</div>
-						<div class="col grid-static-col col-xs-2 text-right" data-fieldname="repayment_date" data-fieldtype="Currency">
+						<div class="col grid-static-col col-xs-2 text-right" data-fieldname="repayment" data-fieldtype="Currency">
 							<div class="field-area" style="display: none;"></div>
 							<div class="static-area ellipsis">{{ _("Repayment") }}</div>
 						</div>
@@ -20,11 +20,11 @@
 						<div class="col grid-static-col col-xs-2  text-right" data-fieldname="interest_amount" data-fieldtype="Currency">
 							<div class="field-area" style="display: none;"></div>
 							<div class="static-area ellipsis">{{ _("Interest Amount") }}</div>
-						</div>						
-						<div class="col grid-static-col col-xs-2  text-right" data-fieldname="interest_amount" data-fieldtype="Currency">
+						</div>
+						<div class="col grid-static-col col-xs-2  text-right" data-fieldname="gps_amount" data-fieldtype="Currency">
 							<div class="field-area" style="display: none;"></div>
 							<div class="static-area ellipsis">{{ _("GPS Amount") }}</div>
-						</div>	
+						</div>
 					</div>
 				</div>
 			</div>
@@ -36,11 +36,11 @@
 							<div class="row-index sortable-handle col col-xs-1">
 								<span>{{ row.idx }}</span>
 							</div>
-							<div class="col grid-static-col col-xs-3 text-right data-fieldname="repayment_date" data-fieldtype="Date">
+							<div class="col grid-static-col col-xs-3 text-right" data-fieldname="repayment_date" data-fieldtype="Date">
 								<div class="field-area" style="display: none;"></div>
 								<div class="static-area ellipsis">{{ row.repayment_date }}</div>
 							</div>
-							<div class="col grid-static-col col-xs-2 text-right data-fieldname="repayment_amount" data-fieldtype="Currency">
+							<div class="col grid-static-col col-xs-2 text-right" data-fieldname="repayment_amount" data-fieldtype="Currency">
 								<div class="field-area" style="display: none;"></div>
 								<div class="static-area ellipsis">$ {{ frappe.format(row.repayment_amount) }}</div>
 							</div>

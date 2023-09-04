@@ -92,7 +92,7 @@ class AmortizationTool(Document):
 
 			row.update({
 				"repayment_date": frappe.format_value(repayment_date, df={"fieldtype": "Date"}),
-				"gps_amount": self.gps_amount / self.repayment_periods 
+				"gps_amount": self.gps_amount / self.repayment_periods
 			})
 
 		return rows
