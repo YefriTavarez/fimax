@@ -7,14 +7,14 @@
  "engine": "InnoDB",
  "field_order": [
   "loan_type",
-  "repayment_periods",
   "interest_type",
+  "requested_gross_amount",
+  "requested_net_amount",
   "repayment_frequency",
   "disbursement_date",
   "column_break_4",
+  "repayment_periods",
   "gps_amount",
-  "requested_gross_amount",
-  "requested_net_amount",
   "legal_expenses_rate",
   "interest_rate",
   "section_break_9",
@@ -162,7 +162,7 @@
    "read_only": 1
   },
   {
-   "default": "0.00",
+   "default": "0",
    "fieldname": "gps_amount",
    "fieldtype": "Currency",
    "label": "GPS Amount"
@@ -173,7 +173,7 @@
  "issingle": 1,
  "links": [],
  "max_attachments": 10,
- "modified": "2023-09-04 16:11:43.959832",
+ "modified": "2023-09-05 09:12:12.079738",
  "modified_by": "Administrator",
  "module": "Loans",
  "name": "Amortization Tool",
