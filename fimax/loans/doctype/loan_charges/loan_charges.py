@@ -92,7 +92,10 @@ class LoanCharges(Document):
             frappe.throw(
                 __("Please submit this Loan Charge before updating the outstanding amount!"))
 
-        outstanding_amount = flt(self.total_amount) - flt(self.paid_amount)
+        if self.discount_amount < 0:
+            self.discount_amount = 0
+
+        outstanding_amount = flt(self.total_amount) - flt(self.paid_amount) - flt(self.discount_amount)
 
         if outstanding_amount < 0.000:
             frappe.throw(__("Outstanding amount cannot be negative!"))
@@ -127,9 +130,11 @@ class LoanCharges(Document):
 
         if flt(self.outstanding_amount, 2) < 0.000:
             frappe.throw(__("Outstanding Amount cannot be less than zero!"))
+        
+        if flt(self.discount_amount, 2) > flt(self.total_amount, 2):
+            frappe.throw(__("the discount cannot be greater than the total amount!"))
 
     def update_status(self):
-
         # it's pending if repayment date is in the future and has nothing paid
         if cstr(self.repayment_date) >= nowdate() and self.outstanding_amount > 0.000:
             self.status = "Pending"
@@ -142,8 +147,8 @@ class LoanCharges(Document):
         if cstr(self.repayment_date) <= nowdate() and self.outstanding_amount > 0.000:
             self.status = "Overdue"
 
-        # it's paid if paid and total amount are equal hence there's not outstanding amount
-        if flt(self.paid_amount, 2) == flt(self.total_amount, 2) or not flt(self.outstanding_amount, 0):
+        # if the outstanding amount is less than zero that means is paid
+        if flt(self.outstanding_amount, 2) <= 0.000:
             self.status = "Paid"
 
     def make_gl_entries(self, cancel=False, adv_adj=False):

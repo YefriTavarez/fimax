@@ -77,7 +77,6 @@
    "reqd": 1
   },
   {
-   "allow_on_submit": 1,
    "default": "Loan",
    "fieldname": "reference_type",
    "fieldtype": "Link",
@@ -86,7 +85,6 @@
    "reqd": 1
   },
   {
-   "allow_on_submit": 1,
    "fieldname": "reference_name",
    "fieldtype": "Dynamic Link",
    "in_list_view": 1,
@@ -146,15 +144,16 @@
   },
   {
    "allow_on_submit": 1,
-   "default": "0.00",
+   "default": "0",
    "fieldname": "discount_amount",
    "fieldtype": "Currency",
-   "label": "Discount Amount"
+   "label": "Discount ",
+   "read_only": 1
   }
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2023-06-28 18:01:16.249578",
+ "modified": "2023-09-07 17:36:31.481289",
  "modified_by": "Administrator",
  "module": "Loans",
  "name": "Loan Charges",

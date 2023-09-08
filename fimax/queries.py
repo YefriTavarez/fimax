@@ -79,6 +79,35 @@ def loan_unlinked_application_query(doctype, txt, searchfield, start, page_len, 
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
+def loan_charges_query(doctype, txt, searchfield, start, page_len, filters):
+	from frappe.query_builder import Criterion
+	conditions = []
+	LC = frappe.qb.DocType("Loan Charges")
+	
+	if filters and filters.get("loan"):
+		conditions.append(LC.loan == filters.get("loan"))
+	
+	if filters and filters.get("status"):
+		conditions.append(~LC.status.isin(filters.get("status")))
+	
+	if filters and filters.get("docstatus"):
+		conditions.append(LC.docstatus == filters.get("docstatus"))
+	
+	if filters and filters.get("custom_filters"):
+		custom_filters = filters.get("custom_filters")
+		if custom_filters.get("search_term"):
+			conditions.append(LC.name.like("%{0}%".format(custom_filters.get("search_term"))))
+		if custom_filters.get("repayment_period"):
+			conditions.append(LC.repayment_period == custom_filters.get("repayment_period"))
+		if custom_filters.get("loan_charges_type"):
+			conditions.append(LC.loan_charges_type == custom_filters.get("loan_charges_type"))
+	
+	return frappe.qb.from_(LC).select('*').where(
+		Criterion.all(conditions)
+	).orderby(LC.loan, LC.repayment_period).run(as_dict=True)
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
 def get_loans(doctype, txt, searchfield, start, page_len, filters):
     return frappe.db.sql("""SELECT 
 			`tabLoan`.name, 

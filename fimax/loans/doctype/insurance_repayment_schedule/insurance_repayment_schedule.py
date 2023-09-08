@@ -29,7 +29,7 @@ class InsuranceRepaymentSchedule(Document):
 			self.status = "Overdue"
 
 		# it's paid if paid and total amount are equal hence there's not outstanding amount
-		if flt(self.paid_amount, 2) == flt(self.repayment_amount, 2):
+		if flt(self.paid_amount, 2) == flt(self.repayment_amount, 2) and self.outstanding_amount <= 0:
 			self.status = "Paid"
 
 	def validate_amounts(self):

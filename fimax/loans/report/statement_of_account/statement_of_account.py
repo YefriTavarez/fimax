@@ -18,6 +18,7 @@ def get_columns():
         _(' # Cuota:Data:70'),
         _('Pagare:Currency:150'),
         _('Monto Pagado:Currency:150'),
+        _('Descuento:Currency:150'),
         _('Monto Pendiente:Currency:150'),
         _('Estado Cuota:Data:150'),
 
@@ -77,6 +78,7 @@ def get_data(filters):
               `tabLoan Charges`.paid_amount
           )
         ) AS 'paid_amount',                                                 #6
+        SUM(`tabLoan Charges`.discount_amount) as 'discount',
         SUM(
             IF(
               (`tabLoan Charges`.loan_charges_type = 'Insurance' AND `tabLoan Charges`.reference_type = 'Insurance Card'),

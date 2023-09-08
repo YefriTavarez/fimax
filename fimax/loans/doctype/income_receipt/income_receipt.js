@@ -250,12 +250,14 @@ frappe.ui.form.on('Income Receipt', {
 				"loan_charges_type": undefined,
 			},
 			"get_query": () => {
+				const values = cur_dialog ? cur_dialog.get_values() : {};
 				return {
-					// "query": "fimax.queries.loan_charges_query",
+					"query": "fimax.queries.loan_charges_query",
 					"filters": {
 						"loan": frm.doc.loan,
-						"status": ["not in", "Paid, Closed"],
-						"docstatus": 1
+						"status": ["Paid", "Closed"],
+						"docstatus": 1,
+						"custom_filters": values
 					}
 				};
 			},
@@ -427,6 +429,7 @@ frappe.ui.form.on('Income Receipt', {
 			event => frm.trigger(event));
 	},
 	"calculate_totals": (frm, cdt, cdn) => {
+		frappe.msgprint("nada")
 		let total_paid = 0.000;
 		let grand_total = 0.000;
 		let total_outstanding = 0.000;
@@ -443,6 +446,7 @@ frappe.ui.form.on('Income Receipt', {
 		frm.set_value("grand_total", grand_total);
 		frm.set_value("total_outstanding", total_outstanding);
 		frm.set_value("difference_amount", grand_total - total_paid);
+		frm.set_value("write_off_amount", 10 )
 	},
 	"set_dynamic_labels": (frm, cdt, cdn) => {
 

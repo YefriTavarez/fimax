@@ -220,11 +220,13 @@ class IncomeReceipt(Document):
 
             if not cancel:
                 loan_charge.paid_amount += amount
-                loan_charge.outstanding_amount -= amount
+                loan_charge.discount_amount += row.discount
+
             else:
                 loan_charge.paid_amount -= amount
-                loan_charge.outstanding_amount += amount
+                loan_charge.discount_amount -= row.discount
 
+            loan_charge.update_outstanding_amount()
             loan_charge.update_references(cancel=cancel)
             loan_charge.update_status()
             loan_charge.submit()
