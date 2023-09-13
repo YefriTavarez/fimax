@@ -227,7 +227,7 @@ class IncomeReceipt(Document):
                 loan_charge.discount_amount -= row.discount
 
             loan_charge.update_outstanding_amount()
-            loan_charge.update_references(cancel=cancel)
+            loan_charge.update_references()
             loan_charge.update_status()
             loan_charge.submit()
 

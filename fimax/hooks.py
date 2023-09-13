@@ -122,7 +122,12 @@ fixtures = [
 doc_events = {
     "Customer": {
         "validate": "fimax.hook.customer.validate",
-    }
+    },
+}
+
+override_doctype_class = {
+    "Payment Entry": "fimax.hook.payment_entry.PaymentEntry",
+    "Sales Invoice":  "fimax.hook.sales_invoice.SalesInvoice"
 }
 
 # Scheduled Tasks

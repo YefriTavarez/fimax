@@ -41,7 +41,7 @@ class LoanCharges(Document):
             and voucher_no = "{self.name}"
         """)
 
-    def update_references(self, cancel=False):
+    def update_references(self):
         # list of reference types that don't need to update the outstanding and paid amount
         skipped_list = ["Insurance Card", "GPS Installation"]
 
@@ -49,43 +49,20 @@ class LoanCharges(Document):
             return
 
         reference = frappe.get_doc(self.reference_type, self.reference_name)
-
-        if not cancel:
-            pass
-
-        reference.paid_amount = self.get_paid_amount()
-        reference.outstanding_amount = self.get_outstanding_amount()
+        
+        reference.paid_amount = self.paid_amount
+        reference.outstanding_amount = self.outstanding_amount
 
         if hasattr(reference, "validate_amounts"):
             reference.validate_amounts()
 
         if hasattr(reference, "update_status"):
             reference.update_status()
-
+            
         reference.submit()
 
     def set_missing_values(self):
         self.outstanding_amount = self.total_amount
-
-    def get_outstanding_amount(self):
-        total_amount = frappe.db.get_value("Loan Charges", filters={
-            "docstatus": 1,
-            "status": ["!=", "Closed"],
-            "reference_type": self.reference_type,
-            "reference_name": self.reference_name,
-        }, fieldname=["SUM(total_amount)"])
-
-        return flt(total_amount, 2) - self.get_paid_amount()
-
-    def get_paid_amount(self):
-        paid_amount = frappe.db.get_value("Loan Charges", filters={
-            "docstatus": 1,
-            "status": ["!=", "Closed"],
-            "reference_type": self.reference_type,
-            "reference_name": self.reference_name,
-        }, fieldname=["SUM(paid_amount)"])
-
-        return flt(paid_amount, 2)
 
     def update_outstanding_amount(self):
         if not self.docstatus == 1.000:

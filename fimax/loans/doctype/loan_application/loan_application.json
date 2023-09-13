@@ -150,6 +150,7 @@
    "label": "Requested Gross Amount",
    "options": "currency",
    "precision": "2",
+   "read_only_depends_on": "eval: doc.sales_invoice",
    "reqd": 1
   },
   {
@@ -313,7 +314,7 @@
  "is_submittable": 1,
  "links": [],
  "max_attachments": 10,
- "modified": "2023-09-01 09:37:47.483325",
+ "modified": "2023-09-08 09:42:35.067867",
  "modified_by": "Administrator",
  "module": "Loans",
  "name": "Loan Application",

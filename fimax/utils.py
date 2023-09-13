@@ -229,3 +229,8 @@ def get_non_paid_interests_by_idx(non_paid_charges):
             interest_charges_by_idx[charge.repayment_period] = charge
 
     return interest_charges_by_idx
+
+def validate_comment_on_cancel(user, doctype, docname):
+    filters={"comment_email":user, "reference_doctype":doctype, "reference_name":docname}
+    if not frappe.db.exists("Comment", filters):
+        frappe.throw("Favor agregar un comentario con la razon de la cancelación al pie de este documento.")

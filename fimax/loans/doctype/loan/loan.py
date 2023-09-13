@@ -100,7 +100,10 @@ class Loan(Document):
         """)
 
     def on_cancel(self):
-        pass
+        validate_comment_on_cancel(
+            user=frappe.session.user,
+            doctype=self.doctype,docname=self.name
+        )
 
     def on_trash(self):
         record = db.exists("Loan Record", self.name)

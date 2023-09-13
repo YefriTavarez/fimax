@@ -12,6 +12,7 @@ from fimax.api import rate_to_decimal as dec
 
 from fimax import simple, compound
 from frappe.utils import flt, cstr, cint, nowdate
+from fimax.utils import validate_comment_on_cancel
 
 
 class LoanApplication(Document):
@@ -43,7 +44,8 @@ class LoanApplication(Document):
         pass
 
     def on_cancel(self):
-        pass
+        user = frappe.session.user
+        validate_comment_on_cancel(user=user, doctype=self.doctype, docname=self.name)
 
     def on_trash(self):
         pass
@@ -134,16 +136,15 @@ def create_from_sales_invoice(sales_invoice):
         "interest_rate": 0,
         "legal_expenses_rate": 5,
         "requested_gross_amount": invoice_details.outstanding_amount,
-        "approved_gross_amount": invoice_details.outstanding_amount,
+        "approved_gross_amount": invoice_details.outstanding_amount, 
         "requested_net_amount": invoice_details.outstanding_amount,
         "approved_net_amount": invoice_details.outstanding_amount,
         "repayment_periods": 12,
         "repayment_day_of_the_month": get_repayment_day_of_the_month(),
         "user_remarks": get_user_remarks(),
     })
-
     appl.validate()
-
+   
     # small fix for the moment
     appl.requested_net_amount = \
         flt(appl.legal_expenses_amount) \
