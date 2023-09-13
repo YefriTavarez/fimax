@@ -171,6 +171,7 @@ class Loan(Document):
 
     def get_known_mops(self, as_set=False):
         known_mops = [
+            "Prestamo",
             "Loan",
             __("Loan"),
             "Loan Payment",

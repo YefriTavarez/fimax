@@ -33,7 +33,7 @@
    "type": "Link"
   }
  ],
- "modified": "2023-09-01 12:04:03.204279",
+ "modified": "2023-09-05 16:38:05.508526",
  "modified_by": "Administrator",
  "module": "Loans",
  "name": "Financiera",
@@ -63,6 +63,12 @@
    "doc_view": "List",
    "label": "GPS Installation",
    "link_to": "GPS Installation",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "List",
+   "label": "Insurance",
+   "link_to": "Insurance Card",
    "type": "DocType"
   },
   {
