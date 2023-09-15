@@ -83,6 +83,7 @@ def loan_charges_query(doctype, txt, searchfield, start, page_len, filters):
 	from frappe.query_builder import Criterion
 	conditions = []
 	LC = frappe.qb.DocType("Loan Charges")
+	LCT = frappe.qb.DocType("Loan Charges Type")
 	
 	if filters and filters.get("loan"):
 		conditions.append(LC.loan == filters.get("loan"))
@@ -102,9 +103,17 @@ def loan_charges_query(doctype, txt, searchfield, start, page_len, filters):
 		if custom_filters.get("loan_charges_type"):
 			conditions.append(LC.loan_charges_type == custom_filters.get("loan_charges_type"))
 	
-	return frappe.qb.from_(LC).select('*').where(
-		Criterion.all(conditions)
-	).orderby(LC.loan, LC.repayment_period).run(as_dict=True)
+	return frappe.qb.from_(LC).join(LCT).on(
+			LC.loan_charges_type == LCT.name
+		).select(
+			LC.name,
+			LC.loan,
+			LC.loan_charges_type,
+			LC.repayment_period,
+			LC.status
+		).where(
+			Criterion.all(conditions)
+		).orderby(LC.loan, LC.repayment_period, LCT.priority).run(as_dict=True)
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs

@@ -19,7 +19,6 @@ class LoanCharges(Document):
     def validate(self):
         self.validate_amounts()
         self.set_missing_values()
-
     def on_update_after_submit(self):
         self.validate_amounts()
 
@@ -75,7 +74,7 @@ class LoanCharges(Document):
         outstanding_amount = flt(self.total_amount) - flt(self.paid_amount) - flt(self.discount_amount)
 
         if outstanding_amount < 0.000:
-            frappe.throw(__("Outstanding amount cannot be negative!"))
+            frappe.throw(__(f"Outstanding amount cannot be negative {self.name} !" ))
 
         self.outstanding_amount = flt(outstanding_amount, 2)
 

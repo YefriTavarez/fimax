@@ -92,7 +92,6 @@ def apply_changes_from_quick_income_receipt(doc, insurance_amount=.000, gps_amou
     for charge in non_paid_charges:
         loan_charge = doc.get_income_receipt_item(loan_doc, charge)
         loan_charge.allocated_amount = 0.000
-
         # skip if there is not money for this loan charges type
         if not loan_charge.loan_charges_type in charges_types:
             continue
@@ -147,7 +146,7 @@ def apply_changes_from_quick_income_receipt(doc, insurance_amount=.000, gps_amou
             else:
                 # if advance to capital, we want to deduct the interest from the capital
                 loan_charge = doc.get_income_receipt_item(loan_doc, charge)
-                loan_charge.allocated_amount = loan_charge.outstanding_amount
+                loan_charge.allocated_amount = 0.00
                 loan_charge.discount = loan_charge.outstanding_amount
 
                 total_interest_write_off += loan_charge.outstanding_amount

@@ -265,7 +265,12 @@ frappe.ui.form.on('Income Receipt', {
 				d.dialog.hide();
 				if (selections.length == 0) { return; }
 
-				fimax.utils.add_rows_to_income_receipt_table(frm, selections, args);
+				if (frm.doc.income_receipt_items.length > 0) {
+					fimax.utils.add_rows_to_income_receipt_table_smartly(frm, selections, args);
+				} else {
+					fimax.utils.add_rows_to_income_receipt_table(frm, selections, args);
+				}
+
 			}
 		});
 
@@ -429,7 +434,6 @@ frappe.ui.form.on('Income Receipt', {
 			event => frm.trigger(event));
 	},
 	"calculate_totals": (frm, cdt, cdn) => {
-		frappe.msgprint("nada")
 		let total_paid = 0.000;
 		let grand_total = 0.000;
 		let total_outstanding = 0.000;
