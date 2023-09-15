@@ -6,7 +6,6 @@ frappe.ui.form.on('Insurance Card', {
 		if (frm.is_new()) {
 			frm.trigger("start_date");
 		}
-
 		$.each({
 			"party": "party",
 			"party_type": "party_type",
@@ -64,15 +63,15 @@ frappe.ui.form.on('Insurance Card', {
 		frm.trigger("make_repayment_schedule");
 	},
 	"total_amount": (frm) => {
-		events = ["calculate_outstanding_amount", "make_repayment_schedule"];
-		$.map(events, (event) => frm.trigger(event));
+		frm.trigger("calculate_outstanding_amount");
+		if (frm.doc.initial_payment_amount < 0.00 ){
+			frappe.throw(__("Initial Payment Amount should be greater than zero!"));
+		} 
+		frm.trigger("make_repayment_schedule")
 	},
 	"initial_payment_amount": (frm) => {
 		frm.trigger("calculate_outstanding_amount");
 		if (frm.doc.initial_payment_amount < 0.00) {
-			let a_third_of_total_amt = frm.doc.total_amount * 0.3;
-			
-			frm.set_value("initial_payment_amount", a_third_of_total_amt);
 			frappe.throw(__("Initial Payment Amount should be greater than zero!"));
 		}
 		frm.trigger("make_repayment_schedule");
@@ -110,7 +109,6 @@ frappe.ui.form.on('Insurance Card', {
 
 		frm.doc.insurance_repayment_schedule = [];
 		let row;
-
 		while (outstanding_amount >= monthly_repayment_amount) {
 			row = frm.add_child("insurance_repayment_schedule", {
 				"repayment_date": frappe.datetime.add_months(frm.doc.start_date, row_idx),
@@ -124,7 +122,6 @@ frappe.ui.form.on('Insurance Card', {
 			allocated_amount += monthly_repayment_amount;
 			row_idx ++;
 		}
-
 		real_outstanding_amount = frm.doc.outstanding_amount - allocated_amount;
 		row.repayment_amount += real_outstanding_amount;
 		row.outstanding_amount += real_outstanding_amount;
@@ -146,7 +143,7 @@ frappe.ui.form.on('Insurance Card', {
 				"Partially": "indicator yellow",
 				"Paid": "indicator green",
 			}[doc.status];
-
+			
 			// let's remove any previous set class
 			$.map(["orange", "red", "yellow", "green"], (color) => {
 				html.find("div[data-fieldname=status] .static-area.ellipsis")

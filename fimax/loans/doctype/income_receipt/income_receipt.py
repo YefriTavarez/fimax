@@ -21,6 +21,7 @@ class IncomeReceipt(Document):
     def validate(self):
         self.validate_income_receipt_items()
         self.validate_discount_amounts()
+        # self.calculate_totals()
 
     def on_submit(self):
         self.make_gl_entries(cancel=False)
@@ -106,6 +107,7 @@ class IncomeReceipt(Document):
             if not loan_charge.get("voucher_name") in [d.get("voucher_name")
                                                        for d in self.income_receipt_items]:
                 self.append("income_receipt_items", loan_charge)
+                
 
         self.calculate_totals()
 
@@ -156,12 +158,10 @@ class IncomeReceipt(Document):
         self.difference_amount = 0.000
 
     def get_income_account_and_currency(self, loan_doc):
-
         income_account = frappe.get_value("Mode of Payment Account", filters={
             "parent": loan_doc.mode_of_payment,
             "company": loan_doc.company
         }, fieldname=["default_account"])
-
         account_currency = frappe.get_value(
             "Account", income_account, "account_currency")
 
@@ -199,6 +199,7 @@ class IncomeReceipt(Document):
             "against_voucher_type": "Loan",
             "against_voucher": self.loan,
         })
+        
 
         return [debit_gl_entry, credit_gl_entry]
 

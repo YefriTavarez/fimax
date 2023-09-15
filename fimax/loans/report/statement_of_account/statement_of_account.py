@@ -113,8 +113,7 @@ def get_data(filters):
               `tabLoan Charges`.loan_charges_type = 'Capital',
               `tabLoan Charges`.outstanding_amount,
               0
-          )
-      ) AS 'Capital',                                                      #17
+          )                               #15
       SUM(
           IF(
               `tabLoan Charges`.loan_charges_type = 'Interest',
@@ -122,8 +121,9 @@ def get_data(filters):
               0
           )
           
-      ) AS 'Comision',                                                     #18
-      `tabLoan`.status AS loan_status                                      #19
+      ) AS 'Comision',                     
+      ) AS 'Capital',                                                       #16
+      `tabLoan`.status AS loan_status                                      #17
     FROM 
         `tabCustomer`
 

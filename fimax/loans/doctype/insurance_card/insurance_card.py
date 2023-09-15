@@ -4,17 +4,32 @@
 
 from __future__ import unicode_literals
 import frappe
+from datetime import datetime
 from frappe.model.document import Document
 from frappe.utils import formatdate
 from frappe.utils import flt, cint, cstr, nowdate
 from frappe import _ as __
 class InsuranceCard(Document):
 	def validate(self):
+		self.calculate_initial_payment_amount()
 		self.validate_party_name()	
 		loan_repayment_periods = frappe.get_value("Loan", 
 			self.loan, "repayment_periods")
 
 		self.validate_value("repayment_periods", "<=", cint(loan_repayment_periods))
+  
+	def calculate_initial_payment_amount(self):
+		self.calculate_outstanding_amount()
+		if (self.initial_payment_amount < 0.00):
+			a_third_of_total_amt = self.total_amount * 0.3;
+			self.initial_payment_amount = a_third_of_total_amt
+     
+	def calculate_outstanding_amount(self):
+		if (self.initial_payment_amount >= self.total_amount):
+			frappe.msgprint(("Initial Payment Amount can't be greater or equals that Total Amount!"));
+			self.initial_payment_amount = 0.00
+		outstanding_amount = self.total_amount - self.initial_payment_amount
+		self.outstanding_amount = outstanding_amount
 
 	def on_submit(self):
 		self.commit_to_loan_charges()
@@ -66,7 +81,6 @@ class InsuranceCard(Document):
 		if self.initial_payment_amount > 0.000:
 			self.setup_initial_payment()
 			
-
 		for row in self.insurance_repayment_schedule:
 			loan_charges = row.get_new_loan_charge("Insurance", row.repayment_amount)
 			loan_charges.currency = self.currency
