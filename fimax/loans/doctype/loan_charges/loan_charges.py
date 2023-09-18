@@ -71,10 +71,10 @@ class LoanCharges(Document):
         if self.discount_amount < 0:
             self.discount_amount = 0
 
-        outstanding_amount = flt(self.total_amount) - flt(self.paid_amount) - flt(self.discount_amount)
+        outstanding_amount = flt(self.total_amount, 2) - flt(self.paid_amount, 2) - flt(self.discount_amount, 2)
 
         if outstanding_amount < 0.000:
-            frappe.throw(__(f"Outstanding amount cannot be negative {self.name} !" ))
+            frappe.throw(__(f"Outstanding amount cannot be negative {self.name} !<br>Currently is {outstanding_amount}" ))
 
         self.outstanding_amount = flt(outstanding_amount, 2)
 
@@ -128,7 +128,7 @@ class LoanCharges(Document):
             self.status = "Paid"
 
     def make_gl_entries(self, cancel=False, adv_adj=False):
-        from erpnext.accounts.general_ledger import make_gl_entries
+        from erpnext.accounts.general.ledger import make_gl_entries
         from erpnext.accounts.utils import get_company_default
 
         loan_doc = frappe.get_doc(
