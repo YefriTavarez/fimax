@@ -13,20 +13,24 @@ class LoanRepaymentSchedule(Document):
 	def autoname(self):
 		self.name = "{0}-NO-{1}".format(self.parent, self.idx)
 
+	def validate(self):
+		self.update_status()
+
 	def update_status(self):
 
 		# it's pending if repayment date is in the future and has nothing paid
 		if cstr(self.repayment_date) >= nowdate() and self.outstanding_amount > 0.000:
 			self.status = "Pending"
 
-		# it's partially paid if repayment date is in the future and has something paid
-		if cstr(self.repayment_date) > nowdate() and self.paid_amount > 0.000:
-			self.status = "Partially"
-
-		# it's overdue if repayment date is in the past and is not fully paid
+			# it's overdue if repayment date is in the past and is not fully paid
 		if cstr(self.repayment_date) <= nowdate() and self.outstanding_amount > 0.000:
 			self.status = "Overdue"
 
+		# it's partially paid if repayment date is in the future and has something paid
+		if cstr(self.repayment_date) > nowdate() and self.paid_amount > 0.000:
+			self.status = "Partially"
+		
+	
 		# it's paid if paid and total amount are equal hence there's not outstanding amount
 		if flt(self.paid_amount, 2) == flt(self.repayment_amount, 2)\
 			or not flt(self.outstanding_amount, 0):

@@ -19,13 +19,14 @@ def get_columns():
         _('Pagare:Currency:150'),
         _('Monto Pagado:Currency:150'),
         _('Descuento:Currency:150'),
+        _('Monto Neto:Currency:150'),
         _('Monto Pendiente:Currency:150'),
         _('Estado Cuota:Data:150'),
 
         _('Address:Data:200'),
         _('City:Data:100'),
         _('Posting Date:Date:120'),
-        _('Total del Prestamo:Currency:150'),
+        _('Cuota:Currency:150'),
         _('Insurance Amount:Currency:150'),
         _('GPS Amount:Currency:150'),
         _('Capital:Currency:150'),
@@ -78,20 +79,27 @@ def get_data(filters):
               `tabLoan Charges`.paid_amount
           )
         ) AS 'paid_amount',                                                 #6
-        SUM(`tabLoan Charges`.discount_amount) as 'discount',
+        SUM(`tabLoan Charges`.discount_amount) as 'discount',               #7
+        (SUM(
+          IF(
+              (`tabLoan Charges`.loan_charges_type = 'Insurance' AND `tabLoan Charges`.reference_type = 'Insurance Card'),
+              0,
+              `tabLoan Charges`.paid_amount
+          )
+      ) - SUM(`tabLoan Charges`.discount_amount)) as 'net_amount', # 8
         SUM(
             IF(
               (`tabLoan Charges`.loan_charges_type = 'Insurance' AND `tabLoan Charges`.reference_type = 'Insurance Card'),
               0,
               `tabLoan Charges`.outstanding_amount
           )
-        ) AS 'outstanding_amount' ,                                         #7     
-      `tabLoan Repayment Schedule`.status,                                  #8
-      `tabAddress`.address_line1,                                           #9
-      `tabAddress`.city,                                                   #10
-      `tabLoan`.posting_date,                                              #11
+        ) AS 'outstanding_amount' ,                                         #9     
+      `tabLoan Repayment Schedule`.status,                                  #10
+      `tabAddress`.address_line1,                                           #11
+      `tabAddress`.city,                                                   #12
+      `tabLoan`.posting_date,                                              #13
 
-      SUM(  `tabLoan Charges`.total_amount ) + (`tabLoan Application`.gps_amount/`tabLoan`.repayment_periods)  AS 'total_payable_amount',    
+      SUM(  `tabLoan Charges`.total_amount ) + (`tabLoan Application`.gps_amount/`tabLoan`.repayment_periods)  AS 'total_payable_amount',  #14  
       SUM(
           IF(
               `tabLoan Charges`.loan_charges_type = 'Insurance',
@@ -99,15 +107,15 @@ def get_data(filters):
               0
           )
           
-      ) + (`tabLoan Application`.insurance_amount/`tabLoan`.repayment_periods) AS 'Insurance',           #13
-      (`tabLoan Application`.gps_amount/`tabLoan`.repayment_periods) as gps_amount,                                    #14
+      ) + (`tabLoan Application`.insurance_amount/`tabLoan`.repayment_periods) AS 'Insurance',           #15
+      (`tabLoan Application`.gps_amount/`tabLoan`.repayment_periods) as gps_amount,                                    #16
       SUM(
           IF(
               `tabLoan Charges`.loan_charges_type = 'Capital',
               `tabLoan Charges`.total_amount,
               0
           )
-      ) AS 'Capital',                                                      #15
+      ) AS 'Capital',                                                      #17
       SUM(
           IF(
               `tabLoan Charges`.loan_charges_type = 'Interest',
@@ -115,8 +123,8 @@ def get_data(filters):
               0
           )
           
-      ) AS 'Comision',                                                     #16
-      `tabLoan`.status AS loan_status                                      #17
+      ) AS 'Comision',                                                     #18
+      `tabLoan`.status AS loan_status                                      #19
     FROM 
         `tabCustomer`
 
@@ -180,7 +188,7 @@ def get_data(filters):
         loan = row[0]
 
         # translate the status (the two of them)
-        row[8] = _(row[8])  # repayment status
+        row[9] = _(row[9])  # repayment status
         row[17] = _(row[17])  # loan status
 
         # clear the first three columns
@@ -190,13 +198,13 @@ def get_data(filters):
                 row[idx] = None
 
             # clear total_payable_amount
-            row[9] = None  # address
-            row[10] = None  # city
-            row[11] = None  # posting_date
-            # row[12] = None  # total_payable_amount
-            #row[13] = None  # insurance_amount
-            # row[14] = None  # gps_amount
-            row[17] = None  # loan_status
+            row[11] = None  # address
+            row[12] = None  # city
+            row[13] = None  # posting_date
+            # row[13] = None  # total_payable_amount
+            #row[14] = None  # insurance_amount
+            # row[15] = None  # gps_amount
+            row[19] = None  # loan_status
 
         previous_loan = loan
 

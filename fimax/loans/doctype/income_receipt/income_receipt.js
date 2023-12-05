@@ -450,7 +450,7 @@ frappe.ui.form.on('Income Receipt', {
 		frm.set_value("grand_total", grand_total);
 		frm.set_value("total_outstanding", total_outstanding);
 		frm.set_value("difference_amount", grand_total - total_paid);
-		frm.set_value("write_off_amount", 10 )
+		frm.set_value("write_off_amount", 0 )
 	},
 	"set_dynamic_labels": (frm, cdt, cdn) => {
 

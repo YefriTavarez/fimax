@@ -157,7 +157,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2023-09-14 12:48:56.100048",
+ "modified": "2023-10-05 17:15:39.966547",
  "modified_by": "Administrator",
  "module": "Loans",
  "name": "Loan Charges",
@@ -192,6 +192,7 @@
    "write": 1
   },
   {
+   "cancel": 1,
    "create": 1,
    "delete": 1,
    "email": 1,

@@ -15,7 +15,7 @@ from frappe import _ as __
 from frappe import db
 from frappe.model.document import Document
 from frappe.utils import cint, cstr, flt, today, add_months
-
+from fimax.utils import validate_comment_on_cancel
 from .utils import get_repayment_status
 
 current_loan_schedule = None
@@ -36,7 +36,7 @@ class Loan(Document):
         self.validate_party_account()
         self.validate_customer_references()
         self.validate_exchange_rate()
-
+  
     def before_insert(self):
         # if not self.loan_application:
         # 	frappe.throw(__("Missing Loan Application!"))
@@ -100,10 +100,27 @@ class Loan(Document):
         """)
 
     def on_cancel(self):
+        self.validate_payment_entry()
         validate_comment_on_cancel(
             user=frappe.session.user,
             doctype=self.doctype,docname=self.name
         )
+       
+
+
+    def validate_payment_entry(self):
+        filters = {"reference_no": self.name, "docstatus":1}
+        payments = frappe.get_list("Payment Entry", filters)
+        if not payments:
+            return
+
+        for payment in payments:
+            pay_entry = frappe.get_doc("Payment Entry", payment.name)
+            pay_entry.add_comment("Comment", f"Entrada De Pago Cancelada Debido A la Cancelacion Del Prestamo  {self.name} !")
+            pay_entry.cancel()
+        
+        frappe.db.commit()
+
 
     def on_trash(self):
         record = db.exists("Loan Record", self.name)
@@ -129,7 +146,7 @@ class Loan(Document):
     def create_payment_entry_if_needed(self):
         if not self.sales_invoice:
             return "We don't have a Sales Invoice to create a Payment Entry"
-
+        
         from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
         payment = get_payment_entry(dt="Sales Invoice", dn=self.sales_invoice)
 

@@ -128,7 +128,7 @@ class LoanCharges(Document):
             self.status = "Paid"
 
     def make_gl_entries(self, cancel=False, adv_adj=False):
-        from erpnext.accounts.general.ledger import make_gl_entries
+        from erpnext.accounts.general_ledger import make_gl_entries
         from erpnext.accounts.utils import get_company_default
 
         loan_doc = frappe.get_doc(

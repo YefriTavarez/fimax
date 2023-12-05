@@ -4,7 +4,9 @@ frappe.ui.form.on("Loan Repayment Schedule", {
 
 		frappe.set_route("List", "Loan Charges", {
 			"reference_type": cdt,
-			"reference_name": cdn
+			"reference_name": cdn,
+
 		});
 	}
+
 });

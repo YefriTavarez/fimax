@@ -92,6 +92,17 @@ $.extend(fimax.utils, {
 			}
 		}).fail(() => frappe.msgprint("¡Ha ocurrido un error!"));
 	},
+	"add_rows_to_income_receipt_table_smartly": (frm, selections, args) => {
+		frappe.confirm("Detectamos que en la tabla de Cargos ya existen registros... Desea reemplazarlos o adicionar estos nuevos?", function() {
+			frm.doc.income_receipt_items = [];
+			fimax.utils.add_rows_to_income_receipt_table(frm, selections, args);
+
+			frappe.show_alert("¡Los registros han sido reemplazados correctamente!");
+		}, function() {
+			fimax.utils.add_rows_to_income_receipt_table(frm, selections, args);
+			frappe.show_alert("¡Los registros han sido adicionados correctamente!");
+		})
+	},
 });
 
 frappe.provide("_f.Frm.prototype");

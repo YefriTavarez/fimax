@@ -46,13 +46,16 @@ def update_status_to_loan_charges():
 
 		# it exists, so then let's get it
 		doc = get_doc(doc.doctype, doc.name)
+		try:
+			doc.run_method("update_references")
+		finally:
+			doc.run_method("update_status")
 
-		doc.run_method("update_references", cancel=False)
-
-		doc.run_method("update_status")
-
-		# submit to update the database
-		doc.submit()
+		# submit to update the 
+		if doc.docstatus != 2:
+			doc.submit()
+    		
+		
 
 
 def create_loan_charges_fines():
@@ -145,6 +148,7 @@ def get_valid_loan_charges():
 			TimestampDiff(Month, loan_charges.modified, Current_Timestamp) > 0
 			And loan_charges.repayment_date < CURDATE()
 			And loan_charges.status NOT IN ('Paid', 'Paused', 'Closed')
+
 	""", as_dict=True)
 
 
