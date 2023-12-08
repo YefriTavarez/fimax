@@ -1,0 +1,32 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2023-09-23 09:39:32.480009",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "loan_charges_type_child"
+ ],
+ "fields": [
+  {
+   "description": " Loan charges type listed above will always be available for payments.",
+   "fieldname": "loan_charges_type_child",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Loan Charges Type ",
+   "options": "Loan Charges Type"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2023-09-23 16:51:24.942561",
+ "modified_by": "Administrator",
+ "module": "Loans",
+ "name": "Loan Charges Type child",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}

@@ -116,7 +116,7 @@ class Loan(Document):
             user=frappe.session.user,
             doctype=self.doctype,docname=self.name
         )
-       
+        self.validate_payment_entry()
 
 
     def validate_payment_entry(self):
@@ -124,12 +124,11 @@ class Loan(Document):
         payments = frappe.get_list("Payment Entry", filters)
         if not payments:
             return
-
+    
         for payment in payments:
             pay_entry = frappe.get_doc("Payment Entry", payment.name)
-            pay_entry.add_comment("Comment", f"Entrada De Pago Cancelada Debido A la Cancelacion Del Prestamo  {self.name} !")
+            pay_entry.add_comment("Comment", f"Entrada De Pago Cancelada Debido A la Cancelacion Del Prestamo  {payment.reference_no} !")
             pay_entry.cancel()
-        
         frappe.db.commit()
 
 

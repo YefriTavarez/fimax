@@ -3,9 +3,8 @@
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
-
+from datetime import timedelta , datetime
 import frappe
-
 from erpnext.controllers.queries import get_match_cond
 
 
@@ -80,40 +79,73 @@ def loan_unlinked_application_query(doctype, txt, searchfield, start, page_len, 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs
 def loan_charges_query(doctype, txt, searchfield, start, page_len, filters):
-	from frappe.query_builder import Criterion
+	from frappe.query_builder import Criterion, Query
+	from frappe.utils import today, add_days
+
 	conditions = []
+	exceptions_conditions = []
 	LC = frappe.qb.DocType("Loan Charges")
 	LCT = frappe.qb.DocType("Loan Charges Type")
+	allow_payments_after = frappe.db.get_single_value("Control Panel" , "allow_payments_after",) 
+	data  = frappe.get_list("Loan Charges Type child", {"parent": "Control Panel"}, "loan_charges_type_child")
+	exceptions_loan_charges = [d.loan_charges_type_child for d in data]
+  
+	if exceptions_loan_charges:
+		exceptions_conditions.append(LC.loan_charges_type.isin(exceptions_loan_charges))
+     
+	if allow_payments_after:
+		last_payment_day = add_days(today(), allow_payments_after) 
+		conditions.append(LC.repayment_date <= last_payment_day)
 	
 	if filters and filters.get("loan"):
 		conditions.append(LC.loan == filters.get("loan"))
+		exceptions_conditions.append(LC.loan == filters.get("loan"))
 	
 	if filters and filters.get("status"):
 		conditions.append(~LC.status.isin(filters.get("status")))
-	
+		exceptions_conditions.append(~LC.status.isin(filters.get("status")))
+
 	if filters and filters.get("docstatus"):
 		conditions.append(LC.docstatus == filters.get("docstatus"))
+		exceptions_conditions.append(LC.docstatus == filters.get("docstatus"))
 	
 	if filters and filters.get("custom_filters"):
 		custom_filters = filters.get("custom_filters")
 		if custom_filters.get("search_term"):
+			frappe.throw(custom_filters.get("search_term"))
 			conditions.append(LC.name.like("%{0}%".format(custom_filters.get("search_term"))))
+			exceptions_conditions.append(LC.name.like("%{0}%".format(custom_filters.get("search_term"))))
 		if custom_filters.get("repayment_period"):
 			conditions.append(LC.repayment_period == custom_filters.get("repayment_period"))
+			exceptions_conditions.append(LC.repayment_period == custom_filters.get("repayment_period"))
 		if custom_filters.get("loan_charges_type"):
 			conditions.append(LC.loan_charges_type == custom_filters.get("loan_charges_type"))
 	
-	return frappe.qb.from_(LC).join(LCT).on(
-			LC.loan_charges_type == LCT.name
-		).select(
-			LC.name,
-			LC.loan,
-			LC.loan_charges_type,
-			LC.repayment_period,
-			LC.status
-		).where(
-			Criterion.all(conditions)
-		).orderby(LC.loan, LC.repayment_period, LCT.priority).run(as_dict=True)
+	available_for_payment = Query.from_(LC).join(LCT).on(
+		LC.loan_charges_type == LCT.name
+	).select(
+		LC.name,
+		LC.loan,
+		LC.loan_charges_type,
+		LC.repayment_period,
+		LC.status
+	).where(
+		Criterion.all(conditions)
+	).orderby(LC.loan, LC.repayment_period, LCT.priority)
+
+	Exceptions = Query.from_(LC).join(LCT).on(
+		LC.loan_charges_type == LCT.name
+	).select(
+		LC.name,
+		LC.loan,
+		LC.loan_charges_type,
+		LC.repayment_period,
+		LC.status
+	).where(
+		Criterion.all(exceptions_conditions)
+	).orderby(LC.loan, LC.repayment_period, LCT.priority)
+	query = available_for_payment + Exceptions if exceptions_loan_charges else available_for_payment
+	return frappe.qb.from_(query).select('*').run(as_dict=True, debug=True)
 
 @frappe.whitelist()
 @frappe.validate_and_sanitize_search_inputs

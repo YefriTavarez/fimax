@@ -215,7 +215,7 @@ frappe.ui.form.on('Amortization Tool', {
 	},
 	"calculate_approved_net_amount": (frm) => {
 		const { doc } = frm;
-		doc.approved_net_amount = flt(doc.legal_expenses_amount) + flt(doc.approved_gross_amount) + flt(doc.gps_amount);
+		doc.approved_net_amount = flt(doc.legal_expenses_amount) + flt(doc.approved_gross_amount);
 		refresh_field("approved_net_amount");
 	},
 	"clear_form": (frm) => {
