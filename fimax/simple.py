@@ -4,6 +4,7 @@ from frappe.utils import flt, cint
 
 def get_total_interest_amount(amount, rate, periods):
 	"""Calculate using simple interest the total payable interest amount"""
+	# frappe.msgprint(f"amount: {flt(amount) * flt(rate) * flt(periods)}")
 	return flt(amount) * flt(rate) * flt(periods)
 
 def get_total_payable_amount(amount, rate, periods):
@@ -19,6 +20,7 @@ def get_interest_amount(amount, rate, periods):
 def get_repayment_amount(amount, rate, periods):
 	"""Calculate using simple interest the repayment amount"""
 	total_payable_amount = get_total_payable_amount(amount, rate, periods)
+	# frappe.msgprint(f" amount: {total_payable_amount / periods}")
 	return flt(total_payable_amount) / flt(periods)
 
 def get_capital_amount(amount, rate, periods):
@@ -58,7 +60,7 @@ def get_as_array(amount, rate, periods):
 		total_balance -= get_repayment_amount(amount, rate, periods)
 
 		opts = frappe._dict({
-			"idx": period +1,
+			"idx": period + 1,
 			"interest_amount": interest_amount,
 			"capital_amount": capital_amount,
 			"repayment_amount": repayment_amount,

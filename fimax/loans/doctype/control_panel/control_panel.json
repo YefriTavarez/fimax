@@ -19,7 +19,10 @@
   "section_break_10",
   "gps_repayment_periods",
   "column_break_12",
-  "gps_supplier"
+  "gps_supplier",
+  "loan_charges_section",
+  "allow_payments_after",
+  "loan_charges_type"
  ],
  "fields": [
   {
@@ -111,11 +114,29 @@
   {
    "fieldname": "column_break_4",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "loan_charges_section",
+   "fieldtype": "Section Break",
+   "label": "Loan Charges"
+  },
+  {
+   "description": "A loan charge will be available for payments X days before it's due date.",
+   "fieldname": "allow_payments_after",
+   "fieldtype": "Int",
+   "label": "Allow Payments After",
+   "reqd": 1
+  },
+  {
+   "fieldname": "loan_charges_type",
+   "fieldtype": "Table MultiSelect",
+   "label": "Loan Charges Type",
+   "options": "Loan Charges Type child"
   }
  ],
  "issingle": 1,
  "links": [],
- "modified": "2023-09-01 11:14:14.330144",
+ "modified": "2023-09-23 16:16:54.563329",
  "modified_by": "Administrator",
  "module": "Loans",
  "name": "Control Panel",

@@ -21,6 +21,7 @@ class AmortizationTool(Document):
 	@frappe.whitelist()
 	def validate(self):
 		self.set_repayment_amount()
+		self.get_repayment_schedule()
 		return self
 	
 	def validate_required_fields_for_repayment_amount(self):
@@ -71,8 +72,10 @@ class AmortizationTool(Document):
 		if self.interest_type == "Compound":
 			soc = compound
 
-		self.repayment_amount = soc.get_repayment_amount(self.approved_net_amount, 
-			dec(self.interest_rate), self.repayment_periods)
+		self.repayment_amount = soc.get_repayment_amount(self.approved_net_amount , 
+			dec(self.interest_rate), self.repayment_periods) 
+		gps = self.gps_amount / self.repayment_periods
+		self.repayment_amount += gps
 
 		self.total_capital_amount = self.requested_net_amount
 		
@@ -92,7 +95,7 @@ class AmortizationTool(Document):
 
 			row.update({
 				"repayment_date": frappe.format_value(repayment_date, df={"fieldtype": "Date"}),
-				"repayment_amount": self.repayment_amount,
+				"repayment_amount": self.repayment_amount ,
 				"gps_amount": flt(self.gps_amount) / self.repayment_periods
 			})
 
