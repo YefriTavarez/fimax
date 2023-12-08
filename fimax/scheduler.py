@@ -56,8 +56,6 @@ def update_status_to_loan_charges():
 			doc.submit()
     		
 		
-
-
 def create_loan_charges_fines():
 	for company, in frappe.get_list("Company", as_list=True):
 		create_loan_charges_fines_for_(company)
