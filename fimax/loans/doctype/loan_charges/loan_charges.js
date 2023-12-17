@@ -20,14 +20,15 @@ frappe.ui.form.on('Loan Charges', {
 		$.map(event_list, (event) => frm.trigger(event));
 	},
 	"set_dynamic_labels": (frm) => {
-		$.map(frm.meta.fields, field => {
+		let currency_fields = $.grep(frm.meta.fields, field => {
 			if (field.fieldtype == "Currency") {
-				let new_label = __("{0} ({1})", [field.label, 
-					frm.doc.currency||frappe.defaults.get_default("currency")]);
-
-				frm.set_df_property(field.fieldname, "label", new_label);
+				return true;
 			}
-		});
+
+			return false;
+		}).map(field => field.fieldname);
+
+		frm.set_currency_labels(currency_fields, frm.doc.currency);
 	},
 	"set_status_indicator": (frm) => {
 		frm.set_indicator_formatter("status", (doc) => {

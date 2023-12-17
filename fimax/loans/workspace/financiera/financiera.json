@@ -1,0 +1,81 @@
+{
+ "category": "Modules",
+ "charts": [],
+ "creation": "2022-12-16 11:20:31.955116",
+ "developer_mode_only": 0,
+ "disable_user_customization": 0,
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "extends_another_page": 0,
+ "hide_custom": 0,
+ "icon": "loan",
+ "idx": 0,
+ "is_default": 0,
+ "is_standard": 1,
+ "label": "Financiera",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reports",
+   "link_to": "Income Receipt",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Estado de Cuenta",
+   "link_to": "Statement of Account",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2023-09-05 16:38:05.508526",
+ "modified_by": "Administrator",
+ "module": "Loans",
+ "name": "Financiera",
+ "owner": "Administrator",
+ "pin_to_bottom": 0,
+ "pin_to_top": 1,
+ "shortcuts": [
+  {
+   "doc_view": "List",
+   "label": "Amortization Tool",
+   "link_to": "Amortization Tool",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "List",
+   "label": "Loan Application",
+   "link_to": "Loan Application",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "List",
+   "label": "Loan",
+   "link_to": "Loan",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "List",
+   "label": "GPS Installation",
+   "link_to": "GPS Installation",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "List",
+   "label": "Insurance",
+   "link_to": "Insurance Card",
+   "type": "DocType"
+  },
+  {
+   "doc_view": "List",
+   "label": "Income Receipt",
+   "link_to": "Income Receipt",
+   "type": "DocType"
+  }
+ ]
+}

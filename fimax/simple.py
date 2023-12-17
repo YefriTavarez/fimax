@@ -47,7 +47,7 @@ def get_as_array(amount, rate, periods):
 	total_balance = get_total_payable_amount(amount, rate, periods)
 
 	periods = cint(periods)
-	for period in xrange(periods):
+	for period in range(periods):
 
 		interest_accumulated += get_interest_amount(amount, rate, periods)
 		capital_accumulated += get_capital_amount(amount, rate, periods)

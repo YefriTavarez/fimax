@@ -4,7 +4,7 @@
 frappe.provide("fimax.loan_appl");
 frappe.ui.form.on('Employee', {
 	"after_save": (frm) => {
-		let url = fimax.loan_appl.url;
+		let { url } = fimax.loan_appl;
 
 		if (!url) {
 			return 0;

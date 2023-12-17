@@ -2,3 +2,8 @@ fimax.patches.v2.add_tax_id_type_field_to_customer
 fimax.patches.v2.remove_income_receipt_item_table
 fimax.patches.v2.add_dark_theme_field_to_user
 execute:frappe.db.sql("drop table if exists tabRecord")
+fimax.patches.v2.update_loan_record_status
+fimax.patches.v2.drop_column_starts_date_in_gps_form
+fimax.patches.v2.create_loan_records_for_existing_loans
+fimax.patches.v2.drop_column_refereces_in_gps_doctype
+fimax.patches.v2.drop_column_ends_date_in_gps_form

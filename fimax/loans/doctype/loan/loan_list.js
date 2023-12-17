@@ -4,15 +4,18 @@
 frappe.listview_settings["Loan"] = {
 	"add_fields": ["status", "docstatus"],
 	"get_indicator": (doc) => {
-		let status_list = {
-			"Open": "Open|red|status,=,Open",
-			"Disbursed": "Disbursed|blue|status,=,Disbursed",
-			"Recovered": "Recovered|orange|status,=,Recovered",
-			"Paused": "Paused|yellow|status,=,Paused",
-			"Closed": "Closed|green|status,=,Closed",
-			"Cancelled": "Cancelled|red|status,=,Cancelled",
-		};
-
-		return status_list[doc.status].split("|");
+		if (doc.status == "Open") {
+			return [__("Open"), "red", "status,=,Open"];
+		} else if (doc.status == "Disbursed") {
+			return [__("Disbursed"), "blue", "status,=,Disbursed"];
+		} else if (doc.status == "Recovered") {
+			return [__("Recovered"), "orange", "status,=,Recovered"];
+		} else if (doc.status == "Paused") {
+			return [__("Paused"), "yellow", "status,=,Paused"];
+		} else if (doc.status == "Closed") {
+			return [__("Closed"), "green", "status,=,Closed"];
+		} else if (doc.status == "Cancelled") {
+			return [__("Cancelled"), "red", "status,=,Cancelled"];
+		}
 	}
 }

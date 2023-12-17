@@ -10,10 +10,11 @@ from frappe.utils import flt, cint, cstr, nowdate
 from frappe import _ as __
 class InsuranceCard(Document):
 	def validate(self):
+		self.validate_party_name()	
 		loan_repayment_periods = frappe.get_value("Loan", 
 			self.loan, "repayment_periods")
 
-		self.validate_value("repayment_periods", "<=", cint(loan_repayment_periods))	
+		self.validate_value("repayment_periods", "<=", cint(loan_repayment_periods))
 
 	def on_submit(self):
 		self.commit_to_loan_charges()
@@ -26,6 +27,7 @@ class InsuranceCard(Document):
 		event.ends_on = "{} 23:59:59".format(cstr(self.end_date)) 
 		event.event_type = "Public"
 		event.all_day = True
+
 		event.insert(ignore_permissions=True)
 
 	def on_cancel(self):
@@ -53,7 +55,7 @@ class InsuranceCard(Document):
 
 	def set_default_values(self):
 		self.repayment_periods = frappe.db.get_single_value("Control Panel",
-			"repayment_periods")
+			"insurance_repayment_periods")
 	
 	def commit_to_loan_charges(self):
 		from fimax.install import add_default_loan_charges_type
@@ -66,11 +68,11 @@ class InsuranceCard(Document):
 			
 
 		for row in self.insurance_repayment_schedule:
-			lc = row.get_new_loan_charge("Insurance", row.repayment_amount)
-			lc.currency = self.currency
+			loan_charges = row.get_new_loan_charge("Insurance", row.repayment_amount)
+			loan_charges.currency = self.currency
 
-			lc.update_status()
-			lc.submit()
+			loan_charges.update_status()
+			loan_charges.submit()
 
 	def rollback_from_loan_charges(self):
 		if self.initial_payment_amount > 0.000:
@@ -100,7 +102,7 @@ class InsuranceCard(Document):
 		frappe.db.commit()
 
 	def setup_initial_payment(self):
-		lc = frappe.get_doc({
+		loan_charges = frappe.get_doc({
 			'doctype': 'Loan Charges',
 			'loan_charges_type': "Insurance",
 			'outstanding_amount': self.initial_payment_amount,
@@ -114,8 +116,8 @@ class InsuranceCard(Document):
 			'total_amount': self.initial_payment_amount
 		})
 
-		lc.currency = self.currency
-		lc.submit()
+		loan_charges.currency = self.currency
+		loan_charges.submit()
 
 	def rollback_initial_payment(self):
 		filters_dict = {
@@ -162,3 +164,24 @@ class InsuranceCard(Document):
 		frappe.publish_realtime("real_progress", {
 			"progress": flt(current) / flt(total) * 100, 
 		}, user=frappe.session.user)
+	
+	def validate_party_name(self):
+		if self.party_name:
+			return 
+		
+		doc_map = {
+			"Customer": "customer_name",
+			"Supplier": "supplier_name",
+
+		}
+		try:
+			self.party_name = frappe.get_value(
+				self.party_type,
+				self.party,
+				doc_map[self.party_type]
+			)
+		except Exception as e:
+			frappe.msgprint(f"""
+				There was an error trying to get the party name 
+				for the {self.party_type} {self.party}"""
+			)

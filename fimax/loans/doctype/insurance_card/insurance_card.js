@@ -16,7 +16,18 @@ frappe.ui.form.on('Insurance Card', {
 			"currency": "currency"
 		}, (key, value)=> frm.add_fetch("loan", key, value));
 
-		frm.trigger("set_status_indicators");
+		$.map(["set_status_indicators", "set_queries"], event => frm.trigger(event));
+	},
+	"set_queries": (frm) => {
+		frm.set_query("loan", function() {
+			return {
+				"query": "fimax.queries.get_loans",
+				"filters": {
+					"asset_type": "Car",
+					"docstatus": "1"
+				}
+			};
+		});
 	},
 	"onload_post_render": (frm) => {
 		frappe.realtime.on("real_progress", function(data) {
@@ -42,9 +53,10 @@ frappe.ui.form.on('Insurance Card', {
 			"posting_date": frappe.datetime.now_date(),
 			"user_remarks": __("Initial Payment for Insurance: {0}", [frm.docname]),
 		}, () => {
-			setTimeout(function() {
-				cur_frm.save();
-			}, 1500)
+			frappe.run_serially([
+				() => frappe.timeout(1.5),
+				() => cur_frm.save(),
+			]);
 		});
 	},
 	"start_date": (frm) => {
@@ -66,8 +78,9 @@ frappe.ui.form.on('Insurance Card', {
 		frm.trigger("make_repayment_schedule");
 	},
 	"calculate_outstanding_amount": (frm) => {
-		if (frm.doc.initial_payment_amount > frm.doc.total_amount) {
-			frappe.msgprint(__("Initial Payment Amount can't be greater that Total Amount!"));
+		if (frm.doc.initial_payment_amount >= frm.doc.total_amount) {
+			frappe.msgprint(__("Initial Payment Amount can't be greater or equals that Total Amount!"));
+			frm.set_value("initial_payment_amount", 0.00);
 		}
 			
 		let outstanding_amount = frm.doc.total_amount - frm.doc.initial_payment_amount;

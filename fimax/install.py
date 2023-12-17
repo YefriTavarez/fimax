@@ -10,7 +10,7 @@ def after_install():
 	add_reqd_roles()
 	add_default_loan_charges_type()
 	add_reqd_custom_fields()
-	add_translations()
+	create_database_views()
 
 def add_reqd_roles():
 	"""adds default roles for the app to run"""
@@ -35,7 +35,7 @@ def add_default_loan_charges_type():
 	from fimax.hook.loan_charges_type import create_loan_charges_type
 
 	loan_charges_type_list = ["Capital", "Interest", "Repayment Amount",
-		"Insurance", "Late Payment Fee", "GPS"]
+		"Insurance", "Late Payment Fee", "GPS", "Recovery Expenses"]
 
 	for loan_charges_type in loan_charges_type_list:
 		if frappe.db.exists("Loan Charges Type", loan_charges_type):
@@ -58,6 +58,17 @@ def add_reqd_custom_fields():
 	add_reqd_custom_fields_in_company()
 	add_reqd_custom_fields_in_customer()
 	
+def create_database_views():
+	from frappe.modules import load_doctype_module
+
+	module = load_doctype_module("Loan Charges", "loans")
+
+	frappe.flags.in_install = False
+	if hasattr(module, "on_doctype_update"):
+		getattr(module, "on_doctype_update")()
+
+	frappe.flags.in_install = "fimax"
+
 def update_erpnext_icons():
 	"""removes default apps' icon from desktop"""
 
@@ -95,39 +106,10 @@ def update_erpnext_icons():
 	frappe.db.commit()
 
 def check_setup_wizard_is_completed():
+	return True
 	if not frappe.db.get_default('desktop:home_page') == 'desktop':
 		print()
 		print("Fimax cannot be installed on a fresh site where the setup wizard is not completed")
 		print("You can run the setup wizard and come back to finish with the installation")
 		print()
 		return False
-
-def add_translations():
-	import csv, os, subprocess
-
-	current_directory = subprocess.check_output("pwd")
-
-	os.chdir("../apps/fimax/fimax")
-
-	translation_file = open("translations.csv", "r")
-
-	os.chdir(current_directory.replace("\n",""))
-
-	csv_file_reader = csv.reader(translation_file)
-
-	for idx, (source, translated) in enumerate(csv_file_reader):
-	    if not idx: continue 
-
-	    if frappe.db.exists("Translation", {
-	    	"source_name": source,
-	    	"language": "es",
-	    }): continue
-
-	    doc = frappe.new_doc("Translation")
-	    doc.language = "es"
-	    doc.source_name = source
-	    doc.target_name = translated
-	    
-	    doc.insert()
-
-	frappe.db.commit()
