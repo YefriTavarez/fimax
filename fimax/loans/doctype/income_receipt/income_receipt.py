@@ -25,11 +25,11 @@ class IncomeReceipt(Document):
     def on_submit(self):
         self.make_gl_entries(cancel=False)
         self.update_loan_charges(cancel=False)
+        self.sync_loan_charges()
 
     def on_cancel(self):
         self.make_gl_entries(cancel=True)
         self.update_loan_charges(cancel=True)
-
         self.ignore_linked_doctypes = ("GL Entry",)
 
     def on_trash(self):
@@ -50,11 +50,13 @@ class IncomeReceipt(Document):
             "repayment_period",
             "repayment_date",
             "status",
+            "docstatus",
             "loan_charges_type"
         ]
 
         filters = {
             "loan": ["=", self.loan],
+            "docstatus": 1,
             "status": ["not in", "Paid, Closed"],
         }
 
@@ -97,6 +99,9 @@ class IncomeReceipt(Document):
         for charge in self.list_loan_charges(loan_charges_list):
             loan_charge = self.get_income_receipt_item(loan_doc, charge)
 
+            if charge.docstatus != 1:
+                continue
+
             # skip for duplicates
             if not loan_charge.get("voucher_name") in [d.get("voucher_name")
                                                        for d in self.income_receipt_items]:
@@ -117,6 +122,7 @@ class IncomeReceipt(Document):
             "account": loan_doc.party_account,
             "repayment_period": charge_doc.repayment_period,
             "repayment_date": charge_doc.repayment_date,
+            "docstatus": charge_doc.docstatus,
             "status": charge_doc.status,
             "loan_charges_type": charge_doc.loan_charges_type,
             "account_currency": loan_doc.currency,
@@ -231,12 +237,21 @@ class IncomeReceipt(Document):
             loan_charge.update_status()
             loan_charge.submit()
 
-        loan_charges_type_list = [
-            d.loan_charges_type for d in self.income_receipt_items]
+        # loan_charges_type_list = [
+        #     d.loan_charges_type for d in self.income_receipt_items]
 
-        if has_common(["Repayment Amount", "Interest", "Capital"], loan_charges_type_list):
-            frappe.get_doc(self.meta.get_field("loan").options, self.loan)\
-                .sync_this_with_loan_charges()
+        # if has_common(["Repayment Amount", "Interest", "Capital"], loan_charges_type_list):
+        #     frappe.get_doc(self.meta.get_field("loan").options, self.loan)\
+        #         .sync_this_with_loan_charges()
+
+    def sync_loan_charges(self):
+        frappe.enqueue_doc(
+            doctype="Loan",
+            name=self.loan,
+            method="sync_this_with_loan_charges",
+            queue="long",
+            enqueue_after_commit=True,
+        )
 
     def validate_income_receipt_items(self):
         if not self.income_receipt_items:
