@@ -64,9 +64,20 @@ class Loan(Document):
         options = self.meta.get_field("status").options
         options_list = options.split("\n")
 
-        self.status = new_status
+        if  all(charge.status == "Paid" for charge in self.loan_schedule):
+            self.status = "Closed"
+
+        if all(charge.status == "Pending" for charge in self.loan_schedule):
+            self.status = "Disbursed"
+
+        if any(charge.status == 'Pending' for charge in self.loan_schedule):
+            self.status = "Open"
+
+        if any(charge.status == 'Overdue' for charge in self.loan_schedule):
+            self.status = "Paused"
 
         self.validate_value("status", "in", options_list, raise_exception=True)
+        # self.save()
 
     def toggle_paused_status(self, paused=True):
         self.update_status("Paused" if paused else "Disbursed")
@@ -533,7 +544,6 @@ class Loan(Document):
 
     @frappe.whitelist()
     def sync_this_with_loan_charges(self):
-
         records = len(self.loan_schedule) or 1
 
         for idx, row in enumerate(self.loan_schedule):
@@ -603,8 +613,9 @@ class Loan(Document):
                     order_by="name Asc"
                 )
             )
-
+        
             row.db_update()
+            self.update_status(new_status=row.status)
 
         # self.update_index_for_loan_schedule()
 

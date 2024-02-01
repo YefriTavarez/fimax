@@ -100,15 +100,7 @@ fixtures = [
                 "name",
                 "in",
                 [
-                    "Recibo de Ingreso",
-                    "Factura de Venta",
-                    "Tabla de Amortizacion",
-                    "Venta Codicional Compañias",
-                    "Venta Condicional Individual",
-                    "Pagare Notarial 2",
-                    "Pagare Notarial",
-                    "Entrada de Pago",
-                    "Venta Codicional",
+                    "Tabla de Amortizacion"
                 ]
             ]
         ]

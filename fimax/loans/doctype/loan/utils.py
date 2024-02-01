@@ -1,5 +1,6 @@
 # Copyright (c) 2023, Yefri Tavarez and contributors
 # For license information, please see license.txt
+import frappe
 
 def get_repayment_status(loan_charges):
     has_overdue = any(charge.status == 'Overdue' for charge in loan_charges)

@@ -26,9 +26,9 @@ def get_columns():
         _('Address:Data:200'),
         _('City:Data:100'),
         _('Posting Date:Date:120'),
-        _('Cuota:Currency:150'),
+        # _('Cuota:Currency:150'),
         _('Insurance Amount:Currency:150'),
-        _('GPS Amount:Currency:150'),
+        # _('GPS Amount:Currency:150'),
         _('Capital:Currency:150'),
         _('Comision:Currency:150'),
         # _('Fine Amount:Currency:150'),
@@ -99,27 +99,26 @@ def get_data(filters):
       `tabAddress`.city,                                                   #12
       `tabLoan`.posting_date,                                              #13
 
-      SUM(  `tabLoan Charges`.total_amount ) + (`tabLoan Application`.gps_amount/`tabLoan`.repayment_periods)  AS 'total_payable_amount',  #14  
+      
       SUM(
           IF(
               `tabLoan Charges`.loan_charges_type = 'Insurance',
-              `tabLoan Charges`.total_amount,
+              `tabLoan Charges`.outstanding_amount,
               0
           )
           
-      ) + (`tabLoan Application`.insurance_amount/`tabLoan`.repayment_periods) AS 'Insurance',           #15
-      (`tabLoan Application`.gps_amount/`tabLoan`.repayment_periods) as gps_amount,                                    #16
+      ) AS 'Insurance',           #15
       SUM(
           IF(
               `tabLoan Charges`.loan_charges_type = 'Capital',
-              `tabLoan Charges`.total_amount,
+              `tabLoan Charges`.outstanding_amount,
               0
           )
       ) AS 'Capital',                                                      #17
       SUM(
           IF(
               `tabLoan Charges`.loan_charges_type = 'Interest',
-              `tabLoan Charges`.total_amount,
+              `tabLoan Charges`.outstanding_amount,
               0
           )
           
@@ -177,7 +176,7 @@ def get_data(filters):
         `tabLoan Charges`.repayment_period,
         `tabLoan Repayment Schedule`.repayment_date
         
-    """.format(conditions=conditions), as_list=True, debug=False)
+    """.format(conditions=conditions), as_list=True, debug=True)
 
     # clear repeated data for loans
     previous_loan = None
@@ -204,7 +203,7 @@ def get_data(filters):
             # row[13] = None  # total_payable_amount
             #row[14] = None  # insurance_amount
             # row[15] = None  # gps_amount
-            row[19] = None  # loan_status
+            row[17] = None  # loan_status
 
         previous_loan = loan
 
